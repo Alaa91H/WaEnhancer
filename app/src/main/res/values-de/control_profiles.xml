@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="control_profiles_title">Profile</string>
+    <string name="control_profiles_scope">Profile nutzen derzeit globale Einstellungen für WhatsApp und WhatsApp Business.</string>
+    <string name="control_profiles_create">Profil erstellen</string>
+    <string name="control_profiles_active">Aktives Profil</string>
+    <string name="control_profiles_select">Auswählen</string>
+    <string name="control_profiles_duplicate">Duplizieren</string>
+    <string name="control_profiles_rename">Umbenennen</string>
+    <string name="control_profiles_delete">Löschen</string>
+    <string name="control_profiles_name">Profilname</string>
+    <string name="control_profiles_confirm">Bestätigen</string>
+    <string name="control_profiles_cancel">Abbrechen</string>
+    <string name="control_profiles_failure">Profil konnte nicht gespeichert werden. Keine Änderungen übernommen.</string>
+    <string name="control_profiles_default">Standard</string>
+</resources>

@@ -59,6 +59,24 @@ public final class ModernTargetSettingsClient {
         }
     }
 
+    /** Applies a saved Manager-owned profile; caller identity verified by provider. */
+    public static boolean selectProfile(Context context, String packageName, String id) {
+        if (context == null || packageName == null || id == null) return false;
+        if (!ModernTargetPolicy.isTargetPackageForProcess(context.getPackageName(), packageName)) {
+            return false;
+        }
+        Bundle extras = new Bundle();
+        extras.putString("target", packageName);
+        extras.putString("profile_id", id);
+        try {
+            Bundle response = context.getContentResolver().call(PROVIDER,
+                    "select-control-profile-v1", null, extras);
+            return response != null && response.getBoolean("accepted", false);
+        } catch (RuntimeException failure) {
+            return false;
+        }
+    }
+
     public static boolean write(Context context, String packageName, String key, boolean enabled) {
         if (context == null || packageName == null || key == null) return false;
         if (!ModernTargetPolicy.isTargetPackageForProcess(context.getPackageName(), packageName)) {

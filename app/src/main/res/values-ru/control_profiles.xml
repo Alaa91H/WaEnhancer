@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="control_profiles_title">Профили</string>
+    <string name="control_profiles_scope">Профили пока используют общие настройки для WhatsApp и WhatsApp Business.</string>
+    <string name="control_profiles_create">Создать профиль</string>
+    <string name="control_profiles_active">Активный профиль</string>
+    <string name="control_profiles_select">Выбрать</string>
+    <string name="control_profiles_duplicate">Дублировать</string>
+    <string name="control_profiles_rename">Переименовать</string>
+    <string name="control_profiles_delete">Удалить</string>
+    <string name="control_profiles_name">Имя профиля</string>
+    <string name="control_profiles_confirm">Подтвердить</string>
+    <string name="control_profiles_cancel">Отмена</string>
+    <string name="control_profiles_failure">Не удалось сохранить профиль. Изменения не применены.</string>
+    <string name="control_profiles_default">По умолчанию</string>
+</resources>

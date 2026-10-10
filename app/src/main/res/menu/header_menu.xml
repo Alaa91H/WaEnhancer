@@ -17,6 +17,11 @@
         android:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/menu_profiles"
+        android:title="@string/control_profiles_title"
+        android:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_about"
         android:icon="@drawable/about"
         android:title="@string/about"

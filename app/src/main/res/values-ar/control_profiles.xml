@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="control_profiles_title">البروفايلات</string>
+    <string name="control_profiles_scope">تستخدم البروفايلات حاليًا إعدادات عامة مشتركة بين واتساب وواتساب للأعمال.</string>
+    <string name="control_profiles_create">إنشاء بروفايل</string>
+    <string name="control_profiles_active">البروفايل النشط</string>
+    <string name="control_profiles_select">اختيار</string>
+    <string name="control_profiles_duplicate">نسخ</string>
+    <string name="control_profiles_rename">إعادة تسمية</string>
+    <string name="control_profiles_delete">حذف</string>
+    <string name="control_profiles_name">اسم البروفايل</string>
+    <string name="control_profiles_confirm">تأكيد</string>
+    <string name="control_profiles_cancel">إلغاء</string>
+    <string name="control_profiles_failure">تعذر حفظ البروفايل. لم يتم تطبيق التغييرات.</string>
+    <string name="control_profiles_default">الافتراضي</string>
+</resources>

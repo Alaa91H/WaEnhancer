@@ -169,6 +169,10 @@
             </intent-filter>
         </receiver>
         <activity
+            android:name=".ui.profiles.ControlCenterProfilesActivity"
+            android:exported="false"
+            android:label="@string/control_profiles_title" />
+        <activity
             android:name=".ui.targets.TargetSettingsActivity"
             android:exported="false"
             android:label="@string/per_target_settings" />

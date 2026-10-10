@@ -83,6 +83,10 @@ class ModernControlCenterShell(
     private var dialogLifecycle: ActivityBoundDialogLifecycle? = null
     private var managerRefresh: (() -> Unit)? = null
     private var settingsObserver: ContentObserver? = null
+    private var profileDialog: AlertDialog? = null
+    private var profileButton: TextView? = null
+    private var availableProfiles: List<Pair<String, String>> = emptyList()
+    private var activeProfileId: String = "default"
 
     /** Shows one centre per target process/activity. Returns false for one Manager fallback. */
     private fun show(): Boolean {
@@ -128,26 +132,46 @@ class ModernControlCenterShell(
     }
 
     private fun buildAndShow() {
-        val states = ModernTargetStateClient.read(activity, packageName)
-        favorites = ModernControlCenterCatalog.parseFavorites(
-            states.getString("pref." + ModernControlCenterCatalog.FAVORITES_KEY, null),
-        )
-        currentModes[ModernHideChatFeature.PREF_ARCHIVE_MODE] =
-            states.getString("state." + ModernHideChatFeature.PREF_ARCHIVE_MODE, null)
-                ?: readModeFromState(states)
+        // Never make a provider/Binder call on WhatsApp's main thread. The first
+        // authenticated snapshot is loaded by refreshSettings() on our worker.
+        val states = Bundle()
+        var initialLoadComplete = false
+        var initialLoadFailed = false
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(8))
             setBackgroundColor(bg)
             layoutDirection = View.LAYOUT_DIRECTION_LOCALE
         }
-        root.addView(TextView(activity).apply {
+        val topBar = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(8))
+        }
+        topBar.addView(TextView(activity).apply {
             text = strings.title
             setTextColor(primary)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 21f)
             typeface = android.graphics.Typeface.DEFAULT_BOLD
-            setPadding(dp(4), dp(4), 0, dp(12))
-        })
+            setPadding(dp(4), 0, dp(4), 0)
+        }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        val chooser = TextView(activity).apply {
+            text = "◎ " + strings.profiles
+            setTextColor(primary)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            gravity = Gravity.CENTER
+            setPadding(dp(10), 0, dp(10), 0)
+            minHeight = dp(48)
+            background = rounded(cardColor, 22)
+            contentDescription = strings.profiles
+            isEnabled = false
+            setOnClickListener { if (isWindowInteractive()) showProfilePicker() }
+        }
+        profileButton = chooser
+        topBar.addView(chooser, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, dp(48),
+        ))
+        root.addView(topBar)
         val search = EditText(activity).apply {
             hint = strings.searchHint
             setTextColor(primary)
@@ -197,6 +221,24 @@ class ModernControlCenterShell(
         fun render(query: String) {
             if (!isShellAlive()) return
             content.removeAllViews()
+            if (!initialLoadComplete) {
+                content.addView(TextView(activity).apply {
+                    text = strings.loading
+                    setTextColor(secondary)
+                    setPadding(dp(12), dp(24), dp(12), dp(24))
+                })
+                restart.visibility = View.GONE
+                return
+            }
+            if (initialLoadFailed) {
+                content.addView(TextView(activity).apply {
+                    text = strings.stateUnavailable
+                    setTextColor(secondary)
+                    setPadding(dp(12), dp(24), dp(12), dp(24))
+                })
+                restart.visibility = View.GONE
+                return
+            }
             restart.visibility = if (rowsInOrder.any { it.requiresRestart }) View.VISIBLE else View.GONE
             val filtered = ControlCenterListState.visible(
                 rowsInOrder, query, selectedCategory, favoritesOnly, favorites, labels,
@@ -284,15 +326,32 @@ class ModernControlCenterShell(
                     refreshInFlight = false
                     if (!isWindowInteractive()) return@submit
                     val updated = latest.get()
-                    if (updated?.getBoolean("accepted", false) == true) {
+                    initialLoadComplete = true
+                    initialLoadFailed = updated?.getBoolean("accepted", false) != true
+                    if (!initialLoadFailed && updated != null) {
                         favorites = ModernControlCenterCatalog.parseFavorites(
                             updated.getString("pref." + ModernControlCenterCatalog.FAVORITES_KEY, null),
                         )
                         currentModes[ModernHideChatFeature.PREF_ARCHIVE_MODE] = readModeFromState(updated)
+                        val profileIds = updated.getStringArrayList("profiles.ids").orEmpty()
+                        val profileNames = updated.getStringArrayList("profiles.names").orEmpty()
+                        availableProfiles = if (updated.getBoolean("profiles.corrupted") ||
+                            profileIds.size != profileNames.size) emptyList()
+                            else profileIds.zip(profileNames)
+                        activeProfileId = updated.getString("profiles.active", "default") ?: "default"
+                        profileButton?.apply {
+                            isEnabled = availableProfiles.isNotEmpty()
+                            text = "◎ " + (availableProfiles.firstOrNull {
+                                it.first == activeProfileId
+                            }?.let {
+                                if (it.first == "default") strings.defaultProfile else it.second
+                            } ?: strings.profiles)
+                        }
                         rowsInOrder = buildEntries(updated, "")
                         redraw?.invoke()
                     } else {
                         Log.w(TAG, "CONTROL_CENTER_REFRESH_FAILED package=$packageName")
+                        redraw?.invoke()
                     }
                     if (refreshQueued) {
                         refreshQueued = false
@@ -305,6 +364,7 @@ class ModernControlCenterShell(
         managerRefresh = { refreshSettings() }
         showDialog(root)
         startObservingSettings()
+        refreshSettings()
     }
 
     /** Listen only while this dialog is visible; never poll WhatsApp or its database. */
@@ -411,6 +471,10 @@ class ModernControlCenterShell(
     ) {
         if (!disposed.compareAndSet(false, true)) return
         stopObservingSettings()
+        profileDialog?.dismiss()
+        profileDialog = null
+        profileButton = null
+        availableProfiles = emptyList()
         mainHandler.removeCallbacksAndMessages(null)
         try {
             taskScope.close()
@@ -426,6 +490,10 @@ class ModernControlCenterShell(
     private fun disposeWithoutWindow(reason: ActivityDialogCloseReason) {
         if (!disposed.compareAndSet(false, true)) return
         stopObservingSettings()
+        profileDialog?.dismiss()
+        profileDialog = null
+        profileButton = null
+        availableProfiles = emptyList()
         mainHandler.removeCallbacksAndMessages(null)
         try {
             taskScope.close()
@@ -444,6 +512,52 @@ class ModernControlCenterShell(
     /** Kept as the row-action boundary used by the in-flight diagnostics PR. */
     private fun fallbackToManager() {
         if (isWindowInteractive()) ModernManagerFallback.open(activity)
+    }
+
+    private fun showProfilePicker() {
+        if (!isWindowInteractive() || availableProfiles.isEmpty() ||
+            profileDialog?.isShowing == true) return
+        val options = availableProfiles.toList()
+        val labels = options.map {
+            (if (it.first == activeProfileId) "✓ " else "") +
+                if (it.first == "default") strings.defaultProfile else it.second
+        }.toTypedArray()
+        profileDialog = AlertDialog.Builder(activity)
+            .setTitle(strings.profiles)
+            .setMessage(strings.profilesGlobalScope)
+            .setItems(labels) { _, index ->
+                if (!isWindowInteractive()) return@setItems
+                val id = options[index].first
+                if (id != activeProfileId) selectProfile(id)
+            }
+            .setNeutralButton(strings.manageProfiles) { _, _ -> fallbackToManager() }
+            .setNegativeButton(android.R.string.cancel, null)
+            .create().also { dialog ->
+                dialog.setOnDismissListener {
+                    if (profileDialog === dialog) profileDialog = null
+                }
+                dialog.show()
+            }
+    }
+
+    private fun selectProfile(id: String) {
+        if (!isWindowInteractive()) return
+        profileButton?.isEnabled = false
+        val context = activity.applicationContext
+        val target = packageName
+        val accepted = taskScope.submit(
+            operation = { ModernTargetSettingsClient.selectProfile(context, target, id) },
+            onComplete = { saved ->
+                if (!isWindowInteractive()) return@submit
+                profileButton?.isEnabled = true
+                if (!saved) {
+                    android.widget.Toast.makeText(activity,
+                        strings.profileSaveFailed, android.widget.Toast.LENGTH_SHORT).show()
+                }
+                managerRefresh?.invoke()
+            },
+        )
+        if (!accepted) profileButton?.isEnabled = true
     }
 
     private fun rounded(color: Int, radius: Int): GradientDrawable =
