@@ -80,6 +80,7 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #449 | Read receipt privacy: hide read receipts, release after reply, delivery tick | PR #460 MERGED (`67fc086b`), all 12 checks green on `92e8109f`; delivery reported UNSUPPORTED |
 | #450 | Stealth privacy: typing, recording and online reported separately | PR #460 MERGED (`67fc086b`), all 12 checks green on `92e8109f` |
 | #451 | Anti-Delete / anti-revoke with explicit capability boundaries | PR #461 MERGED (`3b6b4842`), all 12 checks green on `2c099394` |
+| #391 | Resolver evidence identity: pinned build fingerprint, account scope, generator parity | this branch; PR number filled in on merge |
 
 ### #170 scope notes
 
@@ -229,7 +230,7 @@ FilterGroups, Channels, TextStatusComposer; batch 11 = AntiWa,
 AudioTranscript, ContactVerify, LockedChatsEnhancer, CallRecording;
 batch 12 = BackupRestore, CaptureDevice.
 
-## Remaining work (as of `3b6b4842`)
+## Remaining work (as of the #391 evidence-identity change)
 
 Nothing below is claimed as done.
 
@@ -247,29 +248,58 @@ Nothing below is claimed as done.
 | #433 | **CLOSED**: Control Center acceptance met, verified in the tree |
 | #425 | **CLOSED**: single menu entry restored, Control Center is the control path |
 | #396 | **CLOSED**: merged `e6b056a0`, inherited-certification refused at the generator |
+| #391 | **CLOSED**: evidence identity is package + exact version + pinned build fingerprint + account scope, enforced identically by the validator and the generator |
 
 Every row carries `PENDING_USER_DEVICE_TEST`. Sender-visible behaviour needs the
 owner's second account and is not substitutable by a build.
 
+### #391 scope notes
+
+Evidence identity is now a full target identity rather than a package/version pair:
+
+- `packages.<target>.certifiedBuildFingerprints[<exactVersion>]` pins the build a
+  cell may claim, declared separately from any observation, so a single changed
+  fingerprint cannot certify the cell (`f1094f85`, merged via #477).
+- `packages.<target>.certifiedAccountScopes[<exactVersion>]` pins the runtime
+  instance, and `evidence.<Feature>.targets[].account` says which instance an
+  observation came from. An observation bound to a secondary profile, work profile
+  or cloned instance certifies only a cell scoped to that same instance, and never
+  a cell left package-wide; an observation without an account speaks for the package
+  build only, so it cannot certify an instance-scoped cell.
+- `sync_generated.refuse_uncertifiable_supported_cells` asks the validator which
+  cells are unearned instead of re-implementing the rule, so a generated document
+  can never publish a `supported` cell the validator rejects.
+- `tools/compatibility/test_validate_compatibility.py` and
+  `tools/compatibility/test_sync_generated.py` existed but no workflow ran them.
+  Both now execute in the strict-static compatibility group, ahead of the tools
+  they guard.
+- The M00 evidence lock stopped counting submodule sources. `source_counts` walked
+  every file under `app/src`, so the 424 vendored `.c`/`.h` files under the opus,
+  ogg and libopusenc submodules were counted as WA X source. The count then
+  depended on the clone rather than on the commit — 425 with submodules checked
+  out, 1 without — and the lock drifted on an unchanged tree. The vendored paths
+  are now read from `.gitmodules` and excluded, so `cpp` means "native files this
+  project writes" and is identical on every machine. The gate is unchanged in
+  strength: `test_collect_m00_baseline.py` proves both that a submodule file does
+  not move the count and that a new native file of ours still does.
+
+Deliberate ceilings: the matrix still holds 0 supported cells and no fabricated
+observations. The rules refuse a claim; they do not produce one, and no resolver
+evidence exists until a real device run records it.
+
 ### Next, in order
 
-1. **#391** — resolver evidence identity. Verified by scripted fixture against
-   the real validator: cross-version, cross-package, wrong ABI, expired,
-   future-dated, missing resolver, empty evidence and wildcard cells all refuse;
-   the positive control passes. The one case that still cannot fail is a
-   *single* changed build fingerprint, because the schema declares no expected
-   value to compare against; the conflicting-fingerprint half is now closed.
-   Closing the rest needs that schema field, not more logic.
-2. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
-   evidence gap.
-3. **#383** — the master audit that aggregates the above.
-4. **#377** — per-build WhatsApp/Business version discovery and the
+1. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
+   evidence gap. #391 closed the identity rule those cells will be judged by; the
+   cells themselves still need a real run to earn any status.
+2. **#383** — the master audit that aggregates the above.
+3. **#377** — per-build WhatsApp/Business version discovery and the
    compatibility canary.
-5. **#403** — the release APK growth budget, which currently watches debug only.
-6. **#448** stays open on its own device gate: its four P0-CORE children are all
+4. **#403** — the release APK growth budget, which currently watches debug only.
+5. **#448** stays open on its own device gate: its four P0-CORE children are all
    merged, and closing it would close a parent whose acceptance says the
    sender-account check has to pass first.
-7. **#455** stays open for the same reason: the code-side root causes are fixed,
+6. **#455** stays open for the same reason: the code-side root causes are fixed,
    but the anchor correction wants a run on a real build to confirm.
 
 ### Not started
@@ -280,7 +310,7 @@ Ascending, once the items above are done: #458, #437, #400, #395, #394, #393,
 
 ### Standing constraints
 
-- One integration branch; one visible PR per owner-level task or batch of five.
+- One integration branch; one visible PR per completed task.
 - CI is the only place builds and tests run; no gate is ever weakened.
 - Device testing belongs to the owner and never blocks a merge or a closure.
 - A hook being installed is never reported as a feature working.

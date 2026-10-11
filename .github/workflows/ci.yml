@@ -278,7 +278,12 @@ jobs:
               mkdir -p build/strict-quality/static
               exec > >(tee build/strict-quality/static/compatibility.log) 2>&1
               failures=0
+              # The self-tests run before the tools they guard: a fixture that quietly
+              # stopped matching would otherwise leave the gate green while the rule it
+              # covers is no longer enforced.
               python3 tools/compatibility/test_validator.py || failures=$((failures + 1))
+              python3 tools/compatibility/test_validate_compatibility.py || failures=$((failures + 1))
+              python3 tools/compatibility/test_sync_generated.py || failures=$((failures + 1))
               python3 tools/compatibility/validate_compatibility.py || failures=$((failures + 1))
               python3 tools/compatibility/sync_generated.py --check || failures=$((failures + 1))
               [[ "$failures" -eq 0 ]]

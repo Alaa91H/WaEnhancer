@@ -23,6 +23,8 @@ import os
 import re
 import sys
 
+import validate_compatibility
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 MATRIX = os.path.join(HERE, "compatibility.json")
@@ -109,6 +111,29 @@ def refuse_inherited_certification(matrix: dict) -> None:
         "refusing to generate: %d cells would be certified by a package-wide "
         "'supported' default with no per-cell evidence: %s. Set an explicit "
         "per-feature, exact-version status instead." % (len(inherited), preview)
+    )
+
+
+def refuse_uncertifiable_supported_cells(matrix: dict) -> None:
+    """Fail loudly rather than write a green cell the validator would reject.
+
+    The validator owns the evidence rule; re-implementing it here would let the two
+    disagree, and a generated document is what a reader believes. So the generator
+    asks the validator instead, which means a cell can never be published as
+    supported unless the exact build, account scope and resolver observations behind
+    it are the ones the validator enforces.
+    """
+    problems = validate_compatibility.supported_cell_problems(
+        matrix, matrix.get("derived", {"features": []})
+    )
+    if not problems:
+        return
+    preview = "\n  ".join(problems[:5])
+    if len(problems) > 5:
+        preview += "\n  ... (%d more)" % (len(problems) - 5)
+    raise SystemExit(
+        "refusing to generate: %d supported cell(s) are not backed by evidence the "
+        "validator accepts:\n  %s" % (len(problems), preview)
     )
 
 
@@ -309,12 +334,18 @@ def render(matrix: dict) -> str:
     add("1. Add the version prefix to `packages.<target>.declaredVersions` in `compatibility.json`.")
     add("2. Run `python3 tools/compatibility/sync_generated.py` to regenerate this document and `arrays.xml`.")
     add("3. Run `python3 tools/compatibility/validate_compatibility.py` and `sync_generated.py --check`.")
-    add("4. Record real runtime resolver evidence under `evidence.<FeatureId>.resolvers`.")
-    add("5. Only then set cells to `supported`.")
-    add("6. Re-run validation and commit the source-of-truth and generated artifacts together.")
+    add("4. Record real runtime resolver evidence under `evidence.<FeatureId>.targets[]`.")
+    add("5. Pin the exact build in `packages.<target>.certifiedBuildFingerprints[<exactVersion>]`, and")
+    add("   the instance in `packages.<target>.certifiedAccountScopes[<exactVersion>]` when the")
+    add("   observation was taken on one secondary profile, work profile or cloned instance.")
+    add("6. Only then set cells to `supported`.")
+    add("7. Re-run validation and commit the source-of-truth and generated artifacts together.")
     add("")
-    add("The validator refuses any `supported` cell whose resolver evidence is missing,")
-    add("partial, or lacking a `verifiedAt` timestamp.")
+    add("The validator refuses any `supported` cell whose evidence is missing, partial, taken on a")
+    add("different package, version, build, SDK or ABI, or recorded against a different runtime")
+    add("instance than the cell claims. An observation without an `account` speaks for the package")
+    add("build only, so it can never certify a cell scoped to one account, and an observation bound")
+    add("to one account can never certify a cell left package-wide.")
     add("")
     add(
         "Step 2 rewrites `app/src/main/res/values/arrays.xml` from this matrix, so the"
@@ -395,6 +426,10 @@ def main(argv: list[str]) -> int:
     # "supported" default; refusing here too means the generator cannot certify
     # an inherited cell even when it is run on its own.
     refuse_inherited_certification(matrix)
+
+    # The same rule the validator enforces, asked rather than reimplemented, so a
+    # published document can never show a supported cell the validator rejects.
+    refuse_uncertifiable_supported_cells(matrix)
 
     if not os.path.exists(ARRAYS):
         print("missing %s" % ARRAYS, file=sys.stderr)

@@ -8,7 +8,7 @@
     "jvm_version": "21",
     "workflows_sha256": {
       "agent2-discovery-validation.yml": "bbaf570d67d443e5c6d1ed80c958d475ad990cd6203eb4ec77f4d79a28692a6b",
-      "ci.yml": "9e2174eaff964699163f11e5fc6edb8f96034218bd0cba3d5ecce748fc060c6c",
+      "ci.yml": "0a24cf978eba5e3783d59d158a8d9b891f46528634a0209d907612e878cf5572",
       "codeql.yml": "52631131dd87ffc9dfeb9145a235d62a2749ebe5c5f80b6ad922935482a58dee"
     }
   },
@@ -35,7 +35,7 @@
       ]
     },
     "matrix": "docs/COMPATIBILITY.md",
-    "matrix_sha256": "aa15f6816e7ff173e309a1a96ea927d5919693a070b52bfb21b852a20bf279fb"
+    "matrix_sha256": "5e6dd2089672042d15cea843e6f01146ac36a8da81050d656e67ccf82924b41f"
   },
   "dependencies": {
     "androidx-activity": {
@@ -348,7 +348,7 @@
   "schema": "wax.m00.baseline/1",
   "source_counts": {
     "android_tests": 3,
-    "cpp": 425,
+    "cpp": 1,
     "java": 5,
     "kotlin": 434,
     "unit_tests": 90

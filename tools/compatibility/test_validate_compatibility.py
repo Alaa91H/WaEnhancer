@@ -204,5 +204,127 @@ class EvidenceGateTests(unittest.TestCase):
         self.assertTrue(validate(matrix))
 
 
+class AccountScopeTests(unittest.TestCase):
+    """A resolver result is observed on one running instance, not on every user.
+
+    Secondary WhatsApp profiles, work profiles and cloned instances each have their
+    own install path, data and resolver cache, so an observation taken on one of them
+    is a statement about that instance. The evidence record had no field to say so,
+    which left a per-account observation indistinguishable from a claim about all users.
+    """
+
+    def instance(self, matrix, account, package="whatsapp"):
+        record = observation(package)
+        record["account"] = account
+        matrix["evidence"] = {"Example": {"targets": [record]}}
+        return matrix
+
+    def scope(self, matrix, account, package="whatsapp"):
+        matrix["packages"][package]["certifiedAccountScopes"] = {VERSION: account}
+        return matrix
+
+    def test_instance_bound_evidence_cannot_certify_a_package_wide_cell(self):
+        # The gap this closes: with no declared scope the cell reads as "every user",
+        # and one account's observation cannot support that.
+        matrix = supported(self.instance(fixture(), "work-profile"))
+        failures = validate(matrix)
+        self.assertTrue(failures)
+        self.assertTrue(any("bound to one instance" in text for text in failures))
+
+    def test_global_evidence_certifies_a_package_wide_cell(self):
+        matrix = supported(fixture())
+        matrix["evidence"] = {"Example": {"targets": [observation()]}}
+        self.assertFalse(validate(matrix))
+
+    def test_explicit_any_scope_certifies_global_evidence(self):
+        matrix = supported(self.scope(fixture(), validator.ACCOUNT_ANY))
+        matrix["evidence"] = {"Example": {"targets": [observation()]}}
+        self.assertFalse(validate(matrix))
+
+    def test_instance_bound_evidence_certifies_its_own_scoped_cell(self):
+        matrix = supported(self.scope(fixture(), "work-profile"))
+        self.instance(matrix, "work-profile")
+        self.assertFalse(validate(matrix))
+
+    def test_evidence_from_another_instance_cannot_certify_a_scoped_cell(self):
+        matrix = supported(self.scope(fixture(), "work-profile"))
+        self.instance(matrix, "clone-0")
+        failures = validate(matrix)
+        self.assertTrue(failures)
+        self.assertTrue(any("no complete observation" in text for text in failures))
+
+    def test_global_evidence_cannot_certify_an_instance_scoped_cell(self):
+        matrix = supported(self.scope(fixture(), "work-profile"))
+        matrix["evidence"] = {"Example": {"targets": [observation()]}}
+        failures = validate(matrix)
+        self.assertTrue(failures)
+        self.assertTrue(any("no complete observation" in text for text in failures))
+
+    def test_scope_is_per_package_not_shared_between_targets(self):
+        # A Business cell scoped to one instance must not be satisfied by a WhatsApp
+        # observation, and its scope declaration must not leak across packages.
+        matrix = supported(fixture(), package="business")
+        self.scope(matrix, "work-profile", package="whatsapp")
+        record = observation("business")
+        record["account"] = "work-profile"
+        matrix["evidence"] = {"Example": {"targets": [record]}}
+        failures = validate(matrix)
+        self.assertTrue(failures)
+        self.assertTrue(any("bound to one instance" in text for text in failures))
+
+    def test_mixed_evidence_needs_one_unbound_observation_for_a_wide_cell(self):
+        # One account plus one package-wide observation is enough for a wide cell:
+        # the instance observation is simply not the thing being relied on.
+        matrix = supported(fixture())
+        bound = observation()
+        bound["account"] = "work-profile"
+        matrix["evidence"] = {"Example": {"targets": [bound, observation()]}}
+        self.assertFalse(validate(matrix))
+
+    def test_mixed_evidence_still_needs_its_own_instance_for_a_scoped_cell(self):
+        matrix = supported(self.scope(fixture(), "work-profile"))
+        bound = observation()
+        bound["account"] = "work-profile"
+        matrix["evidence"] = {"Example": {"targets": [observation(), bound]}}
+        self.assertFalse(validate(matrix))
+
+    def test_account_any_on_an_observation_is_a_package_wide_statement(self):
+        matrix = supported(self.instance(fixture(), validator.ACCOUNT_ANY))
+        self.assertFalse(validate(matrix))
+
+    def test_unusable_account_values_fail_closed(self):
+        for account in ("", "   ", 7, "user 0", "user/0", "x" * 65, "phone +15550100"):
+            with self.subTest(account=account):
+                matrix = supported(self.instance(fixture(), account))
+                failures = validate(matrix)
+                self.assertTrue(failures)
+                self.assertTrue(any("unusable account scope" in text for text in failures))
+
+    def test_unusable_declared_scopes_fail_closed(self):
+        for scope in ("", "   ", 7, "work profile", "x" * 65):
+            with self.subTest(scope=scope):
+                matrix = supported(self.scope(fixture(), scope))
+                self.instance(matrix, "work-profile")
+                failures = validate(matrix)
+                self.assertTrue(failures)
+                self.assertTrue(any("account scope" in text for text in failures))
+
+    def test_declared_scope_must_name_a_declared_exact_version(self):
+        matrix = supported(fixture())
+        matrix["packages"]["whatsapp"]["certifiedAccountScopes"] = {"2.26.32.xx": "any"}
+        self.instance(matrix, "work-profile")
+        failures = validate(matrix)
+        self.assertTrue(failures)
+        self.assertTrue(any("non-declared exact account scope" in text for text in failures))
+
+    def test_account_token_vocabulary(self):
+        for value in ("any", "user-0", "work.profile", "clone+1", "A"):
+            with self.subTest(value=value):
+                self.assertTrue(validator._account_scope(value))
+        for value in (None, "", "  ", "two words", "+15550100", "user/0", 3, True):
+            with self.subTest(value=value):
+                self.assertFalse(validator._account_scope(value))
+
+
 if __name__ == "__main__":
     unittest.main()

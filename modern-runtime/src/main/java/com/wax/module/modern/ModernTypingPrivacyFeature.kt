@@ -6,7 +6,6 @@ import android.util.Log
 import io.github.libxposed.api.XposedInterface
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.enums.StringMatchType
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * API 102 port of the legacy TypingPrivacy feature.
@@ -21,16 +20,12 @@ import java.util.concurrent.ConcurrentHashMap
  * three-parameter shape whose third parameter is an `int`. Zero or several
  * matches, or a different signature, disables only this feature.
  *
- * Privacy rules come from the Manager, which owns them, through a new
- * UID-authenticated read that answers **one contact at a time** and returns
- * only two booleans. Bulk-syncing every contact number into RemotePreferences
- * would move the whole address book into the injected process for no reason;
- * asking about the number the hook is already looking at exposes nothing new
- * and keeps the transferred data minimal. Answers are cached briefly because
- * the hook runs on a WhatsApp thread and must not block on IPC.
+ * Existing per-contact overrides live in the target's private WaGlobal
+ * SharedPreferences, not in the Manager. Reading them directly avoids IPC,
+ * a first-event rule miss, and copying phone numbers across app boundaries.
  *
- * Opt-in: needs either the global ghost-mode switch or the typing/recording
- * flags, and nothing happens without them.
+ * Opt-in: needs a global typing/recording switch or the custom-privacy mode
+ * enabled. Reads of options inside an installed hook use current preferences.
  */
 object ModernTypingPrivacyFeature {
     const val FEATURE_ID = "typing_privacy"
@@ -101,11 +96,12 @@ object ModernTypingPrivacyFeature {
     }
 
     data class PrivacyRule(
-        val hideTyping: Boolean,
-        val hideRecording: Boolean,
+        /** Null means no per-contact override: inherit the global switch. */
+        val hideTyping: Boolean? = null,
+        val hideRecording: Boolean? = null,
     )
 
-    private val ruleCache = ConcurrentHashMap<String, PrivacyRule>()
+    const val PREF_CUSTOM_PRIVACY_MODE = "custom_privacy_type"
 
     /** Pure decision, so the rule combination is testable without WhatsApp. */
     @JvmStatic
@@ -116,6 +112,25 @@ object ModernTypingPrivacyFeature {
     ): Boolean =
         (stateType == STATE_RECORDING && hideRecording) ||
             (stateType == STATE_TYPING && hideTyping)
+
+    /** Explicit false per-contact rules override individual global toggles. */
+    @JvmStatic
+    fun shouldSuppressWithOverrides(
+        stateType: Int,
+        globalGhost: Boolean,
+        globalTyping: Boolean,
+        globalRecording: Boolean,
+        rule: PrivacyRule?,
+    ): Boolean =
+        shouldSuppress(
+            stateType,
+            globalGhost || (rule?.hideTyping ?: globalTyping),
+            globalGhost || (rule?.hideRecording ?: globalRecording),
+        )
+
+    @JvmStatic
+    fun isCustomPrivacyEnabled(mode: String?): Boolean =
+        !mode.isNullOrBlank() && mode != "0"
 
     @JvmStatic
     fun install(
@@ -128,8 +143,21 @@ object ModernTypingPrivacyFeature {
         val globalGhost = preferences.getBoolean(PREF_GHOSTMODE, false)
         val hideTypingGlobal = globalGhost || preferences.getBoolean(PREF_GHOSTMODE_TYPING, false)
         val hideRecordingGlobal = globalGhost || preferences.getBoolean(PREF_GHOSTMODE_RECORDING, false)
-        if (!hideTypingGlobal && !hideRecordingGlobal) return Outcome.DISABLED
+        val customEnabled = isCustomPrivacyEnabled(preferences.getString(PREF_CUSTOM_PRIVACY_MODE, "0"))
+        if (!hideTypingGlobal && !hideRecordingGlobal && !customEnabled) return Outcome.DISABLED
         if (jidAccess == null) return Outcome.UNSAFE_SIGNATURE
+
+        val targetRules =
+            try {
+                // WaGlobal belongs to this exact WhatsApp package/user, unlike
+                // the Manager preferences previously queried through IPC.
+                ModernTargetPrivacyRuleStore(
+                    target.getSharedPreferences("WaGlobal", Context.MODE_PRIVATE),
+                )
+            } catch (failure: RuntimeException) {
+                Log.w(TAG, "Target-local privacy rules unavailable: ${failure.javaClass.simpleName}")
+                return Outcome.ERROR
+            }
 
         val composing =
             try {
@@ -179,11 +207,24 @@ object ModernTypingPrivacyFeature {
                                         candidate != null && jidClass.isInstance(candidate)
                                     }
                                 val number = jidAccess.phoneNumber(jid)
-                                val rule = number?.let { lookup(target, it, chain.args) }
-                                val hideTyping = hideTypingGlobal || (rule?.hideTyping == true)
-                                val hideRecording =
-                                    hideRecordingGlobal || (rule?.hideRecording == true)
-                                if (stateType != null && shouldSuppress(stateType, hideTyping, hideRecording)) {
+                                // Read target-local rules synchronously from the
+                                // already-open SharedPreferences. The very first
+                                // typing event must respect the saved override.
+                                val rule =
+                                    if (isCustomPrivacyEnabled(preferences.getString(PREF_CUSTOM_PRIVACY_MODE, "0"))) {
+                                        targetRules.forPhoneNumber(number)
+                                    } else {
+                                        null
+                                    }
+                                if (stateType != null &&
+                                    shouldSuppressWithOverrides(
+                                        stateType,
+                                        preferences.getBoolean(PREF_GHOSTMODE, false),
+                                        preferences.getBoolean(PREF_GHOSTMODE_TYPING, false),
+                                        preferences.getBoolean(PREF_GHOSTMODE_RECORDING, false),
+                                        rule,
+                                    )
+                                ) {
                                     // Legacy semantics: the state callback never fires.
                                     return@intercept null
                                 }
@@ -216,43 +257,10 @@ object ModernTypingPrivacyFeature {
         }
 
     /**
-     * Cached per-contact rule lookup. A cache hit answers immediately; a miss
-     * answers with the global-only rule and asks the Manager in the
-     * background, so a hook thread never blocks on IPC.
+     * Compatibility entry point used by older tests and settings listeners.
+     * The source of truth is now target-local SharedPreferences, so there is
+     * no stale number-keyed cache to invalidate after a privacy edit.
      */
-    private fun lookup(
-        context: Context,
-        number: String,
-        args: List<Any?>,
-    ): PrivacyRule {
-        ruleCache[number]?.let { return it }
-        val contextRef = context.applicationContext
-        val packageName = context.packageName
-        Worker.execute {
-            val fetched = ModernPrivacyRulesClient.fetch(contextRef, packageName, number)
-            if (fetched != null) ruleCache[number] = fetched
-        }
-        return PrivacyRule(false, false)
-    }
-
-    /** Exposed for tests and for a manual refresh after a settings change. */
     @JvmStatic
-    fun clearRuleCache() {
-        ruleCache.clear()
-    }
-
-    private object Worker {
-        private val executor =
-            java.util.concurrent.Executors.newSingleThreadExecutor { task ->
-                Thread(task, "wax-api102-privacy-rules").apply { isDaemon = true }
-            }
-
-        fun execute(block: () -> Unit) {
-            try {
-                executor.execute(block)
-            } catch (rejected: RuntimeException) {
-                Log.w(TAG, "Privacy rule worker unavailable", rejected)
-            }
-        }
-    }
+    fun clearRuleCache() = Unit
 }
