@@ -651,7 +651,7 @@
     <string name="status_audio_normalize">Uniforma il volume</string>
     <string name="status_audio_strip_metadata">Rimuovi i dati identificativi</string>
     <string name="status_audio_number_parts">Numera le parti</string>
-    <string name="status_audio_overflow">Quando la selezione è più lunga di quanto consentito dall'app</string>
+    <string name="status_audio_overflow">"Quando la selezione è più lunga di quanto consentito dall'app"</string>
     <string name="status_audio_overflow_ask">Chiedi ogni volta</string>
     <string name="status_audio_overflow_trim">Tieni solo la prima parte</string>
     <string name="status_audio_overflow_split">Pubblica come parti numerate</string>
@@ -664,7 +664,7 @@
     <string name="status_audio_limit_known">Questa app pubblica fino a %1$s.</string>
     <string name="status_audio_reading">Lettura del file…</string>
     <string name="status_audio_preparing">Preparazione…</string>
-    <string name="status_audio_prepared">%1$d parte/i preparata/e, %2$s in totale.</string>
+    <string name="status_audio_prepared">%1$d parte/i preparata/e, %2$s in totale. Non è stato pubblicato nulla; questi file vengono rimossi alla chiusura della schermata.</string>
     <string name="status_audio_cannot_prepare">Questa selezione non può essere preparata qui: %1$s</string>
     <string name="status_audio_no_file">Nessun file audio è stato scelto.</string>
     <string name="status_audio_unreadable">Non è stato possibile leggere quel file come audio.</string>

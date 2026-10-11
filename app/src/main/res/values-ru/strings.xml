@@ -667,7 +667,7 @@
     <string name="status_audio_limit_known">Это приложение публикует до %1$s.</string>
     <string name="status_audio_reading">Чтение файла…</string>
     <string name="status_audio_preparing">Подготовка…</string>
-    <string name="status_audio_prepared">Подготовлено частей: %1$d, всего %2$s.</string>
+    <string name="status_audio_prepared">Подготовлено частей: %1$d, всего %2$s. Ничего не опубликовано; файлы удалятся при закрытии экрана.</string>
     <string name="status_audio_cannot_prepare">Это выделение нельзя подготовить здесь: %1$s</string>
     <string name="status_audio_no_file">Аудиофайл не выбран.</string>
     <string name="status_audio_unreadable">Не удалось прочитать этот файл как аудио.</string>

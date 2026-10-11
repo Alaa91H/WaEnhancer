@@ -431,6 +431,12 @@ a permission lapsed.
 3. `entries - X` yields a `List` where a `Set` was required, and a duplicated `@Test` — compile
    errors in the new suite.
 
+**Defect found by review before merge, fixed at the cause:** prepared parts were written into the
+cache directory and never released — a copy of the user's audio that nothing would ever clean up.
+The screen now keeps the workspace for as long as it is open, releases it when a different file is
+picked and when the screen closes, and **says so in the result line**: "Nothing has been posted;
+these files are removed when you close this screen." The message and the behaviour now agree.
+
 **Two more defects CI found in this unit, fixed at the cause:**
 
 4. Every new string was English-only, and the project runs `MissingTranslation` as an error in ten
