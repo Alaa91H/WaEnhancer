@@ -335,6 +335,10 @@ jobs:
               # shipped a module whose behaviour the matrix does not describe.
               python3 tools/quality/test_check_feature_registry.py || failures=$((failures + 1))
               python3 tools/quality/check_feature_registry.py || failures=$((failures + 1))
+              # Catalog resolver names must exist as real Unobfuscator load* functions.
+              # Both required and optional native paths are compatibility claims.
+              python3 tools/quality/test_check_catalog_resolvers.py || failures=$((failures + 1))
+              python3 tools/quality/check_catalog_resolvers.py || failures=$((failures + 1))
               [[ "$failures" -eq 0 ]]
           - name: Modernization evidence contracts
             shell: bash
