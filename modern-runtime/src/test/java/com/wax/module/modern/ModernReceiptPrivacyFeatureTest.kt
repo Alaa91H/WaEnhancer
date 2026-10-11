@@ -130,6 +130,48 @@ class ModernReceiptPrivacyFeatureTest {
         assertNotNull(ModernReceiptPrivacyFeature.PREF_HIDE_READ)
     }
 
+    @Test fun groupOnlyReadPreferenceIsReportedUnsupportedNotDisabled() {
+        val request =
+            ModernReceiptPrivacyFeature.Request(
+                hideRead = false,
+                hideReadInGroups = true,
+                afterReply = false,
+                hideDelivery = false,
+            )
+        assertEquals(
+            ModernReceiptPrivacyFeature.Outcome.UNSUPPORTED,
+            ModernReceiptPrivacyFeature.readOutcomeWithoutGlobalHook(request),
+        )
+    }
+
+    @Test fun noReadPreferencesStillReportDisabled() {
+        val request =
+            ModernReceiptPrivacyFeature.Request(
+                hideRead = false,
+                hideReadInGroups = false,
+                afterReply = false,
+                hideDelivery = false,
+            )
+        assertEquals(
+            ModernReceiptPrivacyFeature.Outcome.DISABLED,
+            ModernReceiptPrivacyFeature.readOutcomeWithoutGlobalHook(request),
+        )
+    }
+
+    @Test fun deliveryOnlyCannotBeMistakenForReadPrivacy() {
+        val request =
+            ModernReceiptPrivacyFeature.Request(
+                hideRead = false,
+                hideReadInGroups = false,
+                afterReply = false,
+                hideDelivery = true,
+            )
+        assertEquals(
+            ModernReceiptPrivacyFeature.Outcome.DISABLED,
+            ModernReceiptPrivacyFeature.readOutcomeWithoutGlobalHook(request),
+        )
+    }
+
     @Test fun thePreferenceKeysAreTheLegacyOnes() {
         // An existing user's switch must keep its meaning after the port.
         assertEquals("hideread", ModernReceiptPrivacyFeature.PREF_HIDE_READ)
