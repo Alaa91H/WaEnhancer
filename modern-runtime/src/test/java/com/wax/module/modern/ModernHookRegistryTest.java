@@ -96,9 +96,81 @@ public final class ModernHookRegistryTest {
                 () -> registry.installFeature("pilot", Arrays.asList(hook, hook)));
         assertEquals(0, installs.get());
         registry.installOnce("pilot", hook);
-        assertThrows(IllegalArgumentException.class,
-                () -> registry.installFeature("pilot", Collections.singletonList(hook)));
+        assertEquals(0, registry.installFeature("pilot", Collections.singletonList(hook)));
         assertEquals(1, installs.get());
+    }
+
+    @Test public void repeatedFeatureGroupDoesNotDoubleInstallOrUnhook() throws Throwable {
+        ModernHookRegistry registry = new ModernHookRegistry();
+        AtomicInteger installed = new AtomicInteger();
+        AtomicInteger removed = new AtomicInteger();
+        ModernHookRegistry.Registration a = new ModernHookRegistry.Registration("a", () -> {
+            installed.incrementAndGet();
+            return () -> removed.incrementAndGet();
+        });
+        ModernHookRegistry.Registration b = new ModernHookRegistry.Registration("b", () -> {
+            installed.incrementAndGet();
+            return () -> removed.incrementAndGet();
+        });
+        assertEquals(2, registry.installFeature("privacy", Arrays.asList(a, b)));
+        for (int i = 0; i < 20; i++) {
+            assertEquals(0, registry.installFeature("privacy", Arrays.asList(b, a)));
+        }
+        assertEquals(2, registry.installedCount("privacy"));
+        assertEquals(2, installed.get());
+        assertEquals(0, removed.get());
+        registry.removeFeature("privacy");
+        assertEquals(2, removed.get());
+    }
+
+    @Test public void mixedOldNewGroupsAreRejectedWithoutInstallingNewHooks() throws Throwable {
+        ModernHookRegistry registry = new ModernHookRegistry();
+        AtomicInteger installed = new AtomicInteger();
+        registry.installOnce("privacy", new ModernHookRegistry.Registration("one",
+                () -> { installed.incrementAndGet(); return () -> {}; }));
+        assertThrows(IllegalArgumentException.class, () ->
+                registry.installFeature("privacy", Arrays.asList(
+                        new ModernHookRegistry.Registration("one", () -> () -> {}),
+                        new ModernHookRegistry.Registration("two", () -> {
+                            installed.incrementAndGet();
+                            return () -> {};
+                        })
+                ))
+        );
+        assertEquals(1, installed.get());
+        assertEquals(1, registry.installedCount("privacy"));
+    }
+
+    @Test public void repeatedGroupIsThreadSafeUnderConcurrentBootstrap() throws Exception {
+        ModernHookRegistry registry = new ModernHookRegistry();
+        AtomicInteger installed = new AtomicInteger();
+        ModernHookRegistry.Registration one = new ModernHookRegistry.Registration("one",
+                () -> { installed.incrementAndGet(); return () -> {}; });
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(10);
+        java.util.concurrent.CountDownLatch gate = new java.util.concurrent.CountDownLatch(1);
+        try {
+            java.util.List<java.util.concurrent.Future<Integer>> futures = new java.util.ArrayList<>();
+            for (int i = 0; i < 20; i++) {
+                futures.add(pool.submit(() -> {
+                    gate.await();
+                    try {
+                        return registry.installFeature("privacy", Collections.singletonList(one));
+                    } catch (Throwable ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }));
+            }
+            gate.countDown();
+            int totalNewHooks = 0;
+            for (java.util.concurrent.Future<Integer> future : futures) {
+                totalNewHooks += future.get(5, java.util.concurrent.TimeUnit.SECONDS);
+            }
+            assertEquals(1, totalNewHooks);
+            assertEquals(1, installed.get());
+            assertEquals(1, registry.installedCount("privacy"));
+        } finally {
+            pool.shutdownNow();
+        }
     }
 
     @Test public void rollbackFailureIsSuppressedOnOriginalError() {
@@ -118,6 +190,55 @@ public final class ModernHookRegistryTest {
             assertEquals(1, error.getSuppressed().length);
             assertEquals(1, registry.installedCount("pilot"));
         }
+    }
+
+    @Test public void incompleteRollbackRequiresSuccessfulCleanupBeforeRetry() throws Throwable {
+        ModernHookRegistry registry = new ModernHookRegistry();
+        AtomicInteger removed = new AtomicInteger();
+        ModernHookRegistry.Registration one = new ModernHookRegistry.Registration("one",
+                () -> () -> {
+                    if (removed.incrementAndGet() == 1) {
+                        throw new IllegalStateException("first removal unavailable");
+                    }
+                });
+        try {
+            registry.installFeature("privacy", Arrays.asList(
+                    one,
+                    new ModernHookRegistry.Registration("two", () -> {
+                        throw new IllegalArgumentException("resolver rejected");
+                    })
+            ));
+            fail("partial installation should fail");
+        } catch (IllegalArgumentException expected) {
+            assertEquals("resolver rejected", expected.getMessage());
+            assertEquals(1, expected.getSuppressed().length);
+        }
+        assertEquals(1, registry.installedCount("privacy"));
+        // Merely seeing the residual ID must never be treated as a healthy
+        // complete group or an idempotent successful install.
+        assertThrows(IllegalStateException.class, () ->
+                registry.installFeature("privacy", Collections.singletonList(one)));
+        assertThrows(IllegalStateException.class, () ->
+                registry.installOnce("privacy", one));
+        registry.removeFeature("privacy");
+        assertEquals(2, removed.get());
+        assertEquals(0, registry.installedCount("privacy"));
+        assertEquals(1, registry.installFeature("privacy", Collections.singletonList(one)));
+        assertEquals(1, registry.installedCount("privacy"));
+    }
+
+    @Test public void successfulRollbackAllowsCleanRetry() throws Throwable {
+        ModernHookRegistry registry = new ModernHookRegistry();
+        ModernHookRegistry.Registration one = new ModernHookRegistry.Registration("one", () -> () -> {});
+        assertThrows(IllegalStateException.class, () ->
+                registry.installFeature("privacy", Arrays.asList(
+                        one,
+                        new ModernHookRegistry.Registration("two", () -> {
+                            throw new IllegalStateException("transient");
+                        })
+                )));
+        assertEquals(0, registry.installedCount("privacy"));
+        assertEquals(1, registry.installFeature("privacy", Collections.singletonList(one)));
     }
 
     @Test public void removingFeatureUnhooksInReverseOrder() throws Throwable {

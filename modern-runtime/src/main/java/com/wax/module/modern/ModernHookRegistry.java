@@ -37,6 +37,8 @@ public final class ModernHookRegistry {
     }
 
     private final Map<String, LinkedHashMap<String, Handle>> installed = new LinkedHashMap<>();
+    /** A failed rollback leaves a tracked but NOT healthy handle until cleanup succeeds. */
+    private final Set<String> incompleteFeatures = new LinkedHashSet<>();
 
     private static String requireId(String value) {
         if (value == null || value.trim().isEmpty() || !value.equals(value.trim())) {
@@ -55,6 +57,9 @@ public final class ModernHookRegistry {
 
     public synchronized boolean installOnce(String featureId, Registration hook) throws Throwable {
         String feature = requireId(featureId);
+        if (incompleteFeatures.contains(feature)) {
+            throw new IllegalStateException("Feature has incomplete rollback: " + feature);
+        }
         Objects.requireNonNull(hook, "hook");
         requireUnclaimedId(feature, hook.id);
         LinkedHashMap<String, Handle> previous = installed.get(feature);
@@ -72,15 +77,31 @@ public final class ModernHookRegistry {
      */
     public synchronized int installFeature(String featureId, List<Registration> hooks) throws Throwable {
         String feature = requireId(featureId);
+        if (incompleteFeatures.contains(feature)) {
+            throw new IllegalStateException("Feature has incomplete rollback: " + feature);
+        }
         Objects.requireNonNull(hooks, "hooks");
         Set<String> ids = new LinkedHashSet<>();
         LinkedHashMap<String, Handle> existing = installed.get(feature);
+        int previouslyInstalled = 0;
         for (Registration reg : hooks) {
             Objects.requireNonNull(reg, "registration");
             requireUnclaimedId(feature, reg.id);
-            if (!ids.add(reg.id) || (existing != null && existing.containsKey(reg.id))) {
-                throw new IllegalArgumentException("Duplicate installed hook ID: " + reg.id);
+            if (!ids.add(reg.id)) {
+                throw new IllegalArgumentException("Duplicate hook ID in feature request: " + reg.id);
             }
+            if (existing != null && existing.containsKey(reg.id)) {
+                previouslyInstalled++;
+            }
+        }
+        // A repeated, complete registration is an idempotent no-op: never
+        // hook a method twice just because the target bootstrap retried.
+        // Reject mixed old/new requests before invoking ANY new installer.
+        if (previouslyInstalled == ids.size() && previouslyInstalled > 0) {
+            return 0;
+        }
+        if (previouslyInstalled > 0) {
+            throw new IllegalArgumentException("Partially installed hook group for " + feature);
         }
 
         LinkedHashMap<String, Handle> acquired = new LinkedHashMap<>();
@@ -103,6 +124,7 @@ public final class ModernHookRegistry {
             // Even a failed unhook must remain tracked and retryable, never silently leaked.
             if (!residual.isEmpty()) {
                 installed.computeIfAbsent(feature, ignored -> new LinkedHashMap<>()).putAll(residual);
+                incompleteFeatures.add(feature);
             }
             throw failure;
         }
@@ -135,7 +157,10 @@ public final class ModernHookRegistry {
                 failed.addSuppressed(cause);
             }
         }
-        if (handles.isEmpty()) installed.remove(feature);
+        if (handles.isEmpty()) {
+            installed.remove(feature);
+            incompleteFeatures.remove(feature);
+        }
         if (failed != null) throw failed;
     }
 }
