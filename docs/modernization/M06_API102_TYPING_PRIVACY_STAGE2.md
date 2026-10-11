@@ -18,10 +18,14 @@ dependency:
   shape whose third parameter is an `int` — the same guard the legacy resolver
   applies. Zero/several matches or a different signature disable only this
   feature (`RESOLVER_MISSING`, `RESOLVER_AMBIGUOUS`, `UNSAFE_SIGNATURE`).
-- **Number through `ModernJidAccess`** instead of `FMessageWpp.UserJid`: the
-  recipient is located by `jidClass.isInstance`, so no argument position is
-  assumed, and the phone number comes from the signature-resolved raw string
-  with the legacy derivation rules.
+- **Target-aware JID resolution** instead of `FMessageWpp.UserJid`: exactly
+  one argument may match `jidClass`. Two candidate JIDs cannot prove the
+  recipient, so no per-contact override is selected in that case.
+  `ModernJidAccess.privacyOverridePhoneNumber` accepts only a verified
+  numeric `@s.whatsapp.net` JID (including valid linked-device suffixes).
+  Numeric `@lid`, group, broadcast and unknown-domain identifiers cannot
+  select another contact's rule. The legacy `phoneNumber` projection remains
+  unchanged for all other consumers. Global switches still apply.
 - **Suppression decision is pure and tested**: `shouldSuppress(state, typing,
   recording)` pins the legacy semantics, including that recording is governed
   by its own rule and that unrelated state values are never suppressed.
@@ -53,9 +57,9 @@ corrected modern typing hook does not call it. This avoids a false assumption
 about the Manager owning target-local per-contact data.
 ## Settings and controls
 
-The relay now forwards the three global switches (`ghostmode`, `ghostmode_t`,
-`ghostmode_r`) that the adapter reads, and the contract checker asserts each
-one individually so the list cannot rot silently. The Control Center shows
+The relay forwards the three global switches (`ghostmode`, `ghostmode_t`,
+`ghostmode_r`) **and** `custom_privacy_type` as a typed 0/1/2 mode; the
+contract checker asserts the settings survive Manager-to-runtime mirroring. The Control Center shows
 "Hide Typing" as a real Privacy-category toggle, and the write allowlist
 accepts exactly those three keys.
 

@@ -130,7 +130,7 @@ object ModernTypingPrivacyFeature {
 
     @JvmStatic
     fun isCustomPrivacyEnabled(mode: String?): Boolean =
-        !mode.isNullOrBlank() && mode != "0"
+        mode == "1" || mode == "2"
 
     @JvmStatic
     fun install(
@@ -202,11 +202,10 @@ object ModernTypingPrivacyFeature {
                                 "wax.modern.typing_privacy.composing",
                             ) { chain ->
                                 val stateType = composingState(method.parameterTypes, chain.args.toList())
-                                val jid =
-                                    chain.args.firstOrNull { candidate ->
-                                        candidate != null && jidClass.isInstance(candidate)
-                                    }
-                                val number = jidAccess.phoneNumber(jid)
+                                val jid = uniqueJidArgument(chain.args.toList(), jidClass)
+                                // Never use numeric LIDs or group IDs as contact numbers:
+                                // they could select an unrelated <number>_privacy record.
+                                val number = jidAccess.privacyOverridePhoneNumber(jid)
                                 // Read target-local rules synchronously from the
                                 // already-open SharedPreferences. The very first
                                 // typing event must respect the saved override.
@@ -240,6 +239,22 @@ object ModernTypingPrivacyFeature {
             return Outcome.ERROR
         }
         return Outcome.INSTALLED
+    }
+
+    /**
+     * Two JID parameters do not establish which is the recipient. Suppress
+     * only through global switches until the target signature is proven,
+     * rather than applying a different chat's per-contact rule.
+     */
+    internal fun uniqueJidArgument(args: List<Any?>, jidClass: Class<*>): Any? {
+        var match: Any? = null
+        for (candidate in args) {
+            if (candidate != null && jidClass.isInstance(candidate)) {
+                if (match != null) return null
+                match = candidate
+            }
+        }
+        return match
     }
 
     /** Fail closed when the composing-state signature is missing or ambiguous. */
