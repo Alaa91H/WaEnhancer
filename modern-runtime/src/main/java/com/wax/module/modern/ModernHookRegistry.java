@@ -75,12 +75,25 @@ public final class ModernHookRegistry {
         Objects.requireNonNull(hooks, "hooks");
         Set<String> ids = new LinkedHashSet<>();
         LinkedHashMap<String, Handle> existing = installed.get(feature);
+        int previouslyInstalled = 0;
         for (Registration reg : hooks) {
             Objects.requireNonNull(reg, "registration");
             requireUnclaimedId(feature, reg.id);
-            if (!ids.add(reg.id) || (existing != null && existing.containsKey(reg.id))) {
-                throw new IllegalArgumentException("Duplicate installed hook ID: " + reg.id);
+            if (!ids.add(reg.id)) {
+                throw new IllegalArgumentException("Duplicate hook ID in feature request: " + reg.id);
             }
+            if (existing != null && existing.containsKey(reg.id)) {
+                previouslyInstalled++;
+            }
+        }
+        // A repeated, complete registration is an idempotent no-op: never
+        // hook a method twice just because the target bootstrap retried.
+        // Reject mixed old/new requests before invoking ANY new installer.
+        if (previouslyInstalled == ids.size() && previouslyInstalled > 0) {
+            return 0;
+        }
+        if (previouslyInstalled > 0) {
+            throw new IllegalArgumentException("Partially installed hook group for " + feature);
         }
 
         LinkedHashMap<String, Handle> acquired = new LinkedHashMap<>();
