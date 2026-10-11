@@ -343,6 +343,19 @@ class StatusAudioStudioActivity : BaseActivity() {
         workingPath = null
     }
 
+    /**
+     * Everything this screen made on disk goes with the screen.
+     *
+     * The prepared parts are kept for as long as the editor is open so the result stays
+     * inspectable, and are released on the way out. Nothing else owns them: a file left behind by
+     * a preparation the user has walked away from is a copy of their audio that nothing will ever
+     * clean up, which is exactly the thing the workspace exists to prevent.
+     */
+    private fun releasePrepared() {
+        parts?.releaseAll()
+        parts = null
+    }
+
     private fun displayNameOf(uri: Uri): String =
         runCatching {
             contentResolver
