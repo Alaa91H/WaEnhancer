@@ -31,6 +31,18 @@ class ModernControlCenterPreferenceContractTest {
     }
 
     @Test
+    fun customPrivacyModeIsObservedAndPreservedForApi102() {
+        val key = "custom_privacy_type"
+        assertTrue("Per-chat-only privacy must trigger the relay", ModernRuntimePreferenceRelay.observes(key))
+        assertTrue("Changing custom mode must notify the embedded controls", ModernRuntimePreferenceRelay.affectsControlCenter(key))
+        org.junit.Assert.assertEquals("1", ModernRuntimePreferenceRelay.legacyMode("1"))
+        org.junit.Assert.assertEquals("2", ModernRuntimePreferenceRelay.legacyMode("2"))
+        org.junit.Assert.assertEquals("0", ModernRuntimePreferenceRelay.legacyMode("0"))
+        org.junit.Assert.assertEquals("1", ModernRuntimePreferenceRelay.legacyMode(true))
+        org.junit.Assert.assertEquals("0", ModernRuntimePreferenceRelay.legacyMode(false))
+    }
+
+    @Test
     fun malformedLegacyModeValuesAreNormalizedWithoutChangingSelections() {
         org.junit.Assert.assertEquals("1", ModernRuntimePreferenceRelay.legacyMode(true))
         org.junit.Assert.assertEquals("0", ModernRuntimePreferenceRelay.legacyMode(false))

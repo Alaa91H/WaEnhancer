@@ -31,6 +31,7 @@ object ModernRuntimePreferenceRelay {
             "ghostmode",
             "ghostmode_t",
             "ghostmode_r",
+            "custom_privacy_type",
             "typearchive",
             "viewonce",
             "hideread",
@@ -99,7 +100,7 @@ object ModernRuntimePreferenceRelay {
         val original = preferences.all
         val editor = preferences.edit()
         var changed = false
-        for (key in listOf("typearchive", "antirevoke")) {
+        for (key in listOf("typearchive", "antirevoke", "custom_privacy_type")) {
             if (original[key] is Boolean) {
                 editor.putString(key, legacyMode(original[key]))
                 changed = true
@@ -135,12 +136,13 @@ object ModernRuntimePreferenceRelay {
                     // Tasker automation: opt-in flag plus its auth token.
                     putBoolean("tasker", source.getBoolean("tasker", false))
                     putString("tasker_auth_token", source.getString("tasker_auth_token", "").orEmpty())
-                    // Typing/recording privacy: the three global switches the
-                    // migrated adapter reads. Per-contact rules stay in the
-                    // Manager and are fetched per contact on demand.
+                    // Relay activity toggles and the custom-mode selection.
+                    // Contact rule JSON belongs to the target's private WaGlobal;
+                    // it must never be copied into Manager remote preferences.
                     putBoolean("ghostmode", source.getBoolean("ghostmode", false))
                     putBoolean("ghostmode_t", source.getBoolean("ghostmode_t", false))
                     putBoolean("ghostmode_r", source.getBoolean("ghostmode_r", false))
+                    putString("custom_privacy_type", legacyMode(source.all["custom_privacy_type"]))
                     // Archived-chat hiding: the user's mode, not a boolean.
                     putString("typearchive", source.getString("typearchive", "0") ?: "0")
                     putBoolean("viewonce", source.getBoolean("viewonce", false))
