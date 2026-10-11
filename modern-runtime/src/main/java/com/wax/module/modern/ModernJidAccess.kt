@@ -74,8 +74,15 @@ class ModernJidAccess private constructor(
         /** Resolves the raw-string accessor on an already-resolved JID class. */
         @JvmStatic
         fun resolve(jidClass: Class<*>): Resolution = try {
+            // Every Java class inherits Object.toString(), and many JID
+            // classes override it. It is a display representation, not proof
+            // of a raw address accessor. Counting it alongside a real
+            // String-returning accessor makes an otherwise unique resolver
+            // fail as RAW_STRING_METHOD_AMBIGUOUS (or falsely selects only
+            // toString when there is no raw accessor).
             val candidates = jidClass.methods.filter { method ->
-                method.parameterCount == 0 &&
+                method.name != "toString" &&
+                    method.parameterCount == 0 &&
                     method.returnType == String::class.java &&
                     !java.lang.reflect.Modifier.isStatic(method.modifiers)
             }
