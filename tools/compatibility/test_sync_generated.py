@@ -9,6 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sync_generated  # noqa: E402
+import validate_compatibility  # noqa: E402
 
 
 def fixture() -> dict:
@@ -154,6 +155,118 @@ class InheritedCertificationGateTests(unittest.TestCase):
         matrix = fixture()
         report = sync_generated.render(matrix)
         self.assertIn("No cell in this matrix is resolver-verified yet.", report)
+
+
+VERSION = "2.26.32.123"
+BUILD = "com.whatsapp/release/arm64:stable-build-123"
+STAMP = "2026-10-08T12:00:00Z"
+
+
+def certified_fixture() -> dict:
+    """A matrix whose single declared cell can actually be earned."""
+    matrix = fixture()
+    for package, package_name in (("whatsapp", "com.whatsapp"), ("business", "com.whatsapp.w4b")):
+        matrix["packages"][package] = {
+            "packageName": package_name,
+            "applicationId": "com.wax.module",
+            "declaredVersions": [VERSION],
+            "certifiedBuildFingerprints": {VERSION: BUILD},
+            "defaultStatus": "unknown",
+        }
+    matrix["derived"]["features"][0]["resolutionTier"] = "dexkit"
+    matrix["derived"]["features"][0]["resolverDependencies"] = ["resolveExample"]
+    return matrix
+
+
+def observation(account=None):
+    record = {
+        "package": "whatsapp",
+        "packageName": "com.whatsapp",
+        "version": VERSION,
+        "buildFingerprint": BUILD,
+        "sdk": 35,
+        "abi": "arm64-v8a",
+        "verifiedAt": STAMP,
+        "result": "resolved",
+        "resolvers": {"resolveExample": {"verifiedAt": STAMP, "result": "resolved"}},
+    }
+    if account is not None:
+        record["account"] = account
+    return record
+
+
+def earned_cell(matrix, account=None):
+    matrix["matrix"] = {"ExampleFeature": {"whatsapp": {"versions": {VERSION: "supported"}}}}
+    matrix["evidence"] = {"ExampleFeature": {"targets": [observation(account)]}}
+    return matrix
+
+
+class SupportedClaimEmissionGateTests(unittest.TestCase):
+    """The generator must not publish a cell the validator would reject (#391).
+
+    A generated document is what a reader believes, so the two have to agree by
+    construction. The generator asks the validator rather than re-implementing the
+    evidence rule, and these tests fail if that pairing ever stops holding.
+    """
+
+    def test_an_earned_cell_is_published(self) -> None:
+        matrix = earned_cell(certified_fixture())
+        self.assertFalse(validate_compatibility.supported_cell_problems(matrix, matrix["derived"]))
+        sync_generated.refuse_uncertifiable_supported_cells(matrix)
+
+    def test_an_unearned_cell_is_refused(self) -> None:
+        matrix = certified_fixture()
+        matrix["matrix"] = {
+            "ExampleFeature": {"whatsapp": {"versions": {VERSION: "supported"}}}
+        }
+        with self.assertRaises(SystemExit) as raised:
+            sync_generated.refuse_uncertifiable_supported_cells(matrix)
+        self.assertIn("refusing to generate", str(raised.exception))
+
+    def test_an_instance_bound_observation_is_refused_for_a_package_wide_cell(self) -> None:
+        # The document must not say "supported for every user" on the strength of one
+        # account's observation, which is exactly the claim the cell reads as making.
+        matrix = earned_cell(certified_fixture(), account="work-profile")
+        with self.assertRaises(SystemExit) as raised:
+            sync_generated.refuse_uncertifiable_supported_cells(matrix)
+        self.assertIn("bound to one instance", str(raised.exception))
+
+    def test_the_same_cell_is_published_once_its_scope_is_declared(self) -> None:
+        matrix = earned_cell(certified_fixture(), account="work-profile")
+        matrix["packages"]["whatsapp"]["certifiedAccountScopes"] = {VERSION: "work-profile"}
+        sync_generated.refuse_uncertifiable_supported_cells(matrix)
+
+    def test_the_gate_and_the_validator_reject_the_same_cells(self) -> None:
+        candidates = {
+            "no evidence": lambda m: m.update(
+                {"evidence": {},
+                 "matrix": {"ExampleFeature": {"whatsapp": {"versions": {VERSION: "supported"}}}}}
+            ),
+            "cross-version evidence": lambda m: m["evidence"]["ExampleFeature"]["targets"][0]
+            .update({"version": "2.26.32.124"}),
+            "changed build": lambda m: m["evidence"]["ExampleFeature"]["targets"][0]
+            .update({"buildFingerprint": "com.whatsapp/beta/arm64:stable-build-999"}),
+            "unpinned build": lambda m: m["packages"]["whatsapp"]
+            .pop("certifiedBuildFingerprints"),
+            "instance-bound evidence": lambda m: m["evidence"]["ExampleFeature"]["targets"][0]
+            .update({"account": "clone-0"}),
+            "unresolved resolver": lambda m: m["evidence"]["ExampleFeature"]["targets"][0]
+            ["resolvers"]["resolveExample"].update({"result": "missing"}),
+        }
+        for name, mutate in candidates.items():
+            with self.subTest(case=name):
+                matrix = earned_cell(certified_fixture())
+                mutate(matrix)
+                rejected_by_validator = bool(
+                    validate_compatibility.supported_cell_problems(matrix, matrix["derived"])
+                )
+                generator_refused = False
+                try:
+                    sync_generated.refuse_uncertifiable_supported_cells(matrix)
+                except SystemExit:
+                    generator_refused = True
+                self.assertTrue(rejected_by_validator, "%s passed the validator" % name)
+                self.assertTrue(generator_refused, "%s reached the generated document" % name)
 
 
 if __name__ == "__main__":

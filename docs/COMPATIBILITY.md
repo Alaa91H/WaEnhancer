@@ -242,11 +242,17 @@ When adding a new WhatsApp version:
 1. Add the version prefix to `packages.<target>.declaredVersions` in `compatibility.json`.
 2. Run `python3 tools/compatibility/sync_generated.py` to regenerate this document and `arrays.xml`.
 3. Run `python3 tools/compatibility/validate_compatibility.py` and `sync_generated.py --check`.
-4. Record real runtime resolver evidence under `evidence.<FeatureId>.resolvers`.
-5. Only then set cells to `supported`.
-6. Re-run validation and commit the source-of-truth and generated artifacts together.
+4. Record real runtime resolver evidence under `evidence.<FeatureId>.targets[]`.
+5. Pin the exact build in `packages.<target>.certifiedBuildFingerprints[<exactVersion>]`, and
+   the instance in `packages.<target>.certifiedAccountScopes[<exactVersion>]` when the
+   observation was taken on one secondary profile, work profile or cloned instance.
+6. Only then set cells to `supported`.
+7. Re-run validation and commit the source-of-truth and generated artifacts together.
 
-The validator refuses any `supported` cell whose resolver evidence is missing,
-partial, or lacking a `verifiedAt` timestamp.
+The validator refuses any `supported` cell whose evidence is missing, partial, taken on a
+different package, version, build, SDK or ABI, or recorded against a different runtime
+instance than the cell claims. An observation without an `account` speaks for the package
+build only, so it can never certify a cell scoped to one account, and an observation bound
+to one account can never certify a cell left package-wide.
 
 Step 2 rewrites `app/src/main/res/values/arrays.xml` from this matrix, so the runtime version gate and this document can never disagree.
