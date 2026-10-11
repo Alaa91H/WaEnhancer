@@ -630,7 +630,7 @@ class ModernControlCenterShell(
             }
             val reported = readString(states, item.evidenceKey)
             val effective = if (!stateAccepted) ControlEffective.ERROR else
-                ControlPolicy.effectiveFrom(reported, false, requested)
+                ControlPolicy.effectiveFrom(reported, false, requested, item.restartHint)
             rows.add(
                 ControlEntry(
                     id = item.id,
@@ -643,8 +643,9 @@ class ModernControlCenterShell(
                     writable = stateAccepted && requested != ControlRequested.UNKNOWN &&
                         item.preferenceKey.isNotEmpty() &&
                         ControlPolicy.isWritable(item.preferenceKey, effective),
-                    restartRequired = item.restartHint && requested == ControlRequested.ENABLED &&
-                        effective != ControlEffective.INSTALLED && effective != ControlEffective.WORKING,
+                    restartRequired = ControlPolicy.shouldRecommendRestart(
+                        item.restartHint, requested, effective,
+                    ),
                 ),
             )
         }

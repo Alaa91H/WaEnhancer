@@ -100,6 +100,44 @@ class ControlCenterModelTest {
         )
     }
 
+    @Test fun liveApplyFeaturesNeverClaimRestartForReportedDisabled() {
+        assertEquals(
+            ControlEffective.DISABLED,
+            ControlPolicy.effectiveFrom(
+                "DISABLED", false, ControlRequested.ENABLED, restartHint = false,
+            ),
+        )
+        assertFalse(
+            ControlPolicy.shouldRecommendRestart(
+                false, ControlRequested.ENABLED, ControlEffective.DISABLED,
+            ),
+        )
+    }
+
+    @Test fun failedAndUnknownEvidenceNeverForceRestart() {
+        for (state in listOf(
+            ControlEffective.NOT_OBSERVED,
+            ControlEffective.RESOLVER_FAILED,
+            ControlEffective.UNSAFE_SIGNATURE,
+            ControlEffective.UNSUPPORTED,
+            ControlEffective.PENDING_MIGRATION,
+            ControlEffective.ERROR,
+        )) {
+            assertFalse(
+                "Must not claim restart for $state",
+                ControlPolicy.shouldRecommendRestart(
+                    true, ControlRequested.ENABLED, state,
+                ),
+            )
+        }
+        assertTrue(ControlPolicy.shouldRecommendRestart(
+            true, ControlRequested.ENABLED, ControlEffective.RESTART_REQUIRED,
+        ))
+        assertFalse(ControlPolicy.shouldRecommendRestart(
+            true, ControlRequested.DISABLED, ControlEffective.INSTALLED,
+        ))
+    }
+
     @Test fun installedEvidenceMapsToInstalled() {
         assertEquals(
             ControlEffective.INSTALLED,
@@ -108,6 +146,33 @@ class ControlCenterModelTest {
         assertEquals(
             ControlEffective.INSTALLED,
             ControlPolicy.effectiveFrom("ALREADY_INSTALLED", false, ControlRequested.ENABLED),
+        )
+    }
+
+    @Test fun armedHookIsClassifiedBeforeGenericInstalledPrefix() {
+        assertEquals(
+            ControlEffective.WORKING,
+            ControlPolicy.effectiveFrom(
+                "INSTALLED_ARMED", false, ControlRequested.ENABLED,
+            ),
+        )
+        assertEquals(
+            ControlEffective.WORKING,
+            ControlPolicy.effectiveFrom(
+                "INSTALLED_ARMED_WITH_OBSERVATION", false, ControlRequested.ENABLED,
+            ),
+        )
+        assertEquals(
+            ControlEffective.INSTALLED,
+            ControlPolicy.effectiveFrom(
+                "INSTALLED", false, ControlRequested.ENABLED,
+            ),
+        )
+        assertEquals(
+            ControlEffective.INSTALLED,
+            ControlPolicy.effectiveFrom(
+                "ALREADY_INSTALLED", false, ControlRequested.ENABLED,
+            ),
         )
     }
 
