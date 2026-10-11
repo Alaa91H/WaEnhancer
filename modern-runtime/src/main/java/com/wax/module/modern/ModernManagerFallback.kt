@@ -16,7 +16,12 @@ object ModernManagerFallback {
     private val gate = ActivityFallbackGate()
 
     @JvmStatic
-    fun open(activity: Activity): Boolean {
+    fun open(activity: Activity): Boolean = openDestination(activity, false)
+
+    @JvmStatic
+    fun openProfiles(activity: Activity): Boolean = openDestination(activity, true)
+
+    private fun openDestination(activity: Activity, profiles: Boolean): Boolean {
         if (Looper.myLooper() != Looper.getMainLooper() || activity.isFinishing || activity.isDestroyed) {
             Log.w(TAG, "M06_MANAGER_FALLBACK_SKIPPED reason=ACTIVITY_UNAVAILABLE")
             return false
@@ -61,6 +66,7 @@ object ModernManagerFallback {
         val intent = Intent(Intent.ACTION_MAIN).apply {
             setClassName(MANAGER_PACKAGE, MANAGER_ACTIVITY)
             addCategory(Intent.CATEGORY_LAUNCHER)
+            if (profiles) putExtra("open_control_profiles", true)
         }
         return try {
             application.registerActivityLifecycleCallbacks(callback)

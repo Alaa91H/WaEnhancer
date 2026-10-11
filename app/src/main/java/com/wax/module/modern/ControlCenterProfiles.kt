@@ -24,6 +24,10 @@ object ControlCenterProfiles {
     private val favoriteKey = ModernTargetTelemetryProvider.CONTROL_CENTER_FAVORITES_KEY
     private val booleanKeys = ModernTargetTelemetryProvider.CONTROL_CENTER_PREFERENCE_KEYS.toSet()
 
+    /** Shared key contract for Manager UI and cross-process preference signals. */
+    fun affectsProfile(key: String?): Boolean =
+        key == null || key == KEY || key == favoriteKey || key in modeKeys || key in booleanKeys
+
     data class Profile(
         val id: String,
         val name: String,

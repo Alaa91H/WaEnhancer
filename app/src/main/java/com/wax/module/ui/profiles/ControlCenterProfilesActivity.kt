@@ -1,6 +1,9 @@
 package com.wax.module.ui.profiles
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.content.SharedPreferences
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -40,6 +43,23 @@ private fun ProfilesScreen() {
     var chosenId by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var failed by remember { mutableStateOf(false) }
+
+    // Cross-process changes from the embedded WhatsApp panel update this
+    // Manager screen while it is visible; no polling or duplicate state store.
+    DisposableEffect(prefs) {
+        val handler = Handler(Looper.getMainLooper())
+        var listening = true
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (ControlCenterProfiles.affectsProfile(key)) {
+                handler.post { if (listening) refresh++ }
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            listening = false
+            prefs.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
 
     fun runOperation(operation: () -> Boolean) {
         val ok = operation()

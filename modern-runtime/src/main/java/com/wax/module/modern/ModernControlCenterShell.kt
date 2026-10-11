@@ -530,7 +530,9 @@ class ModernControlCenterShell(
                 val id = options[index].first
                 if (id != activeProfileId) selectProfile(id)
             }
-            .setNeutralButton(strings.manageProfiles) { _, _ -> fallbackToManager() }
+            .setNeutralButton(strings.manageProfiles) { _, _ ->
+                ModernManagerFallback.openProfiles(activity)
+            }
             .setNegativeButton(android.R.string.cancel, null)
             .create().also { dialog ->
                 dialog.setOnDismissListener {
