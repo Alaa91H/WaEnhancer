@@ -407,6 +407,20 @@ Audio → Status Audio Studio**, and every control on it changes the plan rather
 the process that received it, and working on a copy keeps a long split from failing halfway because
 a permission lapsed.
 
+**Three defects CI found in this unit, fixed at the cause:**
+
+1. `info.flags = extractor.sampleFlags` — `MediaExtractor` and `MediaCodec` use different flag
+   namespaces that happen to share a bit, so the value was only correct by coincidence. The flags
+   are now translated, and the two extractor flags with no muxer equivalent (encrypted, partial
+   frame) **refuse the sample** rather than being written with a flag that no longer means what it
+   said. Copying an encrypted sample would have produced a container that claims to be playable and
+   holds ciphertext.
+2. The renderer logged on paths a JVM unit test reaches. `android.util.Log` is unmocked there, so
+   the log replaced the failure under test with `not mocked`. The reason now travels in the
+   outcome, which is where the editor reads it from anyway.
+3. `entries - X` yields a `List` where a `Set` was required, and a duplicated `@Test` — compile
+   errors in the new suite.
+
 **Not claimed:** the path that hands a prepared part to the Status composer, and transcoding for
 containers the platform cannot write. Both need the Status composer resolver, which does not exist
 — that is the finding unit 1 recorded — so the feature stays `NOT_IMPLEMENTED` and the Prepare

@@ -4,7 +4,6 @@ import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
-import android.util.Log
 import java.io.File
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
@@ -106,7 +105,11 @@ class MuxerTrimAudioRenderer(
                 info.offset = 0
                 info.size = size
                 info.presentationTimeUs = (sampleTime - request.segment.startMillis) * MICROS_PER_MILLI
-                info.flags = extractor.sampleFlags
+                info.flags = muxerFlagsFor(extractor.sampleFlags)
+                    ?: return StatusAudioRenderOutcome.Refused(
+                        "encrypted_source",
+                        "This audio is encrypted, so it cannot be copied into a new file.",
+                    )
                 muxer.writeSampleData(muxerTrack, buffer, info)
                 wrote++
                 lastPresentationUs = info.presentationTimeUs
@@ -128,16 +131,42 @@ class MuxerTrimAudioRenderer(
                 )
             }
         } catch (cancellation: InterruptedException) {
-            StatusAudioRenderOutcome.Failed("the preparation was cancelled")
+            // The reason travels in the outcome rather than to a log: this renderer is called
+            // from paths a JVM unit test reaches, and Log is unmocked there.
+            Thread.currentThread().interrupt()
+            StatusAudioRenderOutcome.Failed(
+                cancellation.message ?: "the preparation was interrupted",
+            )
         } catch (failure: Exception) {
-            Log.w(TAG, "trim failed for a ${container.label} selection", failure)
-            StatusAudioRenderOutcome.Failed(failure.message ?: failure.javaClass.simpleName)
+            StatusAudioRenderOutcome.Failed(
+                failure.message ?: "${failure.javaClass.simpleName} while preparing ${container.label}",
+            )
         } finally {
             // A muxer that was started and not stopped cannot finalise its index, so the
             // half-written file is released rather than left looking complete.
             if (muxer != null && !completed) runCatching { muxer.stop() }
             runCatching { muxer?.release() }
             runCatching { extractor?.release() }
+        }
+    }
+
+    /**
+     * The muxer's name for a sample flag, or null when the sample must not be copied at all.
+     *
+     * The two flag sets are different namespaces and happen to share a bit: a muxer reads
+     * `MediaCodec.BUFFER_FLAG_KEY_FRAME`, an extractor reports `MediaExtractor.SAMPLE_FLAG_SYNC`,
+     * and passing the extractor's value straight through relies on that coincidence. The
+     * encrypted flag has no muxer equivalent at all — copying such a sample would write
+     * ciphertext into a container that claims to be playable, so the source is refused instead.
+     */
+    internal fun muxerFlagsFor(sampleFlags: Int): Int? {
+        // Both of these have no muxer equivalent, so a sample carrying either is refused
+        // rather than written with a flag that does not mean what it said.
+        if (sampleFlags and UNMAPPABLE_SAMPLE_FLAGS != 0) return null
+        return if (sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
+            MediaCodec.BUFFER_FLAG_KEY_FRAME
+        } else {
+            0
         }
     }
 
@@ -152,8 +181,16 @@ class MuxerTrimAudioRenderer(
     }
 
     private companion object {
-        const val TAG = "WA-X StatusAudioTrim"
         const val MICROS_PER_MILLI = 1_000L
+
+        /**
+         * Extractor flags with no muxer equivalent.
+         *
+         * A partial frame and an encrypted sample both mean something the output container
+         * cannot express, so they are refused rather than silently dropped.
+         */
+        const val UNMAPPABLE_SAMPLE_FLAGS =
+            MediaExtractor.SAMPLE_FLAG_ENCRYPTED or MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME
 
         /**
          * A copy buffer large enough for one audio sample of any container the muxer writes.

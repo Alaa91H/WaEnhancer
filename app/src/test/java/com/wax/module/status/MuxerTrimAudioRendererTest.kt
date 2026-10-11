@@ -1,7 +1,10 @@
 package com.wax.module.status
 
+import android.media.MediaCodec
+import android.media.MediaExtractor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -170,5 +173,30 @@ class MuxerTrimAudioRendererTest {
 
         assertTrue(request.requiredEdits.isEmpty())
         assertTrue("which is exactly what this renderer can do", renderer.supports(AudioContainer.M4A, request.requiredEdits))
+    }
+
+    @Test
+    fun anEncryptedSourceIsRefusedRatherThanCopiedAsCiphertext() {
+        // The muxer has no encrypted flag. Writing such a sample would produce a container that
+        // claims to be playable and holds ciphertext, so the renderer says no instead.
+        assertNull(
+            muxerFlagsFor(MediaExtractor.SAMPLE_FLAG_ENCRYPTED),
+        )
+    }
+
+    @Test
+    fun aSyncSampleBecomesAKeyFrameAndAnythingElseCarriesNoFlag() {
+        assertEquals(
+            MediaCodec.BUFFER_FLAG_KEY_FRAME,
+            muxerFlagsFor(MediaExtractor.SAMPLE_FLAG_SYNC),
+        )
+        assertEquals(0, muxerFlagsFor(0))
+    }
+
+    @Test
+    fun aFlagWithNoMuxerEquivalentRefusesTheSample() {
+        assertNull(
+            muxerFlagsFor(MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME),
+        )
     }
 }

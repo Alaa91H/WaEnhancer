@@ -693,7 +693,6 @@
     <string name="status_audio_overflow_cancel">Do nothing</string>
     <string name="status_audio_plan">What will happen</string>
     <string name="status_audio_volume_format">Volume: %1$d%%</string>
-    <string name="status_audio_fade_format">%1$d ms</string>
     <string name="status_audio_selection_format">Selected %1$s of %2$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">This app\'s voice Status limit could not be read, so %1$s is being used as a fallback.</string>

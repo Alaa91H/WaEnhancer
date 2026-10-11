@@ -103,7 +103,7 @@ class StatusAudioPreparationTest {
         val options = StatusAudioOptions(fadeInMillis = 500L)
         val plan = StatusAudioStudio.plan(source(30_000L), options, capability())
         val workspace = TempWorkspace()
-        val renderer = RecordingRenderer(canDo = StatusAudioEdit.entries - StatusAudioEdit.FADE_IN)
+        val renderer = RecordingRenderer(canDo = StatusAudioEdit.entries.toSet() - StatusAudioEdit.FADE_IN)
 
         val prepared = StatusAudioPreparer(renderer, workspace).prepare(plan, AudioContainer.M4A, options, "/tmp/source.m4a")
 
@@ -122,7 +122,7 @@ class StatusAudioPreparationTest {
         val options = StatusAudioOptions()
         val plan = StatusAudioStudio.plan(source(30_000L, AudioContainer.MP3), options, capability())
         val workspace = TempWorkspace()
-        val renderer = RecordingRenderer(canDo = StatusAudioEdit.entries - StatusAudioEdit.TRANSCODE)
+        val renderer = RecordingRenderer(canDo = StatusAudioEdit.entries.toSet() - StatusAudioEdit.TRANSCODE)
 
         val prepared = StatusAudioPreparer(renderer, workspace).prepare(plan, AudioContainer.MP3, options, "/tmp/source.mp3")
 
@@ -165,9 +165,8 @@ class StatusAudioPreparationTest {
     }
 
     @Test
-    @Test
     fun aRendererRefusalReleasesThePartItHadAlreadyCreated() {
-        val plan = StatusAudioStudio.plan(source(30_000L), capability())
+        val plan = StatusAudioStudio.plan(source(30_000L), StatusAudioOptions(), capability())
         val workspace = TempWorkspace()
         val renderer =
             RecordingRenderer {
@@ -187,7 +186,7 @@ class StatusAudioPreparationTest {
     }
 
     fun aRendererRefusalIsReportedWithItsOwnExplanation() {
-        val plan = StatusAudioStudio.plan(source(30_000L), capability())
+        val plan = StatusAudioStudio.plan(source(30_000L), StatusAudioOptions(), capability())
         val workspace = TempWorkspace()
         val renderer =
             RecordingRenderer {
@@ -253,7 +252,7 @@ class StatusAudioPreparationTest {
 
     @Test
     fun anUnknownContainerIsRefusedBeforeAnythingIsAllocated() {
-        val plan = StatusAudioStudio.plan(source(container = null), capability())
+        val plan = StatusAudioStudio.plan(source(container = null), StatusAudioOptions(), capability())
         val workspace = TempWorkspace()
         val renderer = RecordingRenderer()
 
@@ -265,7 +264,7 @@ class StatusAudioPreparationTest {
 
     @Test
     fun aNameTheWorkspaceCannotMakeSafeStopsThePreparation() {
-        val plan = StatusAudioStudio.plan(source(30_000L), capability())
+        val plan = StatusAudioStudio.plan(source(30_000L), StatusAudioOptions(), capability())
         val renderer = RecordingRenderer()
         val workspace =
             object : StatusAudioWorkspace {
@@ -291,7 +290,7 @@ class StatusAudioPreparationTest {
 
     @Test
     fun aPreparedPartCarriesNoPathFromTheSource() {
-        val plan = StatusAudioStudio.plan(source(30_000L), capability())
+        val plan = StatusAudioStudio.plan(source(30_000L), StatusAudioOptions(), capability())
         val workspace = TempWorkspace()
         val renderer = RecordingRenderer()
 

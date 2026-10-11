@@ -664,7 +664,6 @@
     <string name="status_audio_overflow_cancel">لا تفعل شيئًا</string>
     <string name="status_audio_plan">ما سيحدث</string>
     <string name="status_audio_volume_format">مستوى الصوت: %1$d%%</string>
-    <string name="status_audio_fade_format">%1$d مللي ثانية</string>
     <string name="status_audio_selection_format">المحدد %1$s من %2$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">تعذّرت قراءة حدّ الحالة الصوتية لهذا التطبيق، لذلك يُستخدم %1$s كبديل.</string>
