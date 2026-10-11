@@ -190,6 +190,28 @@ object ModernReceiptPrivacyFeature {
             hideDelivery = preferences.getBoolean(PREF_HIDE_RECEIPT, false),
         )
 
+    /**
+     * Read the CURRENT preferences at receipt callback time. A bootstrap
+     * snapshot otherwise keeps withholding after the user switches it off.
+     * Disable transitions invalidate pending reply release tokens.
+     */
+    internal fun shouldWithholdReadReceipt(
+        request: Request,
+        conversationKey: String?,
+        nowMillis: Long,
+    ): Boolean {
+        if (!request.hideRead) {
+            clearArmedConversations()
+            return false
+        }
+        if (!request.afterReply) {
+            clearArmedConversations()
+            return true
+        }
+        if (conversationKey == null || nowMillis < 0) return true
+        return !consumeArming(conversationKey, nowMillis)
+    }
+
     @JvmStatic
     fun install(
         target: Context,
@@ -239,25 +261,17 @@ object ModernReceiptPrivacyFeature {
                                     method,
                                     "wax.modern.receipt_privacy.send",
                                 ) { chain ->
-                                    val conversation = conversationKeyOf(chain.args)
-                                    val suppress =
-                                        when {
-                                            conversation == null -> {
-                                                // Without a conversation there is
-                                                // no way to match a reply to this
-                                                // receipt, so withholding is the
-                                                // only safe reading of the switch.
-                                                true
-                                            }
-
-                                            request.afterReply -> {
-                                                !consumeArming(conversation, System.currentTimeMillis())
-                                            }
-
-                                            else -> {
-                                                true
-                                            }
+                                    val current = readRequest(preferences)
+                                    val conversation =
+                                        if (current.hideRead && current.afterReply) {
+                                            conversationKeyOf(chain.args)
+                                        } else {
+                                            null
                                         }
+                                    val suppress =
+                                        shouldWithholdReadReceipt(
+                                            current, conversation, System.currentTimeMillis(),
+                                        )
                                     if (suppress) null else chain.proceed()
                                 }
                             ModernHookRegistry.Handle { handle.unhook() }
