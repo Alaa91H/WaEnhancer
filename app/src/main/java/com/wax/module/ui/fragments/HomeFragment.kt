@@ -50,7 +50,10 @@ import com.wax.module.utils.FilePicker
 import com.wax.module.utils.RootDiagnostics
 import com.wax.module.xposed.core.FeatureLoader
 import com.wax.module.xposed.utils.Utils
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -65,6 +68,7 @@ class HomeFragment : BaseFragment() {
     private var currentBinding: FragmentHomeBinding? = null
     private val binding get() = currentBinding!!
     private var statusReceiverRegistered = false
+    private var modernCheckJob: Job? = null
     private val activationProbeHandler = Handler(Looper.getMainLooper())
     private val pendingActivationProbes = mutableListOf<Runnable>()
 
@@ -106,8 +110,10 @@ class HomeFragment : BaseFragment() {
                     val reportedPackage = intent.getStringExtra("PKG")
                     val heartbeat = TargetHeartbeatCodec.decode(intent.getStringExtra(FeatureLoader.EXTRA_HEARTBEAT))
                     if (heartbeat == null) {
+                        binding.healthCheckStatus.text = getString(R.string.uix_snapshot_unverified)
                         Log.w("WA-X Activation", "Probe reply from $reportedPackage has no valid runtime heartbeat")
                     } else {
+                        binding.healthCheckStatus.text = getString(R.string.uix_probe_received)
                         activation.accept(heartbeat)
                         Log.i("WA-X Activation", "Probe reply from $reportedPackage: stage=${heartbeat.stage}, state=${heartbeat.state}")
                     }
@@ -170,6 +176,8 @@ class HomeFragment : BaseFragment() {
     }
 
     override fun onStop() {
+        modernCheckJob?.cancel()
+        modernCheckJob = null
         activationProbeHandler.removeCallbacks(modernStatusRefresh)
         pendingActivationProbes.forEach(activationProbeHandler::removeCallbacks)
         pendingActivationProbes.clear()
@@ -189,6 +197,15 @@ class HomeFragment : BaseFragment() {
 
         checkStateWpp(requireActivity())
 
+        binding.healthCheckNow.setOnClickListener {
+            if (BuildConfig.MODERN_XPOSED) {
+                renderModernActivation()
+            } else {
+                binding.healthCheckStatus.text = getString(R.string.uix_probe_sent)
+                checkWpp(requireActivity())
+            }
+        }
+
         binding.rebootBtn.setOnClickListener { view ->
             animateClick(view)
             ModuleApplication.instance.restartApp(FeatureLoader.PACKAGE_WPP)
@@ -196,6 +213,14 @@ class HomeFragment : BaseFragment() {
             // has not reported yet, and painting "not running" during that window would be a
             // claim the module cannot make.
             renderTarget(FeatureLoader.PACKAGE_WPP)
+        }
+
+        // Keep long API 102 evidence accessible without occupying the entire Home screen.
+        // A tap expands the real, unchanged text; restart/diagnostic buttons retain their actions.
+        binding.statusSummary1.maxLines = 3
+        binding.status2.setOnClickListener {
+            binding.statusSummary1.maxLines =
+                if (binding.statusSummary1.maxLines == 3) Int.MAX_VALUE else 3
         }
 
         binding.scrollDiagBtn.setOnClickListener { view ->
@@ -252,6 +277,22 @@ class HomeFragment : BaseFragment() {
         startCardAnimations()
 
         return binding.root
+    }
+
+    /** The canonical settings backup/import procedures remain in this screen. */
+    fun openBackupOptions() {
+        if (!isAdded || currentBinding == null) return
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.uix_backup)
+            .setItems(
+                arrayOf(getString(R.string.export_settings), getString(R.string.import_settings)),
+            ) { _, action ->
+                when (action) {
+                    0 -> saveConfigs(requireContext())
+                    1 -> importConfigs(requireContext())
+                }
+            }.setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun startCardAnimations() {
@@ -333,121 +374,148 @@ class HomeFragment : BaseFragment() {
      */
     private fun renderModernActivation() {
         if (!isAdded || currentBinding == null) return
+        if (modernCheckJob?.isActive == true) return
+        binding.healthCheckNow.isEnabled = false
+        binding.healthCheckStatus.text = getString(R.string.uix_checking_snapshot)
         val applicationContext = requireContext().applicationContext
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val snapshot = ModernManagerRuntimeStatus.inspect(applicationContext)
-            withContext(Dispatchers.Main) {
-                if (!isAdded || currentBinding == null) return@withContext
-                binding.statusTitle.text =
-                    if (snapshot.connected) {
-                        getString(R.string.modern_framework_connected, (snapshot.frameworkApi ?: 102).toString())
-                    } else {
-                        getString(R.string.modern_framework_waiting)
-                    }
-                binding.statusSummary.text =
-                    buildString {
-                        append(getString(R.string.modern_framework_status, BuildConfig.VERSION_NAME))
-                        append('\n')
-                        append(snapshot.frameworkName ?: "Vector/LSPosed")
-                        snapshot.connectionProblem?.let { append(": ").append(it) }
-                        append('\n')
-                        append(getString(R.string.modern_framework_features_pending))
-                        append('\n')
-                        append(getString(R.string.modern_pilot_tap))
-                    }
-                binding.statusIcon.setImageResource(
-                    if (snapshot.connected) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
-                )
-                binding.status.getChildAt(0).setBackgroundResource(
-                    if (snapshot.connected) R.drawable.gradient_success else R.drawable.gradient_warning,
-                )
+        modernCheckJob =
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val snapshot = ModernManagerRuntimeStatus.inspect(applicationContext)
+                    withContext(Dispatchers.Main) {
+                        if (!isAdded || currentBinding == null) return@withContext
+                        binding.statusTitle.text =
+                            if (snapshot.connected) {
+                                getString(R.string.modern_framework_connected, (snapshot.frameworkApi ?: 102).toString())
+                            } else {
+                                getString(R.string.modern_framework_waiting)
+                            }
+                        binding.statusSummary.text =
+                            buildString {
+                                append(getString(R.string.modern_framework_status, BuildConfig.VERSION_NAME))
+                                append('\n')
+                                append(snapshot.frameworkName ?: "Vector/LSPosed")
+                                snapshot.connectionProblem?.let { append(": ").append(it) }
+                                append('\n')
+                                append(getString(R.string.modern_framework_features_pending))
+                                append('\n')
+                                append(getString(R.string.modern_pilot_tap))
+                            }
+                        binding.statusIcon.setImageResource(
+                            if (snapshot.connected) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
+                        )
+                        binding.status.getChildAt(0).setBackgroundResource(
+                            if (snapshot.connected) R.drawable.gradient_update else R.drawable.gradient_warning,
+                        )
 
-                snapshot.targets.forEach { target ->
-                    val business = target.packageName == FeatureLoader.PACKAGE_BUSINESS
-                    val title = if (business) binding.statusTitle3 else binding.statusTitle2
-                    val summary = if (business) binding.statusSummary3 else binding.statusSummary1
-                    val icon = if (business) binding.statusIcon3 else binding.statusIcon2
-                    val card = if (business) binding.status3 else binding.status2
-                    val restart = if (business) binding.rebootBtn2 else binding.rebootBtn
-                    val label =
-                        if (business) {
-                            getString(R.string.whatsapp_business_package)
-                        } else {
-                            getString(R.string.whatsapp_app_label)
-                        }
-                    val installed = isInstalled(target.packageName)
-                    title.text = getString(R.string.modern_target_title, label)
-                    summary.text =
-                        if (!installed) {
-                            getString(R.string.app_not_installed)
-                        } else {
-                            val evidence =
-                                when (target.evidence) {
-                                    ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP -> {
-                                        getString(R.string.modern_target_loaded)
-                                    }
-
-                                    ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT -> {
-                                        getString(R.string.modern_target_live_heartbeat)
-                                    }
-
-                                    ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP -> {
-                                        getString(R.string.modern_target_stale)
-                                    }
-
-                                    ModernManagerRuntimeStatus.Evidence.BOOT_MISMATCH,
-                                    ModernManagerRuntimeStatus.Evidence.CLOCK_MISMATCH,
-                                    -> {
-                                        getString(R.string.modern_target_boot_mismatch)
-                                    }
-
-                                    ModernManagerRuntimeStatus.Evidence.NOT_REPORTED -> {
-                                        getString(R.string.modern_target_no_report)
-                                    }
+                        snapshot.targets.forEach { target ->
+                            val business = target.packageName == FeatureLoader.PACKAGE_BUSINESS
+                            val title = if (business) binding.statusTitle3 else binding.statusTitle2
+                            val summary = if (business) binding.statusSummary3 else binding.statusSummary1
+                            val icon = if (business) binding.statusIcon3 else binding.statusIcon2
+                            val card = if (business) binding.status3 else binding.status2
+                            val restart = if (business) binding.rebootBtn2 else binding.rebootBtn
+                            val label =
+                                if (business) {
+                                    getString(R.string.whatsapp_business_package)
+                                } else {
+                                    getString(R.string.whatsapp_app_label)
                                 }
-                            evidence + "\n" +
-                                (
-                                    if (target.bootstrapMilestones.isNotEmpty()) {
-                                        target.bootstrapMilestones.joinToString(" → ") + "\n"
-                                    } else if (target.evidence == ModernManagerRuntimeStatus.Evidence.NOT_REPORTED) {
-                                        getString(R.string.modern_target_no_lifecycle_signal) + "\n"
-                                    } else {
-                                        // Old lifecycle markers expire, but historical
-                                        // authenticated bootstrap evidence is still present.
-                                        getString(R.string.modern_target_previous_attach) + "\n"
-                                    }
-                                ) +
-                                getString(
-                                    R.string.modern_target_menu_status,
-                                    target.menuInstallation ?: "NOT_REPORTED",
-                                ) + "\n" +
-                                getString(
-                                    R.string.modern_target_feature_status,
-                                    target.customTimeInstallation ?: "NOT_REPORTED",
-                                ) + "\n" +
-                                getString(
-                                    R.string.modern_target_share_limit_status,
-                                    target.shareLimitInstallation ?: "NOT_REPORTED",
-                                ) + "\n" +
-                                getString(
-                                    R.string.modern_target_presence_status,
-                                    target.freezeInstallation ?: "NOT_REPORTED",
-                                    target.dndInstallation ?: "NOT_REPORTED",
-                                )
+                            val installed = isInstalled(target.packageName)
+                            val versionLine = if (installed) installedTargetBuildLine(target.packageName) else ""
+                            title.text = getString(R.string.modern_target_title, label)
+                            summary.text =
+                                if (!installed) {
+                                    getString(R.string.app_not_installed)
+                                } else {
+                                    val evidence =
+                                        when (target.evidence) {
+                                            ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP -> {
+                                                getString(R.string.modern_target_loaded)
+                                            }
+
+                                            ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT -> {
+                                                getString(R.string.modern_target_live_heartbeat)
+                                            }
+
+                                            ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP -> {
+                                                getString(R.string.modern_target_stale)
+                                            }
+
+                                            ModernManagerRuntimeStatus.Evidence.BOOT_MISMATCH,
+                                            ModernManagerRuntimeStatus.Evidence.CLOCK_MISMATCH,
+                                            -> {
+                                                getString(R.string.modern_target_boot_mismatch)
+                                            }
+
+                                            ModernManagerRuntimeStatus.Evidence.NOT_REPORTED -> {
+                                                getString(R.string.modern_target_no_report)
+                                            }
+                                        }
+                                    versionLine + "\n" + evidence + "\n" +
+                                        (
+                                            if (target.bootstrapMilestones.isNotEmpty()) {
+                                                target.bootstrapMilestones.joinToString(" → ") + "\n"
+                                            } else if (target.evidence == ModernManagerRuntimeStatus.Evidence.NOT_REPORTED) {
+                                                getString(R.string.modern_target_no_lifecycle_signal) + "\n"
+                                            } else {
+                                                // Old lifecycle markers expire, but historical
+                                                // authenticated bootstrap evidence is still present.
+                                                getString(R.string.modern_target_previous_attach) + "\n"
+                                            }
+                                        ) +
+                                        getString(
+                                            R.string.modern_target_menu_status,
+                                            target.menuInstallation ?: "NOT_REPORTED",
+                                        ) + "\n" +
+                                        getString(
+                                            R.string.modern_target_feature_status,
+                                            target.customTimeInstallation ?: "NOT_REPORTED",
+                                        ) + "\n" +
+                                        getString(
+                                            R.string.modern_target_share_limit_status,
+                                            target.shareLimitInstallation ?: "NOT_REPORTED",
+                                        ) + "\n" +
+                                        getString(
+                                            R.string.modern_target_presence_status,
+                                            target.freezeInstallation ?: "NOT_REPORTED",
+                                            target.dndInstallation ?: "NOT_REPORTED",
+                                        )
+                                }
+                            val reported =
+                                target.evidence == ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP ||
+                                    target.evidence == ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT
+                            icon.setImageResource(
+                                if (reported) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
+                            )
+                            card.getChildAt(0).setBackgroundResource(
+                                if (reported) R.drawable.gradient_update else R.drawable.gradient_warning,
+                            )
+                            restart.visibility = if (reported) View.VISIBLE else View.GONE
                         }
-                    val reported =
-                        target.evidence == ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP ||
-                            target.evidence == ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT
-                    icon.setImageResource(
-                        if (reported) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
-                    )
-                    card.getChildAt(0).setBackgroundResource(
-                        if (reported) R.drawable.gradient_success else R.drawable.gradient_warning,
-                    )
-                    restart.visibility = if (reported) View.VISIBLE else View.GONE
+                        binding.healthCheckStatus.text =
+                            getString(
+                                R.string.uix_snapshot_checked_at,
+                                android.text.format.DateFormat
+                                    .getTimeFormat(requireContext())
+                                    .format(Date()),
+                            )
+                    }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    Log.w("WA-X Health", "Passive status refresh failed", failure)
+                    withContext(Dispatchers.Main) {
+                        if (isAdded && currentBinding != null) {
+                            binding.healthCheckStatus.text = getString(R.string.uix_snapshot_failed)
+                        }
+                    }
+                } finally {
+                    withContext(NonCancellable + Dispatchers.Main) {
+                        if (isAdded && currentBinding != null) binding.healthCheckNow.isEnabled = true
+                    }
                 }
             }
-        }
     }
 
     private fun showModernCustomTimeDialog() {
@@ -904,6 +972,15 @@ class HomeFragment : BaseFragment() {
                 R.drawable.ic_round_warning_24
             },
         )
+    }
+
+    /** Pure PackageManager evidence, not a claim of API102 compatibility or hook readiness. */
+    private fun installedTargetBuildLine(packageName: String): String {
+        val info = runCatching { requireContext().packageManager.getPackageInfo(packageName, 0) }.getOrNull()
+        val unknown = getString(R.string.uix_unknown_version)
+        val version = info?.versionName?.takeIf { it.isNotBlank() } ?: unknown
+        val code = info?.longVersionCode?.toString() ?: unknown
+        return getString(R.string.uix_target_installed_build, packageName, version, code)
     }
 
     private fun isInstalled(packageWpp: String): Boolean =

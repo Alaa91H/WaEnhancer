@@ -28,6 +28,7 @@ import com.wax.module.AppLanguage
 import com.wax.module.BuildConfig
 import com.wax.module.ModuleApplication
 import com.wax.module.R
+import com.wax.module.activities.MainActivity
 import com.wax.module.preference.FloatSeekBarPreference
 import rikka.material.preference.MaterialSwitchPreference
 
@@ -36,6 +37,8 @@ abstract class BasePreferenceFragment :
     SharedPreferences.OnSharedPreferenceChangeListener {
     @JvmField
     protected var mPrefs: SharedPreferences? = null
+    private var backPressedCallback: OnBackPressedCallback? = null
+
     private val prefs: SharedPreferences
         get() = checkNotNull(mPrefs)
 
@@ -45,18 +48,20 @@ abstract class BasePreferenceFragment :
     ) {
         mPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
         prefs.registerOnSharedPreferenceChangeListener(this)
-        requireActivity().onBackPressedDispatcher.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
+        // ViewPager2 keeps adjacent legacy fragments STARTED even while hidden.
+        // Their callbacks must not consume Back until that fragment is RESUMED.
+        val callback =
+            object : OnBackPressedCallback(false) {
                 override fun handleOnBackPressed() {
                     if (parentFragmentManager.backStackEntryCount > 0) {
                         parentFragmentManager.popBackStack()
-                    } else {
+                    } else if ((requireActivity() as? MainActivity)?.returnFromLegacyDestination() != true) {
                         requireActivity().finish()
                     }
                 }
-            },
-        )
+            }
+        backPressedCallback = callback
+        requireActivity().onBackPressedDispatcher.addCallback(this, callback)
     }
 
     /**
@@ -154,7 +159,13 @@ abstract class BasePreferenceFragment :
     override fun onResume() {
         populateLanguagePreference()
         super.onResume()
+        backPressedCallback?.isEnabled = true
         setDisplayHomeAsUpEnabled(true)
+    }
+
+    override fun onPause() {
+        backPressedCallback?.isEnabled = false
+        super.onPause()
     }
 
     override fun onSharedPreferenceChanged(

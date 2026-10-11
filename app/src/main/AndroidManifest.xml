@@ -87,6 +87,9 @@
         </activity>
 
         <activity
+            android:name=".activities.ManagerSettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.AboutActivity"
             android:theme="@style/AppTheme" />
 

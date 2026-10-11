@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.preference.PreferenceManager
 
 /**
  * The WA X colour palette.
@@ -161,6 +162,17 @@ private val DarkScheme =
  * are one step tighter and line height is explicit: the default 1.5 line height at 16sp
  * leaves a lot of air for two-line summaries, which is the bulk of this interface.
  */
+private val AmoledScheme =
+    DarkScheme.copy(
+        background = Color.Black,
+        surface = Color.Black,
+        surfaceContainer = Color(0xFF0B0B0B),
+        surfaceContainerLow = Color(0xFF070707),
+        surfaceContainerHigh = Color(0xFF171717),
+        surfaceContainerHighest = Color(0xFF202020),
+        surfaceContainerLowest = Color.Black,
+    )
+
 private val WaXTypography =
     Typography(
         displaySmall = TextStyle(fontSize = 34.sp, lineHeight = 40.sp, fontWeight = FontWeight.Normal),
@@ -189,13 +201,20 @@ fun WaXTheme(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
+    val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+    val savedMode = prefs.getString("thememode", "0")
+    val appearance = ManagerAppearance.fromStored(savedMode, darkTheme)
     val colorScheme: ColorScheme =
         when {
-            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            appearance.amoled -> {
+                AmoledScheme
             }
 
-            darkTheme -> {
+            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                if (appearance.dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            }
+
+            appearance.dark -> {
                 DarkScheme
             }
 
@@ -203,9 +222,12 @@ fun WaXTheme(
                 LightScheme
             }
         }
-    val extended = if (darkTheme) DarkExtended else LightExtended
+    val extended = if (appearance.dark) DarkExtended else LightExtended
 
-    CompositionLocalProvider(LocalWaXExtendedColors provides extended) {
+    CompositionLocalProvider(
+        LocalWaXExtendedColors provides extended,
+        LocalManagerReducedMotion provides prefs.getBoolean(ManagerMotionPreference.KEY, false),
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = WaXTypography,
