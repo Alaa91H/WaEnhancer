@@ -1,32 +1,47 @@
 package com.wax.module.modern
 
 import android.content.SharedPreferences
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
-import org.junit.Assert.*
-import org.junit.Test
 
 /** Pure JVM regression coverage for Manager-owned durable profile snapshots. */
 class ControlCenterProfilesTest {
     private class MemoryPrefs : InvocationHandler {
         val values = linkedMapOf<String, Any>()
         var rejectCommit = false
-        val prefs: SharedPreferences = Proxy.newProxyInstance(
-            SharedPreferences::class.java.classLoader,
-            arrayOf(SharedPreferences::class.java), this,
-        ) as SharedPreferences
+        val prefs: SharedPreferences =
+            Proxy.newProxyInstance(
+                SharedPreferences::class.java.classLoader,
+                arrayOf(SharedPreferences::class.java),
+                this,
+            ) as SharedPreferences
 
-        override fun invoke(proxy: Any, method: Method, args: Array<Any?>?): Any? {
+        override fun invoke(
+            proxy: Any,
+            method: Method,
+            args: Array<Any?>?,
+        ): Any? {
             val arg = args.orEmpty()
             return when (method.name) {
                 "getString" -> values[arg[0]] as? String ?: arg[1]
+
                 "getBoolean" -> values[arg[0]] as? Boolean ?: arg[1]
+
                 "getAll" -> values.toMap()
+
                 "contains" -> values.containsKey(arg[0])
+
                 "edit" -> editor()
+
                 "registerOnSharedPreferenceChangeListener",
-                "unregisterOnSharedPreferenceChangeListener" -> null
+                "unregisterOnSharedPreferenceChangeListener",
+                -> null
+
                 else -> throw UnsupportedOperationException(method.name)
             }
         }
@@ -43,30 +58,41 @@ class ControlCenterProfilesTest {
                         pending[arg[0] as String] = arg[1]
                         proxy
                     }
+
                     "remove" -> {
                         pending[arg[0] as String] = null
                         proxy
                     }
+
                     "clear" -> {
                         pending.clear()
                         pending.putAll(values.keys.associateWith { null })
                         proxy
                     }
+
                     "commit" -> {
-                        if (rejectCommit) false else {
+                        if (rejectCommit) {
+                            false
+                        } else {
                             for ((key, value) in pending) {
                                 if (value == null) values.remove(key) else values[key] = value
                             }
                             true
                         }
                     }
+
                     "apply" -> {
-                        if (!rejectCommit) for ((key, value) in pending) {
-                            if (value == null) values.remove(key) else values[key] = value
+                        if (!rejectCommit) {
+                            for ((key, value) in pending) {
+                                if (value == null) values.remove(key) else values[key] = value
+                            }
                         }
                         null
                     }
-                    else -> throw UnsupportedOperationException(method.name)
+
+                    else -> {
+                        throw UnsupportedOperationException(method.name)
+                    }
                 }
             } as SharedPreferences.Editor
         }
@@ -90,7 +116,12 @@ class ControlCenterProfilesTest {
         p.values["antirevoke"] = "2"
         p.values[ModernTargetTelemetryProvider.CONTROL_CENTER_FAVORITES_KEY] = "anti_revoke"
         assertTrue(ControlCenterProfiles.create(p.prefs, "Work"))
-        val work = ControlCenterProfiles.read(p.prefs).profiles.last().id
+        val work =
+            ControlCenterProfiles
+                .read(p.prefs)
+                .profiles
+                .last()
+                .id
         p.values["hideread"] = false
         p.values["antirevoke"] = "0"
         p.values[ModernTargetTelemetryProvider.CONTROL_CENTER_FAVORITES_KEY] = "view_once"
@@ -112,7 +143,12 @@ class ControlCenterProfilesTest {
         assertFalse(ControlCenterProfiles.create(p.prefs, "WORK"))
         assertFalse(ControlCenterProfiles.rename(p.prefs, "default", "Renamed"))
         assertFalse(ControlCenterProfiles.delete(p.prefs, "default"))
-        val work = ControlCenterProfiles.read(p.prefs).profiles.last().id
+        val work =
+            ControlCenterProfiles
+                .read(p.prefs)
+                .profiles
+                .last()
+                .id
         assertTrue(ControlCenterProfiles.select(p.prefs, work))
         assertFalse(ControlCenterProfiles.delete(p.prefs, work))
     }
@@ -130,7 +166,12 @@ class ControlCenterProfilesTest {
     @Test fun rejectedCommitDoesNotChangeActivePreferences() {
         val p = MemoryPrefs()
         assertTrue(ControlCenterProfiles.create(p.prefs, "Work"))
-        val work = ControlCenterProfiles.read(p.prefs).profiles.last().id
+        val work =
+            ControlCenterProfiles
+                .read(p.prefs)
+                .profiles
+                .last()
+                .id
         p.values["hideread"] = true
         p.rejectCommit = true
         assertFalse(ControlCenterProfiles.select(p.prefs, work))
@@ -152,9 +193,19 @@ class ControlCenterProfilesTest {
     @Test fun duplicateRenameDeleteArePersistedAndGuarded() {
         val p = MemoryPrefs()
         assertTrue(ControlCenterProfiles.create(p.prefs, "Work"))
-        val id = ControlCenterProfiles.read(p.prefs).profiles.last().id
+        val id =
+            ControlCenterProfiles
+                .read(p.prefs)
+                .profiles
+                .last()
+                .id
         assertTrue(ControlCenterProfiles.duplicate(p.prefs, id, "Vacation"))
-        val copied = ControlCenterProfiles.read(p.prefs).profiles.last().id
+        val copied =
+            ControlCenterProfiles
+                .read(p.prefs)
+                .profiles
+                .last()
+                .id
         assertTrue(ControlCenterProfiles.rename(p.prefs, copied, "Holiday"))
         assertFalse(ControlCenterProfiles.rename(p.prefs, copied, "Work"))
         assertTrue(ControlCenterProfiles.delete(p.prefs, copied))

@@ -223,6 +223,7 @@ class MainActivity : BaseActivity() {
                 startActivity(Intent(this, com.wax.module.ui.profiles.ControlCenterProfilesActivity::class.java))
                 return true
             }
+
             R.id.menu_search -> {
                 val options =
                     ActivityOptionsCompat.makeCustomAnimation(

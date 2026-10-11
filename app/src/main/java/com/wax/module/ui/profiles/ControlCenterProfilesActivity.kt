@@ -1,16 +1,36 @@
 package com.wax.module.ui.profiles
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.content.SharedPreferences
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -49,11 +69,12 @@ private fun ProfilesScreen() {
     DisposableEffect(prefs) {
         val handler = Handler(Looper.getMainLooper())
         var listening = true
-        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (ControlCenterProfiles.affectsProfile(key)) {
-                handler.post { if (listening) refresh++ }
+        val listener =
+            SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (ControlCenterProfiles.affectsProfile(key)) {
+                    handler.post { if (listening) refresh++ }
+                }
             }
-        }
         prefs.registerOnSharedPreferenceChangeListener(listener)
         onDispose {
             listening = false
@@ -84,11 +105,17 @@ private fun ProfilesScreen() {
                 modifier = Modifier.padding(vertical = 12.dp),
             )
             if (failed || state.corrupted) {
-                Text(stringResource(R.string.control_profiles_failure),
-                    color = MaterialTheme.colorScheme.error)
+                Text(
+                    stringResource(R.string.control_profiles_failure),
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
             Button(
-                onClick = { chosenId = ""; name = ""; action = Action.CREATE },
+                onClick = {
+                    chosenId = ""
+                    name = ""
+                    action = Action.CREATE
+                },
                 enabled = !state.corrupted && state.profiles.size < 16,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.control_profiles_create)) }
@@ -97,14 +124,18 @@ private fun ProfilesScreen() {
                     Card(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(12.dp)) {
                             Text(
-                                if (profile.id == ControlCenterProfiles.DEFAULT_ID)
+                                if (profile.id == ControlCenterProfiles.DEFAULT_ID) {
                                     stringResource(R.string.control_profiles_default)
-                                else profile.name,
+                                } else {
+                                    profile.name
+                                },
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             if (profile.id == state.activeId) {
-                                Text(stringResource(R.string.control_profiles_active),
-                                    color = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    stringResource(R.string.control_profiles_active),
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
                             }
                             Row {
                                 if (profile.id != state.activeId) {
@@ -128,10 +159,15 @@ private fun ProfilesScreen() {
                                     }) { Text(stringResource(R.string.control_profiles_rename)) }
                                     TextButton(
                                         enabled = profile.id != state.activeId,
-                                        onClick = { chosenId = profile.id; action = Action.DELETE },
+                                        onClick = {
+                                            chosenId = profile.id
+                                            action = Action.DELETE
+                                        },
                                     ) {
-                                        Text(stringResource(R.string.control_profiles_delete),
-                                            color = MaterialTheme.colorScheme.error)
+                                        Text(
+                                            stringResource(R.string.control_profiles_delete),
+                                            color = MaterialTheme.colorScheme.error,
+                                        )
                                     }
                                 }
                             }
@@ -145,20 +181,22 @@ private fun ProfilesScreen() {
     val selectedAction = action
     if (selectedAction != null) {
         val needsName = selectedAction in setOf(Action.CREATE, Action.DUPLICATE, Action.RENAME)
-        val title = when (selectedAction) {
-            Action.CREATE -> R.string.control_profiles_create
-            Action.DUPLICATE -> R.string.control_profiles_duplicate
-            Action.RENAME -> R.string.control_profiles_rename
-            Action.DELETE -> R.string.control_profiles_delete
-            Action.SELECT -> R.string.control_profiles_select
-        }
+        val title =
+            when (selectedAction) {
+                Action.CREATE -> R.string.control_profiles_create
+                Action.DUPLICATE -> R.string.control_profiles_duplicate
+                Action.RENAME -> R.string.control_profiles_rename
+                Action.DELETE -> R.string.control_profiles_delete
+                Action.SELECT -> R.string.control_profiles_select
+            }
         AlertDialog(
             onDismissRequest = { action = null },
             title = { Text(stringResource(title)) },
             text = {
                 if (needsName) {
                     OutlinedTextField(
-                        value = name, onValueChange = { name = it.take(40) },
+                        value = name,
+                        onValueChange = { name = it.take(40) },
                         label = { Text(stringResource(R.string.control_profiles_name)) },
                         singleLine = true,
                     )
