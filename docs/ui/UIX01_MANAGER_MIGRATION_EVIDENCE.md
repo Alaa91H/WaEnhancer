@@ -51,6 +51,10 @@ Old preference keys are not renamed and all legacy preference fragments remain r
   signed exact-version compatibility and warns before showing existing tests.
   Safe Mode & Recovery offers a read-only explanation and a route to diagnostics,
   **not** an unverified automatic reset or unsupported switch.
+- Home's API102 target cards now show the exact installed package name, versionName
+  and versionCode read independently from Android PackageManager for WhatsApp and Business;
+  missing/unreadable data is explicitly **Unknown**, not a fabricated compatible build.
+  Installed version is not used as runtime activation/feature-success evidence.
 - Home manual checks report a request or an observed snapshot refresh independently
   from runtime success. Automatic modern status refresh now reuses a single in-flight job,
   disables repeat Check actions while active, records the local refresh time, surfaces a

@@ -422,6 +422,7 @@ class HomeFragment : BaseFragment() {
                                     getString(R.string.whatsapp_app_label)
                                 }
                             val installed = isInstalled(target.packageName)
+                            val versionLine = if (installed) installedTargetBuildLine(target.packageName) else ""
                             title.text = getString(R.string.modern_target_title, label)
                             summary.text =
                                 if (!installed) {
@@ -451,7 +452,7 @@ class HomeFragment : BaseFragment() {
                                                 getString(R.string.modern_target_no_report)
                                             }
                                         }
-                                    evidence + "\n" +
+                                    versionLine + "\n" + evidence + "\n" +
                                         (
                                             if (target.bootstrapMilestones.isNotEmpty()) {
                                                 target.bootstrapMilestones.joinToString(" → ") + "\n"
@@ -971,6 +972,15 @@ class HomeFragment : BaseFragment() {
                 R.drawable.ic_round_warning_24
             },
         )
+    }
+
+    /** Pure PackageManager evidence, not a claim of API102 compatibility or hook readiness. */
+    private fun installedTargetBuildLine(packageName: String): String {
+        val info = runCatching { requireContext().packageManager.getPackageInfo(packageName, 0) }.getOrNull()
+        val unknown = getString(R.string.uix_unknown_version)
+        val version = info?.versionName?.takeIf { it.isNotBlank() } ?: unknown
+        val code = info?.longVersionCode?.toString() ?: unknown
+        return getString(R.string.uix_target_installed_build, packageName, version, code)
     }
 
     private fun isInstalled(packageWpp: String): Boolean =

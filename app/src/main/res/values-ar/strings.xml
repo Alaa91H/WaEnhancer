@@ -727,4 +727,6 @@
     <string name="uix_enable_anyway">حفظ التفضيل</string>
     <string name="uix_preview_bubbles">ألوان فقاعات المحادثة</string>
     <string name="uix_preview_message_other">رسالة واردة</string>
+    <string name="uix_target_installed_build">%1$s · الإصدار المثبّت %2$s (رمز الإصدار %3$s)</string>
+    <string name="uix_unknown_version">غير معروف</string>
 </resources>

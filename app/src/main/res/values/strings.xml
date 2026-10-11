@@ -756,4 +756,6 @@
     <string name="uix_enable_anyway">Save preference</string>
     <string name="uix_preview_bubbles">Chat bubble colors</string>
     <string name="uix_preview_message_other">Incoming message</string>
+    <string name="uix_target_installed_build">%1$s · installed %2$s (versionCode %3$s)</string>
+    <string name="uix_unknown_version">Unknown</string>
 </resources>
