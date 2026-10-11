@@ -6,13 +6,43 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
@@ -46,7 +76,11 @@ class FeatureHubFragment : Fragment() {
         screenRevision.intValue++
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View =
         ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
@@ -56,7 +90,9 @@ class FeatureHubFragment : Fragment() {
                         onOpen = { feature, scopeChoice ->
                             if (scopeChoice == 0) {
                                 (activity as? MainActivity)?.navigateToLegacyFragment(
-                                    feature.fragmentType.position, feature.key, feature.parentKey,
+                                    feature.fragmentType.position,
+                                    feature.key,
+                                    feature.parentKey,
                                 )
                             } else {
                                 val target = if (scopeChoice == 1) TargetApp.WHATSAPP else TargetApp.WHATSAPP_BUSINESS
@@ -68,11 +104,12 @@ class FeatureHubFragment : Fragment() {
                             }
                         },
                         onTargetSettings = { scopeChoice ->
-                            val code = when (scopeChoice) {
-                                1 -> TargetApp.WHATSAPP.code
-                                2 -> TargetApp.WHATSAPP_BUSINESS.code
-                                else -> null
-                            }
+                            val code =
+                                when (scopeChoice) {
+                                    1 -> TargetApp.WHATSAPP.code
+                                    2 -> TargetApp.WHATSAPP_BUSINESS.code
+                                    else -> null
+                                }
                             startActivity(
                                 Intent(requireContext(), TargetSettingsActivity::class.java)
                                     .putExtra(TargetSettingsActivity.EXTRA_TARGET_CODE, code),
@@ -94,39 +131,61 @@ class FeatureHubFragment : Fragment() {
         val store = remember(context) { SharedPreferencesSettingsStore(prefs) }
         val entries = remember(context) { FeatureCatalog.getAllFeatures(context) }
         val declared = remember { SettingKeyRegistry.entries.associateBy { it.key } }
-        val favorites = remember(entries) {
-            mutableStateListOf<String>().apply {
-                addAll(entries.map { it.key }.filter { prefs.getBoolean("uix_favorite_" + it, false) })
+        val favorites =
+            remember(entries) {
+                mutableStateListOf<String>().apply {
+                    addAll(entries.map { it.key }.filter { prefs.getBoolean("uix_favorite_" + it, false) })
+                }
             }
-        }
         var query by rememberSaveable { mutableStateOf("") }
         var selected by rememberSaveable { mutableStateOf("all") }
         var scopeChoice by rememberSaveable { mutableIntStateOf(0) }
         var localRevision by remember { mutableIntStateOf(0) }
 
         // UI reloads cached settings after a change in this screen or any returning editor.
-        val resolver = remember(scopeChoice, localRevision, externalRevision) {
-            store.reload()
-            EffectiveSettingsResolver(store)
-        }
-        val scope: SettingsScope = when (scopeChoice) {
-            1 -> SettingsScope.Target(TargetApp.WHATSAPP)
-            2 -> SettingsScope.Target(TargetApp.WHATSAPP_BUSINESS)
-            else -> SettingsScope.Global
-        }
-        val groups = listOf("all", "favorites", "privacy", "general", "media", "customization")
-        val filtered = entries.filter { feature ->
-            val groupMatch = when (selected) {
-                "favorites" -> feature.key in favorites
-                "privacy" -> feature.category == SearchableFeature.Category.PRIVACY
-                "general" -> feature.category.name.startsWith("GENERAL")
-                "media" -> feature.category == SearchableFeature.Category.MEDIA ||
-                    feature.category == SearchableFeature.Category.RECORDINGS
-                "customization" -> feature.category == SearchableFeature.Category.CUSTOMIZATION
-                else -> true
+        val resolver =
+            remember(scopeChoice, localRevision, externalRevision) {
+                store.reload()
+                EffectiveSettingsResolver(store)
             }
-            groupMatch && (query.isBlank() || feature.matches(query))
-        }
+        val scope: SettingsScope =
+            when (scopeChoice) {
+                1 -> SettingsScope.Target(TargetApp.WHATSAPP)
+                2 -> SettingsScope.Target(TargetApp.WHATSAPP_BUSINESS)
+                else -> SettingsScope.Global
+            }
+        val groups = listOf("all", "favorites", "privacy", "general", "media", "customization")
+        val filtered =
+            entries.filter { feature ->
+                val groupMatch =
+                    when (selected) {
+                        "favorites" -> {
+                            feature.key in favorites
+                        }
+
+                        "privacy" -> {
+                            feature.category == SearchableFeature.Category.PRIVACY
+                        }
+
+                        "general" -> {
+                            feature.category.name.startsWith("GENERAL")
+                        }
+
+                        "media" -> {
+                            feature.category == SearchableFeature.Category.MEDIA ||
+                                feature.category == SearchableFeature.Category.RECORDINGS
+                        }
+
+                        "customization" -> {
+                            feature.category == SearchableFeature.Category.CUSTOMIZATION
+                        }
+
+                        else -> {
+                            true
+                        }
+                    }
+                groupMatch && (query.isBlank() || feature.matches(query))
+            }
 
         Scaffold { padding ->
             LazyColumn(
@@ -175,14 +234,16 @@ class FeatureHubFragment : Fragment() {
                                 selected = selected == group,
                                 onClick = { selected = group },
                                 label = {
-                                    Text(when (group) {
-                                        "all" -> stringResource(R.string.uix_all)
-                                        "favorites" -> stringResource(R.string.uix_favorites)
-                                        "privacy" -> stringResource(R.string.privacy)
-                                        "general" -> stringResource(R.string.general)
-                                        "media" -> stringResource(R.string.media)
-                                        else -> stringResource(R.string.perso)
-                                    })
+                                    Text(
+                                        when (group) {
+                                            "all" -> stringResource(R.string.uix_all)
+                                            "favorites" -> stringResource(R.string.uix_favorites)
+                                            "privacy" -> stringResource(R.string.privacy)
+                                            "general" -> stringResource(R.string.general)
+                                            "media" -> stringResource(R.string.media)
+                                            else -> stringResource(R.string.perso)
+                                        },
+                                    )
                                 },
                             )
                         }
@@ -202,8 +263,9 @@ class FeatureHubFragment : Fragment() {
                     val setting = declared[feature.key]
                     val isBoolean = setting?.kind == SettingKeyRegistry.Kind.BOOLEAN
                     val chosen = if (isBoolean) resolver.effectiveBoolean(feature.key, scope) else false
-                    val overridden = isBoolean && scope is SettingsScope.Target &&
-                        store.readBoolean(scope, feature.key) != null
+                    val overridden =
+                        isBoolean && scope is SettingsScope.Target &&
+                            store.readBoolean(scope, feature.key) != null
                     Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
                         Column {
                             Row(modifier = Modifier.fillMaxWidth()) {
@@ -220,8 +282,11 @@ class FeatureHubFragment : Fragment() {
                                         overflow = TextOverflow.Ellipsis,
                                     )
                                     Text(
-                                        if (isBoolean) stringResource(R.string.uix_saved_unverified)
-                                        else stringResource(R.string.uix_open_editor),
+                                        if (isBoolean) {
+                                            stringResource(R.string.uix_saved_unverified)
+                                        } else {
+                                            stringResource(R.string.uix_open_editor)
+                                        },
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         style = MaterialTheme.typography.labelSmall,
                                     )
@@ -245,11 +310,12 @@ class FeatureHubFragment : Fragment() {
                                                 store.writeBoolean(scope, feature.key, enabled)
                                                 localRevision++
                                             },
-                                            colors = SwitchDefaults.colors(
-                                                checkedTrackColor = Color(0xFF208B4D),
-                                                checkedThumbColor = Color.White,
-                                                uncheckedTrackColor = Color.Gray,
-                                            ),
+                                            colors =
+                                                SwitchDefaults.colors(
+                                                    checkedTrackColor = Color(0xFF208B4D),
+                                                    checkedThumbColor = Color.White,
+                                                    uncheckedTrackColor = Color.Gray,
+                                                ),
                                         )
                                     }
                                 }

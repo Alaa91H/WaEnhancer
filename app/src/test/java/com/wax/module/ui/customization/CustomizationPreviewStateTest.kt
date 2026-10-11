@@ -1,6 +1,8 @@
 package com.wax.module.ui.customization
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CustomizationPreviewStateTest {
@@ -35,10 +37,11 @@ class CustomizationPreviewStateTest {
             val hideCommunities = mask and 2 != 0
             val hideCalls = mask and 4 != 0
             val hideUpdates = mask and 8 != 0
-            val state = CustomizationPreviewState(hideChannels = hideChannels)
-                .withTabHidden("600", hideCommunities)
-                .withTabHidden("400", hideCalls)
-                .withTabHidden("300", hideUpdates)
+            val state =
+                CustomizationPreviewState(hideChannels = hideChannels)
+                    .withTabHidden("600", hideCommunities)
+                    .withTabHidden("400", hideCalls)
+                    .withTabHidden("300", hideUpdates)
             assertEquals("channels value $mask", hideChannels, state.hideChannels)
             assertEquals("communities $mask", !hideCommunities, state.showCommunities)
             assertEquals("calls $mask", !hideCalls, state.showCalls)

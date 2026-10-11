@@ -70,6 +70,7 @@ class TargetSettingsActivity : ComponentActivity() {
         const val EXTRA_TARGET_CODE = "uix_initial_target_code"
         const val EXTRA_SETTING_QUERY = "uix_initial_setting_query"
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

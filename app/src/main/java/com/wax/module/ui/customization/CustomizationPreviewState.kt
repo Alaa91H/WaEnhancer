@@ -20,7 +20,10 @@ data class CustomizationPreviewState(
     val showChannelsSection: Boolean get() = showUpdatesTab && !hideChannels
     val showStatusSection: Boolean get() = showUpdatesTab
 
-    fun withTabHidden(tabId: String, hide: Boolean): CustomizationPreviewState {
+    fun withTabHidden(
+        tabId: String,
+        hide: Boolean,
+    ): CustomizationPreviewState {
         require(tabId in setOf("300", "400", "600")) { "Unsupported navigation tab ID" }
         return copy(hiddenTabs = if (hide) hiddenTabs + tabId else hiddenTabs - tabId)
     }

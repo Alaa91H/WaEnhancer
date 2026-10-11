@@ -13,13 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.preference.PreferenceManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.preference.PreferenceManager
 
 /**
  * The WA X colour palette.
@@ -162,15 +162,16 @@ private val DarkScheme =
  * are one step tighter and line height is explicit: the default 1.5 line height at 16sp
  * leaves a lot of air for two-line summaries, which is the bulk of this interface.
  */
-private val AmoledScheme = DarkScheme.copy(
-    background = Color.Black,
-    surface = Color.Black,
-    surfaceContainer = Color(0xFF0B0B0B),
-    surfaceContainerLow = Color(0xFF070707),
-    surfaceContainerHigh = Color(0xFF171717),
-    surfaceContainerHighest = Color(0xFF202020),
-    surfaceContainerLowest = Color.Black,
-)
+private val AmoledScheme =
+    DarkScheme.copy(
+        background = Color.Black,
+        surface = Color.Black,
+        surfaceContainer = Color(0xFF0B0B0B),
+        surfaceContainerLow = Color(0xFF070707),
+        surfaceContainerHigh = Color(0xFF171717),
+        surfaceContainerHighest = Color(0xFF202020),
+        surfaceContainerLowest = Color.Black,
+    )
 
 private val WaXTypography =
     Typography(
@@ -204,12 +205,21 @@ fun WaXTheme(
     val appearance = ManagerAppearance.fromStored(savedMode, darkTheme)
     val colorScheme: ColorScheme =
         when {
-            appearance.amoled -> AmoledScheme
+            appearance.amoled -> {
+                AmoledScheme
+            }
+
             dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                 if (appearance.dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
             }
-            appearance.dark -> DarkScheme
-            else -> LightScheme
+
+            appearance.dark -> {
+                DarkScheme
+            }
+
+            else -> {
+                LightScheme
+            }
         }
     val extended = if (appearance.dark) DarkExtended else LightExtended
 

@@ -278,8 +278,7 @@ class HomeFragment : BaseFragment() {
                     0 -> saveConfigs(requireContext())
                     1 -> importConfigs(requireContext())
                 }
-            }
-            .setNegativeButton(android.R.string.cancel, null)
+            }.setNegativeButton(android.R.string.cancel, null)
             .show()
     }
 

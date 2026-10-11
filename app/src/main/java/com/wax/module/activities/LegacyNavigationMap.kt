@@ -5,13 +5,26 @@ package com.wax.module.activities
  * their original preference owners after the four-tab shell migration.
  */
 internal object LegacyNavigationMap {
-    fun toPage(oldPosition: Int): Int = when (oldPosition) {
-        0 -> 0 // Home
-        1 -> 4 // General
-        2 -> 5 // Privacy
-        3 -> 6 // Media
-        4 -> 8 // Original customization preference owner, not preview
-        5 -> 7 // Recordings
-        else -> 1 // Feature index is a safe non-operational fallback
-    }
+    fun toPage(oldPosition: Int): Int =
+        when (oldPosition) {
+            0 -> 0
+
+            // Home
+            1 -> 4
+
+            // General
+            2 -> 5
+
+            // Privacy
+            3 -> 6
+
+            // Media
+            4 -> 8
+
+            // Original customization preference owner, not preview
+            5 -> 7
+
+            // Recordings
+            else -> 1 // Feature index is a safe non-operational fallback
+        }
 }

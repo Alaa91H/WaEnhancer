@@ -48,13 +48,14 @@ class MainActivity : BaseActivity() {
 
         binding.navView.setOnItemSelectedListener(
             NavigationBarView.OnItemSelectedListener { item ->
-                val position = when (item.itemId) {
-                    R.id.navigation_home -> 0
-                    R.id.navigation_features -> 1
-                    R.id.navigation_colors -> 2
-                    R.id.navigation_tools -> 3
-                    else -> return@OnItemSelectedListener false
-                }
+                val position =
+                    when (item.itemId) {
+                        R.id.navigation_home -> 0
+                        R.id.navigation_features -> 1
+                        R.id.navigation_colors -> 2
+                        R.id.navigation_tools -> 3
+                        else -> return@OnItemSelectedListener false
+                    }
                 binding.viewPager.setCurrentItem(position, true)
                 true
             },
@@ -64,13 +65,16 @@ class MainActivity : BaseActivity() {
             object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
-                    val primaryId = when (position) {
-                        0 -> R.id.navigation_home
-                        2, 8 -> R.id.navigation_colors
-                        3 -> R.id.navigation_tools
-                        else -> R.id.navigation_features
-                    }
-                    binding.navView.menu.findItem(primaryId)?.isChecked = true
+                    val primaryId =
+                        when (position) {
+                            0 -> R.id.navigation_home
+                            2, 8 -> R.id.navigation_colors
+                            3 -> R.id.navigation_tools
+                            else -> R.id.navigation_features
+                        }
+                    binding.navView.menu
+                        .findItem(primaryId)
+                        ?.isChecked = true
 
                     val scrollKey = pendingScrollToPreference
                     if (pendingScrollToFragment == position && scrollKey != null) {
@@ -142,7 +146,11 @@ class MainActivity : BaseActivity() {
      * Bridges the new UIX-01 shell into the historical preference owners. Never
      * rewrites a legacy feature key or changes which target owns its settings.
      */
-    fun navigateToLegacyFragment(position: Int, preferenceKey: String? = null, parentKey: String? = null) {
+    fun navigateToLegacyFragment(
+        position: Int,
+        preferenceKey: String? = null,
+        parentKey: String? = null,
+    ) {
         val page = LegacyNavigationMap.toPage(position)
         pendingScrollToPreference = preferenceKey
         pendingScrollToFragment = if (preferenceKey != null) page else -1

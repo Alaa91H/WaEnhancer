@@ -14,7 +14,9 @@ import com.wax.module.settings.SharedPreferencesSettingsStore
  * The "expected" snapshot is verified first to avoid overwriting newer edits
  * made by the original preference screen while the preview is open.
  */
-class CustomizationPreviewRepository(context: Context) {
+class CustomizationPreviewRepository(
+    context: Context,
+) {
     private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
 
     fun read(scope: SettingsScope): CustomizationPreviewState {
@@ -38,6 +40,7 @@ class CustomizationPreviewRepository(context: Context) {
         if (read(scope) != expected) return false
         if (expected == draft) return true
         val edit = prefs.edit()
+
         fun key(name: String) = SettingsKeys.physicalKey(scope, name)
         if (expected.colorsEnabled != draft.colorsEnabled) edit.putBoolean(key("changecolor"), draft.colorsEnabled)
         if (expected.accentColor != draft.accentColor) edit.putInt(key("primary_color"), draft.accentColor)
