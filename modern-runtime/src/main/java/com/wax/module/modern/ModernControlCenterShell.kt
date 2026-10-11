@@ -519,26 +519,51 @@ class ModernControlCenterShell(
             profileDialog?.isShowing == true) return
         val options = availableProfiles.toList()
         val labels = options.map {
-            (if (it.first == activeProfileId) "✓ " else "") +
-                if (it.first == "default") strings.defaultProfile else it.second
+            if (it.first == "default") strings.defaultProfile else it.second
         }.toTypedArray()
-        profileDialog = AlertDialog.Builder(activity)
-            .setTitle(strings.profiles)
-            .setMessage(strings.profilesGlobalScope)
-            .setItems(labels) { _, index ->
-                if (!isWindowInteractive()) return@setItems
+        // setMessage() and setItems() together make Android's AlertController
+        // hide the list on some OS versions. Use one accessible custom view.
+        val choices = android.widget.ListView(activity).apply {
+            choiceMode = android.widget.ListView.CHOICE_MODE_SINGLE
+            adapter = android.widget.ArrayAdapter(
+                activity, android.R.layout.simple_list_item_single_choice, labels,
+            )
+            contentDescription = strings.profiles
+            setOnItemClickListener { _, _, index, _ ->
+                if (!isWindowInteractive()) return@setOnItemClickListener
+                profileDialog?.dismiss()
                 val id = options[index].first
                 if (id != activeProfileId) selectProfile(id)
             }
+        }
+        val content = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(10), dp(16), 0)
+            addView(TextView(activity).apply {
+                text = strings.profilesGlobalScope
+                setTextColor(secondary)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                setPadding(0, 0, 0, dp(8))
+            })
+            addView(choices, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp((options.size * 52).coerceAtMost(310)),
+            ))
+        }
+        profileDialog = AlertDialog.Builder(activity)
+            .setTitle(strings.profiles)
+            .setView(content)
             .setNeutralButton(strings.manageProfiles) { _, _ ->
                 ModernManagerFallback.openProfiles(activity)
             }
             .setNegativeButton(android.R.string.cancel, null)
-            .create().also { dialog ->
-                dialog.setOnDismissListener {
-                    if (profileDialog === dialog) profileDialog = null
+            .create().also { window ->
+                window.setOnDismissListener {
+                    if (profileDialog === window) profileDialog = null
                 }
-                dialog.show()
+                window.show()
+                val selected = options.indexOfFirst { it.first == activeProfileId }
+                if (selected >= 0) choices.setItemChecked(selected, true)
             }
     }
 
