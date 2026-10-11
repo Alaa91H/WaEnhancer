@@ -89,8 +89,7 @@ class FeatureContractTest {
             .filter {
                 it.riskLevel == RiskLevel.HIGH &&
                     it.availability != FeatureAvailability.NOT_IMPLEMENTED
-            }
-            .forEach { metadata ->
+            }.forEach { metadata ->
                 assertTrue(
                     "${metadata.id} is HIGH risk, so it must declare a required resolver",
                     metadata.requiredResolvers.isNotEmpty(),
