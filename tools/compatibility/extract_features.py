@@ -45,6 +45,10 @@ FEATURES_DIR = os.path.join(
     REPO_ROOT, "app/src/main/java/com/wax/module/xposed/features"
 )
 ARRAYS_XML = os.path.join(REPO_ROOT, "app/src/main/res/values/arrays.xml")
+PREFERENCE_XML_DIR = os.path.join(REPO_ROOT, "app/src/main/res/xml")
+# `app:key="pinnedlimit"` and `android:key="pinnedlimit"` both name a preference row.
+PREFERENCE_KEY = re.compile(r'\b(?:app|android):key="([^"]+)"')
+_PREFERENCE_KEYS: set[str] | None = None
 UNOBFUSCATOR = os.path.join(
     REPO_ROOT, "app/src/main/java/com/wax/module/xposed/core/devkit/Unobfuscator.kt"
 )
@@ -56,13 +60,24 @@ RESOLVER_DECL = re.compile(r"\bfun\s+(load\w+)\s*\(")
 ARRAY_ITEM = re.compile(r"<item>([^<]+)</item>")
 # Only known preference/settings receivers are treated as evidence of a read.
 # Generic getString/getInt calls on JSONObject, Bundle, etc. are not preferences.
+#
+# The receiver is matched rather than the accessor alone, and it may be qualified.
+# `Utils.xprefs.getString("custom_privacy_type", "0")` is the target-scoped
+# SharedPreferences read by CustomPrivacy and Tasker; a pattern anchored on a bare
+# `prefs.` reported both features as reading no preference at all, which is a
+# missing-evidence error rather than a conservative one. An unknown receiver name
+# (`myprefs`, `payload`) is still refused, because `\b` cannot match inside it.
+PREF_RECEIVER = r"(?:\b[\w]+\s*\.\s*)?(?:xprefs|prefs|preferences|sharedPreferences|settingsStore|settings|store)"
 PREF_READ = re.compile(
-    r'\b(?:prefs|preferences|sharedPreferences|settingsStore|settings|store)'
+    r'\b' + PREF_RECEIVER +
     r'\s*\.\s*(?:getBoolean|getString|getInt|getLong|getFloat|getStringSet|contains|get|read)'
-    r'\s*\(\s*(?:"([^"]+)"|(PREF_[A-Z0-9_]+))'
+    # A literal, or a constant reference. The constant is resolved to its value and only
+    # accepted when it is a `PREF_*` name or a key the Manager can actually write, so a
+    # JSON field or an intent extra cannot be recorded as a preference.
+    r'\s*\(\s*(?:"([^"]+)"|([A-Z][A-Z0-9_]*))'
 )
 PREF_CONST = re.compile(
-    r'\bconst\s+val\s+(PREF_[A-Z0-9_]+)\s*=\s*"([^"]+)"'
+    r'\bconst\s+val\s+([A-Z][A-Z0-9_]*)\s*=\s*"([^"]+)"'
 )
 KOTLIN_PACKAGE = re.compile(r"^\s*package\s+([\w.]+)\s*$", re.MULTILINE)
 KOTLIN_IMPORT = re.compile(r"^\s*import\s+([\w.]+)(?:\s+as\s+(\w+))?\s*$", re.MULTILINE)
@@ -295,10 +310,36 @@ def feature_resolver_usage(files: dict[str, str], owners: dict[str, str] | None 
     return usage
 
 
+def declared_preference_keys() -> set[str]:
+    """Every key the Manager can write, read out of the public preference XML.
+
+    This is the second half of resolving a constant reference: `PINNED_LIMIT_PREF_KEY =
+    "pinnedlimit"` is a preference key that no `PREF_*` naming convention would have found,
+    and `JSON_AUDIO_URL = "audio_url"` is not one. The preference contract in
+    ``res/xml`` is what separates them, so a constant is accepted when it is a declared key
+    rather than because its value looks plausible.
+    """
+    if _PREFERENCE_KEYS is not None:
+        return _PREFERENCE_KEYS
+    keys: set[str] = set()
+    try:
+        entries = sorted(os.listdir(PREFERENCE_XML_DIR))
+    except OSError:
+        entries = []
+    for name in entries:
+        if not name.endswith(".xml"):
+            continue
+        for match in PREFERENCE_KEY.findall(read(os.path.join(PREFERENCE_XML_DIR, name)) or ""):
+            keys.add(match)
+    globals()["_PREFERENCE_KEYS"] = keys
+    return keys
+
+
 def feature_preference_keys(files: dict[str, str], owners: dict[str, str] | None = None) -> dict[str, list[str]]:
     """Inventory statically provable reads; writes and dynamic keys stay unknown."""
     if owners is None:
         owners = declared_classes(files)
+    catalog = declared_preference_keys()
     keys: dict[str, list[str]] = {}
     for stem in files:
         body = strip_comments(aggregate(files, feature_closure(stem, files, owners=owners)))
@@ -307,8 +348,12 @@ def feature_preference_keys(files: dict[str, str], owners: dict[str, str] | None
         for literal, constant in PREF_READ.findall(body):
             if literal:
                 found.add(literal)
-            elif constant in constants:
-                found.add(constants[constant])
+                continue
+            value = constants.get(constant)
+            if value is None:
+                continue
+            if constant.startswith("PREF_") or value in catalog:
+                found.add(value)
         if found:
             keys[stem] = sorted(found)
     return keys

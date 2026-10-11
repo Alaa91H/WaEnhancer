@@ -78,7 +78,7 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #170 | F155 atomic diagnostic + self-test engine, Manager screen, SAF ZIP export | PR #457 MERGED (`44b90875`), all 12 checks green on `8c093fc8`, issue CLOSED |
 | #455 | API102 resolver, hook and core privacy failure investigation | PR #459 MERGED (`599deca6`), all 12 checks green on `a6f0f3b4` |
 | #449 | Read receipt privacy: hide read receipts, release after reply, delivery tick | PR #460 MERGED (`67fc086b`), all 12 checks green on `92e8109f`; delivery reported UNSUPPORTED |
-| #450 | Stealth privacy: typing, recording and online reported separately | PR #460 MERGED (`67fc086b`), all 12 checks green on `92e8109f` |
+| #450 | Stealth privacy: typing, recording and online reported separately | CLOSED — PR #460 (`67fc086b`) then #479 (`4c7bff32`), all checks green |
 | #451 | Anti-Delete / anti-revoke with explicit capability boundaries | PR #461 MERGED (`3b6b4842`), all 12 checks green on `2c099394` |
 | #391 | Resolver evidence identity: pinned build fingerprint, account scope, generator parity | this branch; PR number filled in on merge |
 
@@ -241,14 +241,15 @@ Nothing below is claimed as done.
 | #170 | merged `44b90875`, **CLOSED**, anonymised schema posted on the issue |
 | #455 | root causes merged `599deca6`: control-center lifecycle, contact-data anchor, fail-closed resolver selection |
 | #449 | merged `67fc086b`: read receipts withheld, release-after-reply, delivery tick `UNSUPPORTED` |
-| #450 | merged `67fc086b`: typing and recording reported separately; online `SERVER_CONTROLLED` |
+| #450 | **CLOSED**: merged `67fc086b` then `4c7bff32` (#479); typing and recording reported separately; online `SERVER_CONTROLLED`; per-contact rules read from the target store |
 | #451 | merged `3b6b4842`: anti-revoke, bounded retention, no protected content copied |
 | #452 | merged `9a9d0a72`: Status seen privacy, separate from chat receipts |
 | #357 | merged `5c8d91b6`: the Status reply seen-receipt rule; native path `NATIVE_PATH_UNRESOLVED` |
 | #433 | **CLOSED**: Control Center acceptance met, verified in the tree |
 | #425 | **CLOSED**: single menu entry restored, Control Center is the control path |
 | #396 | **CLOSED**: merged `e6b056a0`, inherited-certification refused at the generator |
-| #391 | **CLOSED**: evidence identity is package + exact version + pinned build fingerprint + account scope, enforced identically by the validator and the generator |
+| #391 | **CLOSED**: merged `6f5e5e1e` (#480); evidence identity is package + exact version + pinned build fingerprint + account scope, enforced identically by the validator and the generator |
+| #394 | merged here: the preference-key inventory sees qualified store receivers and constants outside the `PREF_*` convention |
 
 Every row carries `PENDING_USER_DEVICE_TEST`. Sender-visible behaviour needs the
 owner's second account and is not substitutable by a build.
@@ -287,6 +288,46 @@ Deliberate ceilings: the matrix still holds 0 supported cells and no fabricated
 observations. The rules refuse a claim; they do not produce one, and no resolver
 evidence exists until a real device run records it.
 
+### #394 scope notes — the preference-key inventory is no longer incomplete by design
+
+`derived.features[*].preferenceKeys` under-reported in two provable ways, both now closed:
+
+- **Qualified store receivers were invisible.** `Utils.xprefs` is the target-scoped
+  `SharedPreferences`, and `CustomPrivacy` reads every one of its keys through it
+  (`Utils.xprefs.getString("custom_privacy_type", "0")`). A pattern anchored on a
+  bare `prefs.` reported the feature as reading nothing at all. The receiver is now
+  matched as a receiver, qualifier included.
+- **Constants outside the `PREF_*` convention were invisible.** `PinnedLimit` reads
+  `prefs.getBoolean(PINNED_LIMIT_PREF_KEY, false)`. A constant reference is now
+  resolved to its value and accepted when it is a `PREF_*` name **or** a key the
+  Manager's preference XML actually declares. That second clause is what keeps
+  `JSON_AUDIO_URL = "audio_url"` out of the inventory: an undeclared constant is
+  refused, not guessed, and an unreadable contract refuses every constant rather
+  than falling back to accepting names.
+
+Before/after inventory diff, derived and committed:
+
+| feature | before | after |
+|---|---|---|
+| `CustomPrivacy` | `[]` | `["custom_privacy_type"]` |
+| `PinnedLimit` | `[]` | `["pinnedlimit"]` |
+
+Features with at least one provable key: **51 → 53 of 64**. The other 11 were
+re-read one by one rather than assumed faulty, and none of them is a missed read:
+
+| feature | why it has no provable key |
+|---|---|
+| `ContactItemListener`, `ConversationItemListener`, `MenuStatusProvider`, `ContextMenuActionProvider` | listeners/providers; they receive the store and never read it |
+| `ActivityController`, `AboutContactPicker` | read `Intent` extras and the contact picker, not preferences |
+| `DndMode`, `DeleteStatus`, `DownloadProfile` | take `preferences` in the constructor; the keys they act on are supplied by the caller, not read here |
+| `MinorFixes` | modern adapter, staged source only, not wired into `ModernXposedEntry` |
+| `DebugFeature` | contract test double |
+
+Coverage is deliberately conservative: an unknown receiver name (`myprefs`), a
+chained accessor (`ModuleRuntime.getPrefs()`), a dynamic key and a write-only key
+are all refused. Under-reporting a key is recoverable; certifying a key that is not
+a preference is not.
+
 ### Next, in order
 
 1. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
@@ -304,7 +345,7 @@ evidence exists until a real device run records it.
 
 ### Not started
 
-Ascending, once the items above are done: #458, #437, #400, #395, #394, #393,
+Ascending, once the items above are done: #458, #437, #400, #395, #393,
 #389, #387, #386, #385, #384, #379, #378, #372, #371, #370, #369, #368, #354,
 #353, #352, #351, #350, and the remainder of the open list.
 
