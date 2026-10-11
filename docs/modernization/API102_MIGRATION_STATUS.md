@@ -28,6 +28,16 @@
   Manager fallback. Device validation PENDING_USER_DEVICE_TEST. Controls for
   the still-legacy-only features stay pending until their own waves land.
 
+## Concurrent development
+
+Two lanes work on this repository in parallel and neither waits on the other. The protocol,
+including which paths each lane owns, is [`docs/collaboration/PROTOCOL.md`](../collaboration/PROTOCOL.md);
+claims, leases, the `blocked-on:aux` route and the append-only
+[`LOG.md`](../collaboration/LOG.md) are defined there. Work order comes from
+[`docs/collaboration/QUEUE.md`](../collaboration/QUEUE.md).
+
+---
+
 ## Wave / batch plan (M06.08 order, batches of 5 per task spec)
 
 Wave rule (mechanical, refinement-allowed but never silent):
@@ -327,6 +337,143 @@ Coverage is deliberately conservative: an unknown receiver name (`myprefs`), a
 chained accessor (`ModuleRuntime.getPrefs()`), a dynamic key and a write-only key
 are all refused. Under-reporting a key is recoverable; certifying a key that is not
 a preference is not.
+
+### #10 scope notes — the catalog must not claim a native path that does not exist
+
+Inspecting F003 before building it turned up a defect that reaches past that one feature:
+**every resolver name the platform catalog declares existed in no resolver.** Ten declarations —
+`loadStatusComposer`, `loadStatusPublish`, `loadSendMessage`, `loadRevokeMessage`,
+`loadReceiptOptions`, `loadPresenceManager`, `loadChatState`, `loadMediaTransfer`,
+`loadMediaDownload`, `loadNotificationListener` — are absent from the 191 `fun load*` in
+`Unobfuscator`, and every one of those features was marked `AVAILABLE`.
+
+The engines are real and tested. What does not exist is the consumer: nothing constructs
+`StatusAudioStudio`, `MediaPolicy`, `NotificationCooldownEngine`, `PresenceAlertEngine`,
+`OutgoingPolicyEngine`, `MessageRevocationQueue`, the history timeline or the scheduler, and the
+manifest declares no notification listener. So the fix is to say so rather than to name a resolver
+that resolves nothing:
+
+- the fictional names are gone; no feature declares a resolver it does not use;
+- the ten unwired features are declared `FeatureAvailability.NOT_IMPLEMENTED` — the enum member
+  that already existed for "declared, not built";
+- `FeatureContractTest.aHighRiskFeatureIsCapabilityGated` now accepts "a required resolver **or**
+  NOT_IMPLEMENTED". The combination it replaces — HIGH risk, no resolver, presented as available —
+  is exactly what the two outbound features declared;
+- a new case pins the four unwired engines to `NOT_IMPLEMENTED` and to declaring no resolver.
+
+This adds a gate; it removes none. The source-level check that *no* resolver name in the catalog is
+missing from `Unobfuscator` belongs to `tools/` and is raised as its own issue for the other lane.
+
+### #10 unit 2 — preparing a selection into files, and refusing rather than approximating
+
+`StatusAudioStudio` decides *what* should be posted. This unit adds the layer that makes those
+decisions into files, and it is deliberately shaped so that the awkward cases cannot pass
+unnoticed:
+
+- **`StatusAudioPreparer`** turns a plan into parts, and the rules are strict on purpose. A part
+  that fails takes the whole preparation down and **every** file written before it is deleted —
+  a half-prepared series posted as a series would be worse than a refusal. A renderer that cannot
+  do what the plan asked is refused with the missing edit named. A renderer that refuses or fails
+  has its own allocated name released too, because a file the user never chose that nothing else
+  will clean up is a leak, not a detail.
+- **`MuxerTrimAudioRenderer`** copies compressed samples, so a cut is bit-identical to what the
+  user chose. What it cannot do is *change* audio: `MediaMuxer` cannot apply a fade, a volume
+  change or a loudness correction, so the renderer declares exactly the edits it honours and
+  refuses the rest by name. Silently serving a different clip would be the worst outcome here.
+- **`DirectoryStatusAudioWorkspace`** makes every name. The file is
+  `wae-status-part-<n>-of-<total>.<ext>` from the plan's own index, so a source called
+  `../../shared_prefs/x.mp3` cannot choose where anything lands, and no source path is ever
+  carried into a result. The directory is removed with its last part.
+
+19 new unit tests cover the split, the refusal with its reason, the failure that leaves nothing,
+the cancellation between parts, the unknown container, the unsafe name, and each boundary of the
+renderer's honesty — including that a missing source file is a failure and never a crash.
+
+Device validation `PENDING_USER_DEVICE_TEST`. What is **not** claimed: the editor screen, the
+posting path into the Status composer, and the transcode path for containers the platform cannot
+write. Those are the next units, and until they exist the feature stays `NOT_IMPLEMENTED` in the
+catalog — which is exactly what the unit above fixed.
+
+### #10 unit 3 — the editor, and where the limit comes from
+
+`StatusAudioStudioActivity` is the screen the issue asks for, reachable from **Settings → Media →
+Audio → Status Audio Studio**, and every control on it changes the plan rather than a local field:
+
+- pick a file (SAF), trim start/end, fade in/out, volume, level the loudness, strip identifying
+  details, number the parts, and choose what happens when the selection is longer than this client
+  posts — with the plan, its warnings and the exact outcome shown before anything is written;
+- the header states **whether this client's voice Status limit was read or assumed**.
+  `StatusAudioCapabilityReader` reads it from a target-scoped preference and returns
+  `StatusAudioCapability.Unknown` when it cannot, which makes the planner record the compatibility
+  fallback. There is no path that fills the limit from a constant and calls it a reading, because
+  that distinction is the one the whole compatibility matrix turns on;
+- slow work (copy in, read, plan, prepare) runs off the UI thread, and a preparation in flight is
+  cancelled with the screen;
+- the copied source never leaves the app's own directory: `StatusAudioSourceReaderSupport.safeName`
+  reduces a display name to a last segment and refuses anything that could be a path, so
+  `../../etc/passwd` becomes `passwd` and a control character becomes `audio`.
+
+`AndroidStatusAudioSourceReader` copies the picked document in before reading it: a SAF grant is for
+the process that received it, and working on a copy keeps a long split from failing halfway because
+a permission lapsed.
+
+**Three defects CI found in this unit, fixed at the cause:**
+
+1. `info.flags = extractor.sampleFlags` — `MediaExtractor` and `MediaCodec` use different flag
+   namespaces that happen to share a bit, so the value was only correct by coincidence. The flags
+   are now translated, and the two extractor flags with no muxer equivalent (encrypted, partial
+   frame) **refuse the sample** rather than being written with a flag that no longer means what it
+   said. Copying an encrypted sample would have produced a container that claims to be playable and
+   holds ciphertext.
+2. The renderer logged on paths a JVM unit test reaches. `android.util.Log` is unmocked there, so
+   the log replaced the failure under test with `not mocked`. The reason now travels in the
+   outcome, which is where the editor reads it from anyway.
+3. `entries - X` yields a `List` where a `Set` was required, and a duplicated `@Test` — compile
+   errors in the new suite.
+
+**Defect found by review before merge, fixed at the cause:** prepared parts were written into the
+cache directory and never released — a copy of the user's audio that nothing would ever clean up.
+The screen now keeps the workspace for as long as it is open, releases it when a different file is
+picked and when the screen closes, and **says so in the result line**: "Nothing has been posted;
+these files are removed when you close this screen." The message and the behaviour now agree.
+
+**Two more defects CI found in this unit, fixed at the cause:**
+
+4. Every new string was English-only, and the project runs `MissingTranslation` as an error in ten
+   shipped locales. All thirty keys are now translated in ar, de, es, fr, in, it, iw, pt, ru, tr
+   and zh. A screen that only reads correctly in one language is not finished.
+5. `AndroidStatusAudioSourceReader` swallowed the exception from an unreadable file. The reason is
+   now carried on the reader and shown to the user — "this file cannot be read" without saying why
+   is not something the user can act on. It is not written to a log, because the user is the one
+   who needs it.
+
+**Not claimed:** the path that hands a prepared part to the Status composer, and transcoding for
+containers the platform cannot write. Both need the Status composer resolver, which does not exist
+— that is the finding unit 1 recorded — so the feature stays `NOT_IMPLEMENTED` and the Prepare
+button ends in a prepared file rather than a posted Status.
+
+### #10 unit 4 — the wording a user actually reads
+
+Lint refused this unit's own strings, and each refusal was a real defect rather than noise:
+
+1. `Prepared %1$d part(s)` was a string, so the count was rendered as `1 part(s)`. It is now a
+   `<plurals>` in **all eleven** shipped locales, each with the quantity forms that language
+   actually uses — ar with zero/one/two/few/many/other, ru with one/few/many/other, iw with
+   one/two/other, zh with `other` only. A count glued to an uninflected noun is machine output, and
+   six of the shipped languages inflect on it.
+2. The coarse-trim note was a `"\n"` appended to a formatted string. It is now
+   `status_audio_selection_coarse_format`, a second string the translator can order, rather than a
+   line break nobody can move.
+3. `status_audio_no_file` was declared in eleven locales and referenced nowhere. It now heads the
+   empty state, above the hint that tells the user what to do about it — which is what the screen
+   was already trying to say with two unlabelled sentences of equal weight.
+4. `Uri.parse(uri)` in the source reader is the KTX `uri.toUri()` the rest of the tree uses.
+
+A new case pins the two properties lint cannot check: that the plural reaches every shipped locale
+rather than only the default one, and that the coarse variant is a string of its own. A checker
+that reads one file would have passed with the other eleven still wrong.
+
+Device validation `PENDING_USER_DEVICE_TEST`.
 
 ### Next, in order
 

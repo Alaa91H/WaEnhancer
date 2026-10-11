@@ -1,0 +1,111 @@
+package com.wax.module.status
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * The last place a device path could enter the studio, and the file it must never reach.
+ *
+ * A picked document arrives as a URI whose display name may be anything the providing app chose:
+ * a full path, a directory traversal, a control character. Everything downstream — the plan, the
+ * prepared part, a diagnostic line — is built from the name, so the name is sanitised here and
+ * the refusal cases are pinned rather than assumed.
+ */
+class StatusAudioSourceReaderSupportTest {
+    @Test
+    fun aPlainFileNameIsKeptAsItIs() {
+        assertEquals("holiday.m4a", StatusAudioSourceReaderSupport.safeName("holiday.m4a"))
+    }
+
+    @Test
+    fun aFullDevicePathLosesEverythingBeforeTheLastSegment() {
+        assertEquals(
+            "WaGlobal.xml",
+            StatusAudioSourceReaderSupport.safeName("/data/user/0/com.whatsapp/shared_prefs/WaGlobal.xml"),
+        )
+    }
+
+    @Test
+    fun aWindowsSeparatorIsTreatedAsASeparatorToo() {
+        assertEquals("recording.wav", StatusAudioSourceReaderSupport.safeName("C:\\Users\\me\\recording.wav"))
+    }
+
+    @Test
+    fun aTraversalAttemptBecomesTheLastSegmentRatherThanAPath() {
+        assertEquals(
+            "passwd",
+            StatusAudioSourceReaderSupport.safeName("../../etc/passwd"),
+        )
+    }
+
+    @Test
+    fun aNameThatIsOnlyPunctuationIsNotCarriedThrough() {
+        assertEquals("audio", StatusAudioSourceReaderSupport.safeName(".."))
+        assertEquals("audio", StatusAudioSourceReaderSupport.safeName("."))
+        assertEquals("audio", StatusAudioSourceReaderSupport.safeName("   "))
+        assertEquals("audio", StatusAudioSourceReaderSupport.safeName(null))
+        assertEquals("audio", StatusAudioSourceReaderSupport.safeName(""))
+    }
+
+    @Test
+    fun aNameWithAControlCharacterIsRefusedRatherThanCleaned() {
+        assertEquals("audio", StatusAudioSourceReaderSupport.safeName("clip\nname.m4a"))
+        assertEquals("audio", StatusAudioSourceReaderSupport.safeName("clip\u0000name.m4a"))
+        assertEquals("audio", StatusAudioSourceReaderSupport.safeName("clip\u001Fname.m4a"))
+    }
+
+    @Test
+    fun anOverlongNameIsShortenedRatherThanRefused() {
+        val name = StatusAudioSourceReaderSupport.safeName("x".repeat(400) + ".m4a")
+
+        assertTrue("a name has to stay bounded", name.length <= 96)
+    }
+
+    @Test
+    fun theContainerIsRecognisedFromTheNameAndFallsBackToTheMimeType() {
+        val fromName =
+            StatusAudioSourceReaderSupport.source("clip.opus", null, 1_000L, 10L, false, false)
+        assertEquals(AudioContainer.OPUS, fromName.container)
+
+        val fromMime =
+            StatusAudioSourceReaderSupport.source("voice-note", "audio/ogg", 1_000L, 10L, false, false)
+        assertEquals(AudioContainer.OGG, fromMime.container)
+
+        val unknown =
+            StatusAudioSourceReaderSupport.source("clip.bin", "application/octet-stream", 1_000L, 10L, false, false)
+        assertNull(
+            "a format nothing recognises is unknown, not a guess",
+            unknown.container,
+        )
+    }
+
+    @Test
+    fun anUnreadableLengthIsZeroRatherThanAGuess() {
+        val source = StatusAudioSourceReaderSupport.source("clip.m4a", null, -1L, -1L, false, false)
+
+        assertEquals(0L, source.durationMillis)
+        assertEquals(0L, source.sizeBytes)
+    }
+
+    @Test
+    fun locationAndAuthorTagsAreRecordedAsFoundAndNeverGuessed() {
+        val tagged = StatusAudioSourceReaderSupport.source("clip.m4a", null, 1_000L, 10L, true, true)
+        assertTrue(tagged.hasLocationTag)
+        assertTrue(tagged.hasAuthorTag)
+
+        val untagged = StatusAudioSourceReaderSupport.source("clip.m4a", null, 1_000L, 10L, false, false)
+        assertFalse(untagged.hasLocationTag)
+        assertFalse(untagged.hasAuthorTag)
+    }
+
+    @Test
+    fun everyContainerHasItsOwnSuffix() {
+        val suffixes = AudioContainer.entries.map { StatusAudioSourceReaderSupport.suffixFor(it) }
+
+        assertEquals(AudioContainer.entries.size, suffixes.distinct().size)
+        assertTrue(suffixes.all { it.isNotBlank() && it.none { character -> !character.isLetterOrDigit() } })
+    }
+}

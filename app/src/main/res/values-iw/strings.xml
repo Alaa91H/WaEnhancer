@@ -641,4 +641,41 @@
     <string name="diagnostics_status_not_tested">לא נבדק</string>
     <string name="diagnostics_status_unsupported">לא נתמך</string>
     <string name="diagnostics_status_external">נדרש אימות חיצוני</string>
+    <!-- Status Audio Studio (F003, issue #10) -->
+    <string name="status_audio_studio">סטודיו אודיו לסטטוס</string>
+    <string name="status_audio_pick_hint">בחר קובץ שמע מהמכשיר כדי להכין אותו כסטטוס קולי. שום דבר לא מתפרסם עד שתבקש.</string>
+    <string name="status_audio_choose_file">בחירת שמע</string>
+    <string name="status_audio_prepare">הכנה</string>
+    <string name="status_audio_trim_start">תחילת הבחירה</string>
+    <string name="status_audio_trim_end">סוף הבחירה</string>
+    <string name="status_audio_fade_in">עריכה להיעלמות</string>
+    <string name="status_audio_fade_out">דעיכה</string>
+    <string name="status_audio_normalize">יישור עוצמה</string>
+    <string name="status_audio_strip_metadata">הסרת פרטי זיהוי</string>
+    <string name="status_audio_number_parts">מספור החלקים</string>
+    <string name="status_audio_overflow">כאשר הבחירה ארוכה יותר ממה שהאפליקציה מתירה</string>
+    <string name="status_audio_overflow_ask">לשאול בכל פעם</string>
+    <string name="status_audio_overflow_trim">לשמור רק את החלק הראשון</string>
+    <string name="status_audio_overflow_split">לפרסם כחלקים ממוספרים</string>
+    <string name="status_audio_overflow_cancel">לא לעשות דבר</string>
+    <string name="status_audio_plan">מה יקרה</string>
+    <string name="status_audio_volume_format">עוצמה: %1$d%%</string>
+    <string name="status_audio_selection_format">נבחר %1$s מתוך %2$s</string>
+    <string name="status_audio_selection_coarse_format">נבחר %1$s מתוך %2$s\n%3$s</string>
+    <string name="status_audio_source_format">%1$s • %2$s</string>
+    <string name="status_audio_limit_fallback">לא ניתן היה לקרוא את מגבלת הסטטוס הקולי של האפליקציה, ולכן משתמשים ב-%1$s כחלופה.</string>
+    <string name="status_audio_limit_known">האפליקציה מפרסמת עד %1$s.</string>
+    <string name="status_audio_reading">קריאת הקובץ…</string>
+    <string name="status_audio_preparing">בהכנה…</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">חלק אחד הוכן, %2$s בסך. שום דבר לא פורסם; הקבצים יימחקו עם סגירת המסך.</item>
+        <item quantity="two">שני חלקים הוכנו, %2$s בסך. שום דבר לא פורסם; הקבצים יימחקו עם סגירת המסך.</item>
+        <item quantity="other">%1$d חלקים הוכנו, %2$s בסך. שום דבר לא פורסם; הקבצים יימחקו עם סגירת המסך.</item>
+    </plurals>
+    <string name="status_audio_cannot_prepare">אי אפשר להכין את הבחירה הזו כאן: %1$s</string>
+    <string name="status_audio_no_file">לא נבחר קובץ שמע.</string>
+    <string name="status_audio_unreadable">לא ניתן היה לקרוא את הקובץ הזה כשמע.</string>
+    <string name="status_audio_unreadable_reason">לא ניתן היה לקרוא את הקובץ הזה כשמע: %1$s</string>
+    <string name="status_audio_trim_coarse">הקובץ ארוך, ולכן ידית הבחירה זזה בשניות שלמות.</string>
+
 </resources>

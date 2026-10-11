@@ -186,6 +186,24 @@ class PlatformFoundationTest {
     }
 
     @Test
+    fun aHighRiskFeatureIsEitherGatedOrDeclaredUnwired() {
+        // The registry rejects a HIGH-risk feature that names no required resolver, because a
+        // gate is what stops it when an update moves what it hooks. A feature that declares
+        // itself NOT_IMPLEMENTED is held back harder than any gate, so it is the one shape
+        // that may be presented without one.
+        PlatformFeatureCatalog
+            .metadata()
+            .filter { it.riskLevel == RiskLevel.HIGH }
+            .forEach { metadata ->
+                assertTrue(
+                    "${metadata.id} is HIGH risk: it needs a required resolver or NOT_IMPLEMENTED",
+                    metadata.requiredResolvers.isNotEmpty() ||
+                        metadata.availability == FeatureAvailability.NOT_IMPLEMENTED,
+                )
+            }
+    }
+
+    @Test
     fun theCatalogCoversEveryPhase() {
         val categories = PlatformFeatureCatalog.metadata().map { it.category }.toSet()
         assertTrue(FeatureCategory.PRIVACY in categories)

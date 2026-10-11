@@ -638,4 +638,40 @@
     <string name="diagnostics_status_not_tested">Belum diuji</string>
     <string name="diagnostics_status_unsupported">Tidak didukung</string>
     <string name="diagnostics_status_external">Perlu verifikasi eksternal</string>
+    <!-- Status Audio Studio (F003, issue #10) -->
+    <string name="status_audio_studio">Studio Audio Status</string>
+    <string name="status_audio_pick_hint">Pilih file audio dari perangkat ini untuk menyiapkannya sebagai status suara. Tidak ada yang dipublikasikan sampai Anda memintanya.</string>
+    <string name="status_audio_choose_file">Pilih audio</string>
+    <string name="status_audio_prepare">Siapkan</string>
+    <string name="status_audio_trim_start">Awal pilihan</string>
+    <string name="status_audio_trim_end">Akhir pilihan</string>
+    <string name="status_audio_fade_in">Fade in</string>
+    <string name="status_audio_fade_out">Fade out</string>
+    <string name="status_audio_normalize">Samakan keras suara</string>
+    <string name="status_audio_strip_metadata">Hapus data pengenal</string>
+    <string name="status_audio_number_parts">Beri nomor bagian</string>
+    <string name="status_audio_overflow">Saat pilihan lebih panjang dari yang diizinkan aplikasi</string>
+    <string name="status_audio_overflow_ask">Tanyakan setiap kali</string>
+    <string name="status_audio_overflow_trim">Simpan hanya bagian pertama</string>
+    <string name="status_audio_overflow_split">Publikasikan sebagai bagian bernomor</string>
+    <string name="status_audio_overflow_cancel">Jangan lakukan apa pun</string>
+    <string name="status_audio_plan">Yang akan terjadi</string>
+    <string name="status_audio_volume_format">Volume: %1$d%%</string>
+    <string name="status_audio_selection_format">Dipilih %1$s dari %2$s</string>
+    <string name="status_audio_selection_coarse_format">Dipilih %1$s dari %2$s\n%3$s</string>
+    <string name="status_audio_source_format">%1$s • %2$s</string>
+    <string name="status_audio_limit_fallback">Batas status suara untuk aplikasi ini tidak dapat dibaca, jadi %1$s dipakai sebagai pengganti.</string>
+    <string name="status_audio_limit_known">Aplikasi ini mempublikasi hingga %1$s.</string>
+    <string name="status_audio_reading">Membaca file…</string>
+    <string name="status_audio_preparing">Menyiapkan…</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">%1$d bagian disiapkan, total %2$s. Belum ada yang dipublikasikan; file ini dihapus saat layar ditutup.</item>
+        <item quantity="other">%1$d bagian disiapkan, total %2$s. Belum ada yang dipublikasikan; file ini dihapus saat layar ditutup.</item>
+    </plurals>
+    <string name="status_audio_cannot_prepare">Pilihan ini tidak dapat disiapkan di sini: %1$s</string>
+    <string name="status_audio_no_file">Belum ada file audio yang dipilih.</string>
+    <string name="status_audio_unreadable">File itu tidak dapat dibaca sebagai audio.</string>
+    <string name="status_audio_unreadable_reason">File itu tidak dapat dibaca sebagai audio: %1$s</string>
+    <string name="status_audio_trim_coarse">File ini panjang, jadi gagang pilihan bergerak dalam hitungan detik.</string>
+
 </resources>

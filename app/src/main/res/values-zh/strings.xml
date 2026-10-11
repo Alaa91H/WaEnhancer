@@ -640,4 +640,39 @@
     <string name="diagnostics_status_not_tested">未测试</string>
     <string name="diagnostics_status_unsupported">不支持</string>
     <string name="diagnostics_status_external">需要外部验证</string>
+    <!-- Status Audio Studio (F003, issue #10) -->
+    <string name="status_audio_studio">动态音频工作室</string>
+    <string name="status_audio_pick_hint">从本设备选择一个音频文件，准备为语音动态。在你要求之前不会发布任何内容。</string>
+    <string name="status_audio_choose_file">选择音频</string>
+    <string name="status_audio_prepare">准备</string>
+    <string name="status_audio_trim_start">选择起点</string>
+    <string name="status_audio_trim_end">选择终点</string>
+    <string name="status_audio_fade_in">淡入</string>
+    <string name="status_audio_fade_out">淡出</string>
+    <string name="status_audio_normalize">统一响度</string>
+    <string name="status_audio_strip_metadata">移除身份信息</string>
+    <string name="status_audio_number_parts">为分段编号</string>
+    <string name="status_audio_overflow">当所选内容超过应用允许的长度时</string>
+    <string name="status_audio_overflow_ask">每次询问我</string>
+    <string name="status_audio_overflow_trim">只保留第一段</string>
+    <string name="status_audio_overflow_split">按编号分段发布</string>
+    <string name="status_audio_overflow_cancel">不执行</string>
+    <string name="status_audio_plan">将会发生什么</string>
+    <string name="status_audio_volume_format">音量：%1$d%%</string>
+    <string name="status_audio_selection_format">已选择 %2$s 中的 %1$s</string>
+    <string name="status_audio_selection_coarse_format">已选择 %2$s 中的 %1$s\n%3$s</string>
+    <string name="status_audio_source_format">%1$s • %2$s</string>
+    <string name="status_audio_limit_fallback">无法读取该应用的语音动态时长上限，因此使用 %1$s 作为替代值。</string>
+    <string name="status_audio_limit_known">该应用最长可发布 %1$s。</string>
+    <string name="status_audio_reading">正在读取文件…</string>
+    <string name="status_audio_preparing">正在准备…</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="other">已准备 %1$d 段，共 %2$s。尚未发布任何内容；关闭此屏幕时将删除这些文件。</item>
+    </plurals>
+    <string name="status_audio_cannot_prepare">此处无法准备该选择：%1$s</string>
+    <string name="status_audio_no_file">尚未选择音频文件。</string>
+    <string name="status_audio_unreadable">无法将该文件作为音频读取。</string>
+    <string name="status_audio_unreadable_reason">无法将该文件作为音频读取：%1$s</string>
+    <string name="status_audio_trim_coarse">该文件较长，选择手柄按整秒移动。</string>
+
 </resources>

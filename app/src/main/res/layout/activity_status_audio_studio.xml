@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@drawable/toolbar_background"
+        app:logo="@mipmap/ic_launcher"
+        app:title="@string/status_audio_studio"
+        app:titleCentered="false"
+        app:titleTextAppearance="@style/ToolbarTitleStyle"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@id/actionBar"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Nothing chosen yet: the picker is the only action offered. -->
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingVertical="32dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/status_audio_no_file"
+                    android:textAlignment="center"
+                    android:textColor="?android:textColorPrimary"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/status_audio_pick_hint"
+                    android:textAlignment="center"
+                    android:textColor="?android:textColorSecondary" />
+            </LinearLayout>
+
+            <!-- The source and the plan. Hidden until a file has been read. -->
+            <LinearLayout
+                android:id="@+id/sourcePanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/sourceName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:ellipsize="middle"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:textColorPrimary" />
+
+                <TextView
+                    android:id="@+id/sourceFacts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="13sp"
+                    android:textColor="?android:textColorSecondary" />
+
+                <TextView
+                    android:id="@+id/limitFacts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="13sp"
+                    android:textColor="?android:textColorSecondary" />
+
+                <!-- Selection range. -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/status_audio_trim_start"
+                    android:textStyle="bold" />
+
+                <SeekBar
+                    android:id="@+id/trimStart"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="1000" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/status_audio_trim_end"
+                    android:textStyle="bold" />
+
+                <SeekBar
+                    android:id="@+id/trimEnd"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="1000" />
+
+                <TextView
+                    android:id="@+id/selectionFacts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textSize="13sp"
+                    android:textColor="?android:textColorSecondary" />
+
+                <!-- Fades. -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/status_audio_fade_in"
+                    android:textStyle="bold" />
+
+                <SeekBar
+                    android:id="@+id/fadeIn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/status_audio_fade_out"
+                    android:textStyle="bold" />
+
+                <SeekBar
+                    android:id="@+id/fadeOut"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100" />
+
+                <!-- Volume. -->
+                <TextView
+                    android:id="@+id/volumeLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:textStyle="bold" />
+
+                <SeekBar
+                    android:id="@+id/volume"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="200" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/normalize"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/status_audio_normalize" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/stripMetadata"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:checked="true"
+                    android:text="@string/status_audio_strip_metadata" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/numberParts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:checked="true"
+                    android:text="@string/status_audio_number_parts" />
+
+                <!-- What will happen when the source is longer than this client posts. -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/status_audio_overflow"
+                    android:textStyle="bold" />
+
+                <RadioGroup
+                    android:id="@+id/overflow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/overflowAsk"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/status_audio_overflow_ask" />
+
+                    <RadioButton
+                        android:id="@+id/overflowTrim"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_audio_overflow_trim" />
+
+                    <RadioButton
+                        android:id="@+id/overflowSplit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_audio_overflow_split" />
+
+                    <RadioButton
+                        android:id="@+id/overflowCancel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_audio_overflow_cancel" />
+                </RadioGroup>
+
+                <!-- The plan, the warnings and the outcome. -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/status_audio_plan"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/planText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textSize="14sp"
+                    android:textColor="?android:textColorPrimary" />
+
+                <ProgressBar
+                    android:id="@+id/progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/resultText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textSize="14sp"
+                    android:textColor="?android:textColorPrimary"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/actionBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:background="?android:attr/colorBackground"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/pickButton"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/status_audio_choose_file" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/prepareButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:enabled="false"
+            android:text="@string/status_audio_prepare" />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -639,4 +639,40 @@
     <string name="diagnostics_status_not_tested">Nicht getestet</string>
     <string name="diagnostics_status_unsupported">Nicht unterstützt</string>
     <string name="diagnostics_status_external">Externe Prüfung nötig</string>
+    <!-- Status Audio Studio (F003, issue #10) -->
+    <string name="status_audio_studio">Status-Audio-Studio</string>
+    <string name="status_audio_pick_hint">Wähle eine Audiodatei von diesem Gerät, um sie als Sprachnachricht-Status vorzubereiten. Es wird nichts veröffentlicht, bevor du es anforderst.</string>
+    <string name="status_audio_choose_file">Audio wählen</string>
+    <string name="status_audio_prepare">Vorbereiten</string>
+    <string name="status_audio_trim_start">Auswahlbeginn</string>
+    <string name="status_audio_trim_end">Auswahlende</string>
+    <string name="status_audio_fade_in">Einblenden</string>
+    <string name="status_audio_fade_out">Ausblenden</string>
+    <string name="status_audio_normalize">Lautheit angleichen</string>
+    <string name="status_audio_strip_metadata">Identifizierende Angaben entfernen</string>
+    <string name="status_audio_number_parts">Teile nummerieren</string>
+    <string name="status_audio_overflow">Wenn die Auswahl länger ist als diese App erlaubt</string>
+    <string name="status_audio_overflow_ask">Mich jedes Mal  fragen</string>
+    <string name="status_audio_overflow_trim">Nur den ersten Teil behalten</string>
+    <string name="status_audio_overflow_split">Als nummerierte Teile veröffentlichen</string>
+    <string name="status_audio_overflow_cancel">Nichts tun</string>
+    <string name="status_audio_plan">Was passieren wird</string>
+    <string name="status_audio_volume_format">Lautstärke: %1$d%%</string>
+    <string name="status_audio_selection_format">%1$s von %2$s ausgewählt</string>
+    <string name="status_audio_selection_coarse_format">%1$s von %2$s ausgewählt\n%3$s</string>
+    <string name="status_audio_source_format">%1$s • %2$s</string>
+    <string name="status_audio_limit_fallback">Das Limit für Sprachstatus dieser App konnte nicht gelesen werden, daher wird %1$s als Ersatzwert verwendet.</string>
+    <string name="status_audio_limit_known">Diese App veröffentlicht bis zu %1$s.</string>
+    <string name="status_audio_reading">Datei wird gelesen…</string>
+    <string name="status_audio_preparing">Wird vorbereitet…</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">%1$d Teil vorbereitet, insgesamt %2$s. Es wurde nichts veröffentlicht; diese Dateien werden beim Schließen entfernt.</item>
+        <item quantity="other">%1$d Teile vorbereitet, insgesamt %2$s. Es wurde nichts veröffentlicht; diese Dateien werden beim Schließen entfernt.</item>
+    </plurals>
+    <string name="status_audio_cannot_prepare">Diese Auswahl kann hier nicht vorbereitet werden: %1$s</string>
+    <string name="status_audio_no_file">Es wurde keine Audiodatei ausgewählt.</string>
+    <string name="status_audio_unreadable">Diese Datei konnte nicht als Audio gelesen werden.</string>
+    <string name="status_audio_unreadable_reason">Diese Datei konnte nicht als Audio gelesen werden: %1$s</string>
+    <string name="status_audio_trim_coarse">Diese Datei ist lang, daher bewegt sich der Auswahlgriff in ganzen Sekunden.</string>
+
 </resources>

@@ -327,4 +327,57 @@ class StatusAudioStudioTest {
         assertTrue(accepted.toDisplayLine().contains("post_as_is"))
         assertFalse(accepted.toDisplayLine().contains("clip.m4a"))
     }
+
+    // --- shipped wording ---------------------------------------------------------------
+
+    /**
+     * The count is a plural, in every language the project ships.
+     *
+     * It was one string reading `Prepared %1$d part(s)`, and lint refused it for the right
+     * reason: "1 part(s)" is machine output, and six of the shipped languages inflect the noun
+     * on the count. The contract asserted here is the one lint cannot check — that the plural
+     * reaches every locale, and that the coarse-trim note is a sentence of its own rather than a
+     * line break glued onto a formatted string, which no translator can reorder.
+     */
+    @Test
+    fun thePartCountIsAPluralInEveryShippedLocale() {
+        val resRoot = resDirectory() ?: return
+        val locales = listOf("values") + SHIPPED_LOCALES.map { "values-$it" }
+        val files = locales.map { java.io.File(resRoot, "$it/strings.xml") }.filter { it.isFile }
+        assertEquals(
+            "every shipped locale must ship a strings.xml, or a translation is silently missing",
+            locales.size,
+            files.size,
+        )
+
+        files.forEach { file ->
+            val text = file.readText()
+            assertTrue(
+                "${file.path} still declares status_audio_prepared as a string, so the count is " +
+                    "rendered as \"part(s)\" in this language",
+                !text.contains("<string name=\"status_audio_prepared\">"),
+            )
+            assertTrue(
+                "${file.path} does not declare status_audio_prepared as a plural",
+                text.contains("<plurals name=\"status_audio_prepared\">"),
+            )
+            assertTrue(
+                "${file.path} is missing the coarse-trim variant of the selection line",
+                text.contains("<string name=\"status_audio_selection_coarse_format\">"),
+            )
+        }
+    }
+
+    /** The resource directory, whichever of the module, repository or app root we run from. */
+    private fun resDirectory(): String? =
+        listOf("src/main/res", "app/src/main/res", "../app/src/main/res")
+            .map { java.io.File(it) }
+            .firstOrNull { it.isDirectory }
+            ?.path
+
+    private companion object {
+        /** The locales the project ships, as directory suffixes. */
+        val SHIPPED_LOCALES =
+            listOf("ar", "de", "es", "fr", "in", "it", "iw", "pt", "ru", "tr", "zh")
+    }
 }

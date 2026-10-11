@@ -160,12 +160,18 @@ class NoPaywallContractTest {
         val store = seededStore()
         NoPaywallContract.stripLegacyEntitlements(store)
         val facts = FeatureFacts(target = TargetApp.WHATSAPP, installedVersion = "2.26.40.21")
-        PlatformFeatureCatalog.metadata().forEach { metadata ->
-            assertEquals(
-                FeatureAvailability.AVAILABLE,
-                FeatureAccessPolicy.evaluate(metadata, facts).availability,
-            )
-        }
+        // Only the features that claim to be available: a feature declared NOT_IMPLEMENTED
+        // answers with that, and it is the declaration talking, not a payment state.
+        PlatformFeatureCatalog
+            .metadata()
+            .filter { it.availability == FeatureAvailability.AVAILABLE }
+            .forEach { metadata ->
+                assertEquals(
+                    "${metadata.id} must not be changed by a former entitlement",
+                    FeatureAvailability.AVAILABLE,
+                    FeatureAccessPolicy.evaluate(metadata, facts).availability,
+                )
+            }
     }
 
     @Test

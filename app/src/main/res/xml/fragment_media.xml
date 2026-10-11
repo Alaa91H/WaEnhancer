@@ -126,6 +126,13 @@
             app:minValue="0.1"
             app:title="@string/voice_note_speed" />
 
+        <!-- Opens the editor: pick a file, trim it, and see exactly what will be posted
+             before anything is written. -->
+        <Preference
+            app:key="status_audio_studio"
+            app:summary="@string/status_audio_pick_hint"
+            app:title="@string/status_audio_studio" />
+
         <rikka.material.preference.MaterialSwitchPreference
             app:key="audio_transcription"
             app:summary="@string/audio_transcription_sum"

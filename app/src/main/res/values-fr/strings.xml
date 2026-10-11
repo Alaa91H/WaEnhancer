@@ -639,4 +639,40 @@
     <string name="diagnostics_status_not_tested">Non testé</string>
     <string name="diagnostics_status_unsupported">Non pris en charge</string>
     <string name="diagnostics_status_external">Contrôle externe requis</string>
+    <!-- Status Audio Studio (F003, issue #10) -->
+    <string name="status_audio_studio">Studio audio de statut</string>
+    <string name="status_audio_pick_hint">"Choisissez un fichier audio sur cet appareil pour le préparer comme statut vocal. Rien n'est publié tant que vous ne le demandez pas."</string>
+    <string name="status_audio_choose_file">Choisir un audio</string>
+    <string name="status_audio_prepare">Préparer</string>
+    <string name="status_audio_trim_start">Début de la sélection</string>
+    <string name="status_audio_trim_end">Fin de la sélection</string>
+    <string name="status_audio_fade_in">"Fondu d'entrée"</string>
+    <string name="status_audio_fade_out">Fondu de sortie</string>
+    <string name="status_audio_normalize">Égaliser le volume</string>
+    <string name="status_audio_strip_metadata">"Supprimer les données d'identification"</string>
+    <string name="status_audio_number_parts">Numéroter les parties</string>
+    <string name="status_audio_overflow">"Quand la sélection dépasse ce que l'application autorise"</string>
+    <string name="status_audio_overflow_ask">Me demander chaque fois</string>
+    <string name="status_audio_overflow_trim">Ne garder que la première partie</string>
+    <string name="status_audio_overflow_split">Publier en parties numérotées</string>
+    <string name="status_audio_overflow_cancel">Ne rien faire</string>
+    <string name="status_audio_plan">Ce qui va se passer</string>
+    <string name="status_audio_volume_format">Volume : %1$d%%</string>
+    <string name="status_audio_selection_format">%1$s sélectionné sur %2$s</string>
+    <string name="status_audio_selection_coarse_format">%1$s sélectionné sur %2$s\n%3$s</string>
+    <string name="status_audio_source_format">%1$s • %2$s</string>
+    <string name="status_audio_limit_fallback">"La limite de statut vocal de cette application n'a pas pu être lue, %1$s est donc utilisé comme solution de repli."</string>
+    <string name="status_audio_limit_known">"Cette application publie jusqu'à %1$s."</string>
+    <string name="status_audio_reading">Lecture du fichier…</string>
+    <string name="status_audio_preparing">Préparation…</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">"%1$d partie préparée, %2$s au total. Rien n'est publié ; ces fichiers sont supprimés à la fermeture de cet écran."</item>
+        <item quantity="other">"%1$d parties préparées, %2$s au total. Rien n'est publié ; ces fichiers sont supprimés à la fermeture de cet écran."</item>
+    </plurals>
+    <string name="status_audio_cannot_prepare">Cette sélection ne peut pas être préparée ici : %1$s</string>
+    <string name="status_audio_no_file">"Aucun fichier audio n'a été choisi."</string>
+    <string name="status_audio_unreadable">"Ce fichier n'a pas pu être lu comme de l'audio."</string>
+    <string name="status_audio_unreadable_reason">"Ce fichier n'a pas pu être lu comme de l'audio : %1$s"</string>
+    <string name="status_audio_trim_coarse">Ce fichier est long, la poignée de sélection se déplace par secondes entières.</string>
+
 </resources>

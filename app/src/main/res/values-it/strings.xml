@@ -639,4 +639,40 @@
     <string name="diagnostics_status_not_tested">Non testato</string>
     <string name="diagnostics_status_unsupported">Non supportato</string>
     <string name="diagnostics_status_external">Verifica esterna richiesta</string>
+    <!-- Status Audio Studio (F003, issue #10) -->
+    <string name="status_audio_studio">Studio audio per lo stato</string>
+    <string name="status_audio_pick_hint">Scegli un file audio da questo dispositivo per prepararlo come stato vocale. Nulla viene pubblicato finché non lo chiedi.</string>
+    <string name="status_audio_choose_file">Scegli audio</string>
+    <string name="status_audio_prepare">Prepara</string>
+    <string name="status_audio_trim_start">Inizio selezione</string>
+    <string name="status_audio_trim_end">Fine selezione</string>
+    <string name="status_audio_fade_in">Fade in</string>
+    <string name="status_audio_fade_out">Fade out</string>
+    <string name="status_audio_normalize">Uniforma il volume</string>
+    <string name="status_audio_strip_metadata">Rimuovi i dati identificativi</string>
+    <string name="status_audio_number_parts">Numera le parti</string>
+    <string name="status_audio_overflow">"Quando la selezione è più lunga di quanto consentito dall'app"</string>
+    <string name="status_audio_overflow_ask">Chiedi ogni volta</string>
+    <string name="status_audio_overflow_trim">Tieni solo la prima parte</string>
+    <string name="status_audio_overflow_split">Pubblica come parti numerate</string>
+    <string name="status_audio_overflow_cancel">Non fare nulla</string>
+    <string name="status_audio_plan">Cosa accadrà</string>
+    <string name="status_audio_volume_format">Volume: %1$d%%</string>
+    <string name="status_audio_selection_format">Selezionati %1$s di %2$s</string>
+    <string name="status_audio_selection_coarse_format">Selezionati %1$s di %2$s\n%3$s</string>
+    <string name="status_audio_source_format">%1$s • %2$s</string>
+    <string name="status_audio_limit_fallback">Non è stato possibile leggere il limite dello stato vocale di questa app, quindi si usa %1$s come alternativa.</string>
+    <string name="status_audio_limit_known">Questa app pubblica fino a %1$s.</string>
+    <string name="status_audio_reading">Lettura del file…</string>
+    <string name="status_audio_preparing">Preparazione…</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">%1$d parte preparata, %2$s in totale. Non è stato pubblicato nulla; questi file vengono rimossi alla chiusura della schermata.</item>
+        <item quantity="other">%1$d parti preparate, %2$s in totale. Non è stato pubblicato nulla; questi file vengono rimossi alla chiusura della schermata.</item>
+    </plurals>
+    <string name="status_audio_cannot_prepare">Questa selezione non può essere preparata qui: %1$s</string>
+    <string name="status_audio_no_file">Nessun file audio è stato scelto.</string>
+    <string name="status_audio_unreadable">Non è stato possibile leggere quel file come audio.</string>
+    <string name="status_audio_unreadable_reason">Non è stato possibile leggere quel file come audio: %1$s</string>
+    <string name="status_audio_trim_coarse">Questo file è lungo, quindi la maniglia di selezione si muove a secondi interi.</string>
+
 </resources>
