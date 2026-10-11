@@ -680,7 +680,9 @@
           "loadPinnedInChatMethod",
           "loadSetPinnedLimitMethod"
         ],
-        "preferenceKeys": []
+        "preferenceKeys": [
+          "pinnedlimit"
+        ]
       },
       {
         "id": "CustomTime",
@@ -1011,7 +1013,9 @@
           "ModuleRuntime"
         ],
         "resolverDependencies": [],
-        "preferenceKeys": []
+        "preferenceKeys": [
+          "custom_privacy_type"
+        ]
       },
       {
         "id": "AudioTranscript",
