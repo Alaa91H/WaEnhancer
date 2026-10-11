@@ -21,6 +21,15 @@ class AndroidStatusAudioSourceReader(
 ) : StatusAudioSourceReader {
     private val directory: File by lazy { File(context.cacheDir, "wae-status-audio") }
 
+    /**
+     * Why the last [describe] could not read the file, for the editor to show.
+     *
+     * It is carried on the reader rather than logged: the user is the one who needs to know that
+     * the file was refused, and a log line would be read by nobody.
+     */
+    var unreadableReason: String? = null
+        private set
+
     override fun copyIn(
         uri: String,
         displayName: String,
@@ -37,6 +46,7 @@ class AndroidStatusAudioSourceReader(
 
     override fun describe(path: String): StatusAudioSource {
         val file = File(path)
+        unreadableReason = null
         val retriever = MediaMetadataRetriever()
         return try {
             retriever.setDataSource(path)
@@ -49,8 +59,11 @@ class AndroidStatusAudioSourceReader(
                 hasAuthorTag = retriever.hasAuthorTag(),
             )
         } catch (failure: Exception) {
-            // A file the framework cannot open still has to be described honestly: the length is
-            // unreadable, which the planner rejects, and the name is the only thing known.
+            // A file the framework cannot open still has to be described honestly: the length
+            // is unreadable, which the planner rejects, and the name is the only thing known.
+            // The reason travels in the returned value rather than to a log, so the editor can
+            // show why the file was refused instead of only that it was.
+            unreadableReason = failure.message ?: failure.javaClass.simpleName
             StatusAudioSourceReaderSupport.source(
                 displayName = file.name,
                 mimeType = null,

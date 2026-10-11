@@ -642,4 +642,36 @@
     <string name="diagnostics_status_not_tested">Не проверено</string>
     <string name="diagnostics_status_unsupported">Не поддерживается</string>
     <string name="diagnostics_status_external">Нужна внешняя проверка</string>
+    <!-- Status Audio Studio (F003, issue #10) -->
+    <string name="status_audio_studio">Студия аудио статуса</string>
+    <string name="status_audio_pick_hint">Выберите аудиофайл с этого устройства, чтобы подготовить его как голосовой статус. Ничего не публикуется, пока вы не попросите.</string>
+    <string name="status_audio_choose_file">Выбрать аудио</string>
+    <string name="status_audio_prepare">Подготовить</string>
+    <string name="status_audio_trim_start">Начало выделения</string>
+    <string name="status_audio_trim_end">Конец выделения</string>
+    <string name="status_audio_fade_in">Появление</string>
+    <string name="status_audio_fade_out">Затухание</string>
+    <string name="status_audio_normalize">Выровнять громкость</string>
+    <string name="status_audio_strip_metadata">Удалить идентифицирующие данные</string>
+    <string name="status_audio_number_parts">Нумеровать части</string>
+    <string name="status_audio_overflow">Если выделение длиннее, чем допускает приложение</string>
+    <string name="status_audio_overflow_ask">Спрашивать каждый раз</string>
+    <string name="status_audio_overflow_trim">Оставить только первую часть</string>
+    <string name="status_audio_overflow_split">Опубликовать пронумерованными частями</string>
+    <string name="status_audio_overflow_cancel">Ничего не делать</string>
+    <string name="status_audio_plan">Что произойдёт</string>
+    <string name="status_audio_volume_format">Громкость: %1$d%%</string>
+    <string name="status_audio_selection_format">Выбрано %1$s из %2$s</string>
+    <string name="status_audio_source_format">%1$s • %2$s</string>
+    <string name="status_audio_limit_fallback">Не удалось прочитать лимит голосового статуса для этого приложения, поэтому используется %1$s.</string>
+    <string name="status_audio_limit_known">Это приложение публикует до %1$s.</string>
+    <string name="status_audio_reading">Чтение файла…</string>
+    <string name="status_audio_preparing">Подготовка…</string>
+    <string name="status_audio_prepared">Подготовлено частей: %1$d, всего %2$s.</string>
+    <string name="status_audio_cannot_prepare">Это выделение нельзя подготовить здесь: %1$s</string>
+    <string name="status_audio_no_file">Аудиофайл не выбран.</string>
+    <string name="status_audio_unreadable">Не удалось прочитать этот файл как аудио.</string>
+    <string name="status_audio_unreadable_reason">Не удалось прочитать этот файл как аудио: %1$s</string>
+    <string name="status_audio_trim_coarse">Файл длинный, поэтому ползунок выделения двигается целыми секундами.</string>
+
 </resources>

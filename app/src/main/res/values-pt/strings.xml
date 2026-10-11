@@ -641,4 +641,36 @@
     <string name="diagnostics_status_not_tested">Não testado</string>
     <string name="diagnostics_status_unsupported">Sem suporte</string>
     <string name="diagnostics_status_external">Verificação externa necessária</string>
+    <!-- Status Audio Studio (F003, issue #10) -->
+    <string name="status_audio_studio">Estúdio de áudio de status</string>
+    <string name="status_audio_pick_hint">Escolha um ficheiro de áudio deste dispositivo para o preparar como status de voz. Nada é publicado até você o pedir.</string>
+    <string name="status_audio_choose_file">Escolher áudio</string>
+    <string name="status_audio_prepare">Preparar</string>
+    <string name="status_audio_trim_start">Início da seleção</string>
+    <string name="status_audio_trim_end">Fim da seleção</string>
+    <string name="status_audio_fade_in">Fade-in</string>
+    <string name="status_audio_fade_out">Fade-out</string>
+    <string name="status_audio_normalize">Igualar o volume</string>
+    <string name="status_audio_strip_metadata">Remover dados identificadores</string>
+    <string name="status_audio_number_parts">Numerar as partes</string>
+    <string name="status_audio_overflow">Quando a seleção é mais longa do que a app permite</string>
+    <string name="status_audio_overflow_ask">Perguntar sempre</string>
+    <string name="status_audio_overflow_trim">Manter apenas a primeira parte</string>
+    <string name="status_audio_overflow_split">Publicar como partes numeradas</string>
+    <string name="status_audio_overflow_cancel">Não fazer nada</string>
+    <string name="status_audio_plan">O que vai acontecer</string>
+    <string name="status_audio_volume_format">Volume: %1$d%%</string>
+    <string name="status_audio_selection_format">Selecionado %1$s de %2$s</string>
+    <string name="status_audio_source_format">%1$s • %2$s</string>
+    <string name="status_audio_limit_fallback">Não foi possível ler o limite de status de voz desta app, por isso usa-se %1$s como alternativa.</string>
+    <string name="status_audio_limit_known">Esta app publica até %1$s.</string>
+    <string name="status_audio_reading">A ler o ficheiro…</string>
+    <string name="status_audio_preparing">A preparar…</string>
+    <string name="status_audio_prepared">%1$d parte(s) preparada(s), %2$s no total.</string>
+    <string name="status_audio_cannot_prepare">Esta seleção não pode ser preparada aqui: %1$s</string>
+    <string name="status_audio_no_file">Não foi escolhido nenhum ficheiro de áudio.</string>
+    <string name="status_audio_unreadable">Não foi possível ler esse ficheiro como áudio.</string>
+    <string name="status_audio_unreadable_reason">Não foi possível ler esse ficheiro como áudio: %1$s</string>
+    <string name="status_audio_trim_coarse">Este ficheiro é longo, por isso a alça de seleção move-se em segundos inteiros.</string>
+
 </resources>

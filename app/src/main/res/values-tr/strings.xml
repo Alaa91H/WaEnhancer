@@ -641,4 +641,36 @@
     <string name="diagnostics_status_not_tested">Test edilmedi</string>
     <string name="diagnostics_status_unsupported">Desteklenmiyor</string>
     <string name="diagnostics_status_external">Harici doğrulama gerekli</string>
+    <!-- Status Audio Studio (F003, issue #10) -->
+    <string name="status_audio_studio">Durum Ses Stüdyosu</string>
+    <string name="status_audio_pick_hint">Sesli durum olarak hazırlamak için bu cihazdan bir ses dosyası seçin. Siz istemedikçe hiçbir şey yayınlanmaz.</string>
+    <string name="status_audio_choose_file">Ses seç</string>
+    <string name="status_audio_prepare">Hazırla</string>
+    <string name="status_audio_trim_start">Seçim başlangıcı</string>
+    <string name="status_audio_trim_end">Seçim sonu</string>
+    <string name="status_audio_fade_in">Kısılma girişi</string>
+    <string name="status_audio_fade_out">Kısılma çıkışı</string>
+    <string name="status_audio_normalize">Sesi dengele</string>
+    <string name="status_audio_strip_metadata">Tanımlayıcı bilgileri kaldır</string>
+    <string name="status_audio_number_parts">Parçaları numaralandır</string>
+    <string name="status_audio_overflow">Seçim uygulamanın izin verdiğinden uzun olduğunda</string>
+    <string name="status_audio_overflow_ask">Her seferinde sor</string>
+    <string name="status_audio_overflow_trim">Yalnızca ilk parçayı koru</string>
+    <string name="status_audio_overflow_split">Numaralı parçalar olarak yayınla</string>
+    <string name="status_audio_overflow_cancel">Hiçbir şey yapma</string>
+    <string name="status_audio_plan">Ne olacak</string>
+    <string name="status_audio_volume_format">Ses: %1$d%%</string>
+    <string name="status_audio_selection_format">%2$s içinden %1$s seçildi</string>
+    <string name="status_audio_source_format">%1$s • %2$s</string>
+    <string name="status_audio_limit_fallback">Bu uygulamanın sesli durum sınırı okunamadı, bu yüzden %1$s yedek olarak kullanılıyor.</string>
+    <string name="status_audio_limit_known">Bu uygulama %1$s kadar yayınlar.</string>
+    <string name="status_audio_reading">Dosya okunuyor…</string>
+    <string name="status_audio_preparing">Hazırlanıyor…</string>
+    <string name="status_audio_prepared">%1$d parça hazırlandı, toplam %2$s.</string>
+    <string name="status_audio_cannot_prepare">Bu seçim burada hazırlanamaz: %1$s</string>
+    <string name="status_audio_no_file">Ses dosyası seçilmedi.</string>
+    <string name="status_audio_unreadable">Bu dosya ses olarak okunamadı.</string>
+    <string name="status_audio_unreadable_reason">Bu dosya ses olarak okunamadı: %1$s</string>
+    <string name="status_audio_trim_coarse">Bu dosya uzun, bu yüzden seçim tutamacı tam saniyelerle ilerliyor.</string>
+
 </resources>

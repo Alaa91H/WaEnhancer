@@ -674,5 +674,6 @@
     <string name="status_audio_cannot_prepare">لا يمكن تجهيز هذا التحديد هنا: %1$s</string>
     <string name="status_audio_no_file">لم يتم اختيار أي ملف صوتي.</string>
     <string name="status_audio_unreadable">تعذّرت قراءة هذا الملف كصوت.</string>
+    <string name="status_audio_unreadable_reason">تعذّرت قراءة هذا الملف كصوت: %1$s</string>
 
 </resources>

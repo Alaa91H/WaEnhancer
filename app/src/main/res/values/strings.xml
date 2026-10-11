@@ -703,5 +703,6 @@
     <string name="status_audio_cannot_prepare">This selection cannot be prepared here: %1$s</string>
     <string name="status_audio_no_file">No audio file has been chosen.</string>
     <string name="status_audio_unreadable">That file could not be read as audio.</string>
+    <string name="status_audio_unreadable_reason">That file could not be read as audio: %1$s</string>
 
 </resources>

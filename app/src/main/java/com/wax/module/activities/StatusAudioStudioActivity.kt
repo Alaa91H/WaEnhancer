@@ -122,9 +122,20 @@ class StatusAudioStudioActivity : BaseActivity() {
             val read = withContext(Dispatchers.IO) { readSource(uri.toString(), displayName) }
             setBusy(false)
             if (read == null) {
-                // The copy never happened, so there is nothing to clean up and nothing to show
-                // but the reason: an unreadable document is not a state the user can act on.
-                Toast.makeText(this@StatusAudioStudioActivity, R.string.status_audio_unreadable, Toast.LENGTH_LONG).show()
+                // The copy never happened, so there is nothing to clean up. The reason is the
+                // file's own when the media framework refused it, because "this file cannot be
+                // read" without saying why is not something the user can act on.
+                val why = reader.unreadableReason
+                Toast
+                    .makeText(
+                        this@StatusAudioStudioActivity,
+                        if (why == null) {
+                            getString(R.string.status_audio_unreadable)
+                        } else {
+                            getString(R.string.status_audio_unreadable_reason, why)
+                        },
+                        Toast.LENGTH_LONG,
+                    ).show()
                 return@launch
             }
             adopt(read.first, read.second)

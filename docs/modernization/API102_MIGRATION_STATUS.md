@@ -431,6 +431,16 @@ a permission lapsed.
 3. `entries - X` yields a `List` where a `Set` was required, and a duplicated `@Test` — compile
    errors in the new suite.
 
+**Two more defects CI found in this unit, fixed at the cause:**
+
+4. Every new string was English-only, and the project runs `MissingTranslation` as an error in ten
+   shipped locales. All thirty keys are now translated in ar, de, es, fr, in, it, iw, pt, ru, tr
+   and zh. A screen that only reads correctly in one language is not finished.
+5. `AndroidStatusAudioSourceReader` swallowed the exception from an unreadable file. The reason is
+   now carried on the reader and shown to the user — "this file cannot be read" without saying why
+   is not something the user can act on. It is not written to a log, because the user is the one
+   who needs it.
+
 **Not claimed:** the path that hands a prepared part to the Status composer, and transcoding for
 containers the platform cannot write. Both need the Status composer resolver, which does not exist
 — that is the finding unit 1 recorded — so the feature stays `NOT_IMPLEMENTED` and the Prepare
