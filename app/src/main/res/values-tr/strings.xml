@@ -666,7 +666,7 @@
     <string name="status_audio_limit_known">Bu uygulama %1$s kadar yayınlar.</string>
     <string name="status_audio_reading">Dosya okunuyor…</string>
     <string name="status_audio_preparing">Hazırlanıyor…</string>
-    <string name="status_audio_prepared">%1$d parça hazırlandı, toplam %2$s.</string>
+    <string name="status_audio_prepared">%1$d parça hazırlandı, toplam %2$s. Hiçbir şey yayınlanmadı; bu dosyalar ekran kapatıldığında silinir.</string>
     <string name="status_audio_cannot_prepare">Bu seçim burada hazırlanamaz: %1$s</string>
     <string name="status_audio_no_file">Ses dosyası seçilmedi.</string>
     <string name="status_audio_unreadable">Bu dosya ses olarak okunamadı.</string>

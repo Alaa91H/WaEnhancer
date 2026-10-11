@@ -663,7 +663,7 @@
     <string name="status_audio_limit_known">Aplikasi ini mempublikasi hingga %1$s.</string>
     <string name="status_audio_reading">Membaca file…</string>
     <string name="status_audio_preparing">Menyiapkan…</string>
-    <string name="status_audio_prepared">%1$d bagian disiapkan, total %2$s.</string>
+    <string name="status_audio_prepared">%1$d bagian disiapkan, total %2$s. Belum ada yang dipublikasikan; file ini dihapus saat layar ditutup.</string>
     <string name="status_audio_cannot_prepare">Pilihan ini tidak dapat disiapkan di sini: %1$s</string>
     <string name="status_audio_no_file">Belum ada file audio yang dipilih.</string>
     <string name="status_audio_unreadable">File itu tidak dapat dibaca sebagai audio.</string>

@@ -664,7 +664,7 @@
     <string name="status_audio_limit_known">Questa app pubblica fino a %1$s.</string>
     <string name="status_audio_reading">Lettura del file…</string>
     <string name="status_audio_preparing">Preparazione…</string>
-    <string name="status_audio_prepared">%1$d parte/i preparata/e, %2$s in totale.</string>
+    <string name="status_audio_prepared">%1$d parte/i preparata/e, %2$s in totale. Non è stato pubblicato nulla; questi file vengono rimossi alla chiusura della schermata.</string>
     <string name="status_audio_cannot_prepare">Questa selezione non può essere preparata qui: %1$s</string>
     <string name="status_audio_no_file">Nessun file audio è stato scelto.</string>
     <string name="status_audio_unreadable">Non è stato possibile leggere quel file come audio.</string>

@@ -666,7 +666,7 @@
     <string name="status_audio_limit_known">האפליקציה מפרסמת עד %1$s.</string>
     <string name="status_audio_reading">קריאת הקובץ…</string>
     <string name="status_audio_preparing">בהכנה…</string>
-    <string name="status_audio_prepared">%1$d חלקים הוכנו, %2$s בסך.</string>
+    <string name="status_audio_prepared">%1$d חלקים הוכנו, %2$s בסך. שום דבר לא פורסם; הקבצים יימחקו עם סגירת המסך.</string>
     <string name="status_audio_cannot_prepare">אי אפשר להכין את הבחירה הזו כאן: %1$s</string>
     <string name="status_audio_no_file">לא נבחר קובץ שמע.</string>
     <string name="status_audio_unreadable">לא ניתן היה לקרוא את הקובץ הזה כשמע.</string>

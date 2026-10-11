@@ -52,6 +52,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 class StatusAudioStudioActivity : BaseActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
+    /** The prepared parts, kept for as long as the editor is open. */
+    private var parts: DirectoryStatusAudioWorkspace? = null
+
     /** Set when the screen goes away, so a long split stops instead of finishing unwatched. */
     private val cancelled = AtomicBoolean(false)
     private var preparation: Job? = null
@@ -107,6 +110,8 @@ class StatusAudioStudioActivity : BaseActivity() {
     override fun onDestroy() {
         cancelled.set(true)
         preparation?.cancel()
+        releaseWorking()
+        releasePrepared()
         scope.cancel()
         super.onDestroy()
     }
@@ -155,6 +160,7 @@ class StatusAudioStudioActivity : BaseActivity() {
         path: String,
         described: StatusAudioSource,
     ) {
+        releasePrepared()
         workingPath = path
         source = described
         findViewById<View>(R.id.emptyState).visibility = View.GONE
@@ -273,18 +279,23 @@ class StatusAudioStudioActivity : BaseActivity() {
         val path = workingPath ?: return
         val options = currentOptions()
 
+        // A second preparation starts from a clean directory: the names are positional, so
+        // parts left by a previous run with a different length would otherwise linger.
+        releasePrepared()
+        val workspace =
+            DirectoryStatusAudioWorkspace(File(cacheDir, PARTS_DIRECTORY)) {
+                StatusAudioSourceReaderSupport.suffixFor(it)
+            }
+        parts = workspace
+
         showResult(getString(R.string.status_audio_preparing))
         setBusy(true)
         preparation =
             scope.launch {
                 val outcome =
                     withContext(Dispatchers.IO) {
-                        StatusAudioPreparer(
-                            MuxerTrimAudioRenderer(cancelled),
-                            DirectoryStatusAudioWorkspace(File(cacheDir, PARTS_DIRECTORY)) {
-                                StatusAudioSourceReaderSupport.suffixFor(it)
-                            },
-                        ).prepare(current, container, options, path) { cancelled.get() }
+                        StatusAudioPreparer(MuxerTrimAudioRenderer(cancelled), workspace)
+                            .prepare(current, container, options, path) { cancelled.get() }
                     }
                 preparation = null
                 setBusy(false)

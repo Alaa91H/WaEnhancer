@@ -699,7 +699,7 @@
     <string name="status_audio_limit_known">This app posts up to %1$s.</string>
     <string name="status_audio_reading">Reading the file…</string>
     <string name="status_audio_preparing">Preparing…</string>
-    <string name="status_audio_prepared">Prepared %1$d part(s), %2$s in total.</string>
+    <string name="status_audio_prepared">Prepared %1$d part(s), %2$s in total. Nothing has been posted; these files are removed when you close this screen.</string>
     <string name="status_audio_cannot_prepare">This selection cannot be prepared here: %1$s</string>
     <string name="status_audio_no_file">No audio file has been chosen.</string>
     <string name="status_audio_unreadable">That file could not be read as audio.</string>
