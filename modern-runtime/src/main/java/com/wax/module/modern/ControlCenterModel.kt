@@ -98,7 +98,7 @@ object ControlStatusText {
     fun status(effective: ControlEffective): String =
         when (effective) {
             ControlEffective.NOT_OBSERVED -> "Not observed yet"
-            ControlEffective.WORKING -> "Working"
+            ControlEffective.WORKING -> "Hook signalled active (behavior unverified)"
             ControlEffective.INSTALLED -> "Installed"
             ControlEffective.DISABLED -> "Off"
             ControlEffective.RESOLVER_FAILED -> "Resolver could not confirm"

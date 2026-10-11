@@ -82,7 +82,7 @@ class ControlCenterLabels private constructor(private val language: String) {
         )
         private val arabicStatus = mapOf(
             ControlEffective.NOT_OBSERVED to "لم يتم التحقق من التشغيل بعد",
-            ControlEffective.WORKING to "توجد أدلة تشغيل",
+            ControlEffective.WORKING to "تم رصد إشارة الـHook (لم يتم التحقق من السلوك)",
             ControlEffective.INSTALLED to "تم تثبيت الـHook",
             ControlEffective.DISABLED to "معطّل",
             ControlEffective.RESOLVER_FAILED to "تعذر تحديد نقطة الربط",

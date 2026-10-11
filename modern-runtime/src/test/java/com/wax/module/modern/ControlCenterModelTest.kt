@@ -144,6 +144,12 @@ class ControlCenterModelTest {
         assertEquals(ControlCategory.PENDING, grouped.last().first)
     }
 
+    @Test fun armedHookStatusDoesNotClaimBehaviorVerification() {
+        val label = ControlStatusText.status(ControlEffective.WORKING)
+        assertTrue(label.contains("unverified"))
+        assertTrue(label.contains("Hook"))
+    }
+
     @Test fun statusTextNeverClaimsWorkingForFailures() {
         assertEquals("Resolver could not confirm", ControlStatusText.status(ControlEffective.RESOLVER_FAILED))
         assertEquals("Pending migration", ControlStatusText.status(ControlEffective.PENDING_MIGRATION))
