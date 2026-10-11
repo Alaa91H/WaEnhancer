@@ -64,7 +64,7 @@ object ModernConversationItemListenerFeature {
     private val boundItems = WeakHashMap<View, BoundConversationItem>()
     private var adapter: ListAdapter? = null
     private var adapterActivity: WeakReference<Activity>? = null
-    private var innerUnhook: ModernHookRegistry.Handle? = null
+    private val rowHookSlot = ModernReplaceableHookSlot()
     private var lifecycleRegistered = false
 
     @Volatile
@@ -181,12 +181,13 @@ object ModernConversationItemListenerFeature {
     }
 
     private fun rehookGetView(current: ListAdapter) {
-        try {
-            innerUnhook?.unhook()
-        } catch (unhookFailure: Throwable) {
-            Log.w(TAG, "Previous row hook would not release", unhookFailure)
-        } finally {
-            innerUnhook = null
+        // Never install another getView interceptor while the old one might
+        // still be live. The slot retains failed handles for a safe retry.
+        val unhookFailure = rowHookSlot.release()
+        if (unhookFailure != null) {
+            if (unhookFailure is VirtualMachineError) throw unhookFailure
+            Log.w(TAG, "Previous row hook would not release; replacement deferred", unhookFailure)
+            return
         }
         val getView = try {
             current.javaClass.getMethod(
@@ -235,7 +236,7 @@ object ModernConversationItemListenerFeature {
                 }
                 result
             }
-            innerUnhook = ModernHookRegistry.Handle { handle?.unhook() }
+            rowHookSlot.track(ModernHookRegistry.Handle { handle?.unhook() })
         } catch (failure: Throwable) {
             if (failure is VirtualMachineError) throw failure
             Log.w(TAG, "Row hook unavailable on " + current.javaClass.name, failure)
@@ -245,12 +246,10 @@ object ModernConversationItemListenerFeature {
     /** Releases the per-adapter row hook and bindings when the chat dies. */
     private fun releaseConversation(activity: Activity) {
         if (adapterActivity?.get() !== activity) return
-        try {
-            innerUnhook?.unhook()
-        } catch (unhookFailure: Throwable) {
-            Log.w(TAG, "Row hook would not release on destroy", unhookFailure)
-        } finally {
-            innerUnhook = null
+        val unhookFailure = rowHookSlot.release()
+        if (unhookFailure != null) {
+            if (unhookFailure is VirtualMachineError) throw unhookFailure
+            Log.w(TAG, "Row hook removal failed on destroy; handle retained", unhookFailure)
         }
         adapter = null
         adapterActivity = null
