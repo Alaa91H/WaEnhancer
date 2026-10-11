@@ -37,8 +37,16 @@ class ModernJidAccess private constructor(
         }?.let { JidRules.stripDeviceSuffix(it) }
     }
 
-    /** The phone number, or null when the JID carries none. */
+    /** Legacy projection: deliberately unchanged for other migrated consumers. */
     fun phoneNumber(jid: Any?): String? = JidRules.phoneNumber(rawString(jid))
+
+    /**
+     * Only a verified phone-domain JID may address a private per-contact rule.
+     * LIDs, group IDs and broadcast IDs can contain digits but are not phone
+     * numbers. Never guess a contact identity from their local parts.
+     */
+    fun privacyOverridePhoneNumber(jid: Any?): String? =
+        JidRules.phoneNumberForPrivacyOverride(rawString(jid))
 
     fun isGroup(jid: Any?): Boolean =
         rawString(jid)?.endsWith(JidRules.GROUP_SUFFIX) == true
@@ -91,6 +99,24 @@ class ModernJidAccess private constructor(
 object JidRules {
     const val GROUP_SUFFIX = "@g.us"
     const val BROADCAST_SUFFIX = "@broadcast"
+    private const val PHONE_SUFFIX = "@s.whatsapp.net"
+
+    /**
+     * A rule stored under <digits>_privacy may only be selected by a phone
+     * JID. The legacy phoneNumber() deliberately also projects numeric LIDs
+     * and group IDs; that loose projection must not select a private rule.
+     *
+     * Unknown domains/format changes fail closed for the per-contact override.
+     * Global privacy switches still apply independently.
+     */
+    fun phoneNumberForPrivacyOverride(raw: String?): String? {
+        if (raw.isNullOrBlank()) return null
+        val canonical = stripDeviceSuffix(raw)
+        if (!canonical.endsWith(PHONE_SUFFIX)) return null
+        val digits = canonical.removeSuffix(PHONE_SUFFIX)
+        if (digits.length !in 1..32 || !digits.all { it in '0'..'9' }) return null
+        return digits
+    }
     private val KNOWN_SUFFIXES = listOf(
         GROUP_SUFFIX,
         "@s.whatsapp.net",
