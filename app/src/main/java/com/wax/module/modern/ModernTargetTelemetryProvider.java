@@ -277,6 +277,18 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_CONTACT_ACCESS.equals(event)
                 || EVENT_JID_ACCESS.equals(event)
                 || EVENT_TYPING_PRIVACY.equals(event)
+                // Every branch that stores a distinct privacy state must be
+                // reachable from this allowlist. These values are authenticated
+                // target-origin metadata, never message/contact contents.
+                || EVENT_TYPING_PRIVACY_TYPING.equals(event)
+                || EVENT_TYPING_PRIVACY_RECORDING.equals(event)
+                || EVENT_ONLINE_PRIVACY.equals(event)
+                || EVENT_ANTI_REVOKE.equals(event)
+                || EVENT_STATUS_SEEN_HIDDEN.equals(event)
+                || EVENT_STATUS_SEEN_AFTER_REPLY.equals(event)
+                || EVENT_RECEIPT_PRIVACY_READ.equals(event)
+                || EVENT_RECEIPT_PRIVACY_AFTER_REPLY.equals(event)
+                || EVENT_RECEIPT_PRIVACY_DELIVERY.equals(event)
                 || EVENT_HIDE_CHAT.equals(event)
                 || EVENT_VIEW_ONCE.equals(event)
                 || EVENT_MESSAGE_ACCESS.equals(event)

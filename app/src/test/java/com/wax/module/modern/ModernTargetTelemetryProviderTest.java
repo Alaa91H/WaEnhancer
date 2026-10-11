@@ -60,6 +60,27 @@ public final class ModernTargetTelemetryProviderTest {
         assertFalse(ModernTargetTelemetryProvider.isSupportedEvent(null));
     }
 
+    @Test public void allDeclaredTelemetryEventsReachTheirProviderBranches() throws Exception {
+        // A forgotten isSupportedEvent() entry silently rejects the IPC call
+        // before call() reaches its matching state-writing branch. Catch any
+        // newly declared event that lacks admission at unit-test time.
+        int count = 0;
+        for (java.lang.reflect.Field field : ModernTargetTelemetryProvider.class.getDeclaredFields()) {
+            if (!field.getName().startsWith("EVENT_")) continue;
+            if (field.getType() != String.class) continue;
+            if (!java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            String event = (String) field.get(null);
+            assertTrue("Declared event silently rejected by provider: " + field.getName(),
+                    ModernTargetTelemetryProvider.isSupportedEvent(event));
+            count++;
+        }
+        assertTrue("Expected full feature evidence catalog", count >= 29);
+        assertFalse(ModernTargetTelemetryProvider.isSupportedEvent("STATUS_SEEN_UNKNOWN"));
+        assertFalse(ModernTargetTelemetryProvider.isSupportedEvent("TYPING_PRIVACY_SECRET"));
+        assertFalse(ModernTargetTelemetryProvider.isSupportedEvent(""));
+        assertFalse(ModernTargetTelemetryProvider.isSupportedEvent(" RECEIPT_PRIVACY_READ"));
+    }
+
     @Test public void settingsWriteAllowlistCoversOnlyWiredAdapters() {
         assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey(
                 "modern.feature.custom_time.enabled"));
