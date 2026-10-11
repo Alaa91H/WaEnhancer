@@ -46,6 +46,8 @@ import androidx.preference.PreferenceManager
 import com.wax.module.ModuleApplication
 import com.wax.module.R
 import com.wax.module.activities.base.BaseActivity
+import com.wax.module.ui.components.WaXFeatureSwitch
+import com.wax.module.ui.theme.ManagerMotionPreference
 import com.wax.module.ui.theme.WaXTheme
 
 /** Uses the existing thememode preference, rather than a second Manager theme store. */
@@ -78,6 +80,7 @@ class ManagerSettingsActivity : BaseActivity() {
     private fun SettingsPage() {
         val prefs = remember { PreferenceManager.getDefaultSharedPreferences(this) }
         var mode by remember { mutableIntStateOf(prefs.getString("thememode", "0")?.toIntOrNull() ?: 0) }
+        var reduceMotion by remember { mutableStateOf(prefs.getBoolean(ManagerMotionPreference.KEY, false)) }
         Scaffold { inset ->
             Column(
                 modifier =
@@ -115,6 +118,29 @@ class ManagerSettingsActivity : BaseActivity() {
                         })
                         Text(stringResource(title), modifier = Modifier.padding(start = 8.dp))
                     }
+                }
+                HorizontalDivider()
+                Row(
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.uix_reduce_manager_motion), style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            stringResource(R.string.uix_reduce_manager_motion_summary),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    WaXFeatureSwitch(checked = reduceMotion, onCheckedChange = { enabled ->
+                        if (reduceMotion != enabled) {
+                            reduceMotion = enabled
+                            prefs.edit().putBoolean(ManagerMotionPreference.KEY, enabled).apply()
+                            // WaXTheme reads this setting when the Activity is created.
+                            recreate()
+                        }
+                    })
                 }
                 HorizontalDivider()
                 Card(onClick = { navigateToLegacy("app_language") }, modifier = Modifier.fillMaxWidth()) {

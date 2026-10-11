@@ -729,4 +729,6 @@
     <string name="uix_preview_message_other">رسالة واردة</string>
     <string name="uix_target_installed_build">%1$s · الإصدار المثبّت %2$s (رمز الإصدار %3$s)</string>
     <string name="uix_unknown_version">غير معروف</string>
+    <string name="uix_reduce_manager_motion">تقليل حركة مفاتيح واجهة المدير</string>
+    <string name="uix_reduce_manager_motion_summary">عرض مفاتيح واجهة WA X دون انتقال متحرك. تتبع بقية الحركات إعدادات نظام Android.</string>
 </resources>

@@ -758,4 +758,6 @@
     <string name="uix_preview_message_other">Incoming message</string>
     <string name="uix_target_installed_build">%1$s · installed %2$s (versionCode %3$s)</string>
     <string name="uix_unknown_version">Unknown</string>
+    <string name="uix_reduce_manager_motion">Reduce Manager switch animations</string>
+    <string name="uix_reduce_manager_motion_summary">Show static WA X Manager switches without motion. Other animations follow Android system settings.</string>
 </resources>

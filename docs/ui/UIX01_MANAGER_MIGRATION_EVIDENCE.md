@@ -86,6 +86,17 @@ Old preference keys are not renamed and all legacy preference fragments remain r
   optimistic stale-edit detection plus one committed write batch, **not** an atomic
   interprocess transaction. Release validation must still test simultaneous writers.
 
+## Manager-only reduced switch motion (2026-10-11)
+
+- App Settings offers a Manager-only `wax.manager.reduce_motion` preference.
+- When selected, the shared Manager feature switch uses a static Canvas with
+  explicit physical right/green ON, left/grey OFF and `Role.Switch` toggle
+  semantics, with a 52×48dp touch target. When not selected, Material3's normal
+  animated Switch is preserved (and follows Android system animation scaling).
+- This staged control does **not** claim to suppress animations outside the
+  shared Manager switches or inside WhatsApp. Other animation/motion
+  accessibility and device/visual tests remain open under #371.
+
 ## Local validation
 
 Verified on an authorized Windows Android SDK/JDK builder:

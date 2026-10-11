@@ -201,7 +201,8 @@ fun WaXTheme(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val savedMode = PreferenceManager.getDefaultSharedPreferences(context).getString("thememode", "0")
+    val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+    val savedMode = prefs.getString("thememode", "0")
     val appearance = ManagerAppearance.fromStored(savedMode, darkTheme)
     val colorScheme: ColorScheme =
         when {
@@ -223,7 +224,10 @@ fun WaXTheme(
         }
     val extended = if (appearance.dark) DarkExtended else LightExtended
 
-    CompositionLocalProvider(LocalWaXExtendedColors provides extended) {
+    CompositionLocalProvider(
+        LocalWaXExtendedColors provides extended,
+        LocalManagerReducedMotion provides prefs.getBoolean(ManagerMotionPreference.KEY, false),
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = WaXTypography,
