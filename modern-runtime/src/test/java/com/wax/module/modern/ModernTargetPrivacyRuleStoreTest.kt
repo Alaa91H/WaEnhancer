@@ -154,6 +154,9 @@ class ModernTargetPrivacyRuleStoreTest {
         assertFalse(ModernTypingPrivacyFeature.isCustomPrivacyEnabled("0"))
         assertFalse(ModernTypingPrivacyFeature.isCustomPrivacyEnabled(""))
         assertFalse(ModernTypingPrivacyFeature.isCustomPrivacyEnabled(null))
+        assertFalse(ModernTypingPrivacyFeature.isCustomPrivacyEnabled("unsupported"))
+        assertFalse(ModernTypingPrivacyFeature.isCustomPrivacyEnabled("3"))
+        assertFalse(ModernTypingPrivacyFeature.isCustomPrivacyEnabled("-1"))
     }
 
     private fun fakePreferences(
