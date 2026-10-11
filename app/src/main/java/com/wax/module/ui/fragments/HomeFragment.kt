@@ -51,6 +51,9 @@ import com.wax.module.utils.RootDiagnostics
 import com.wax.module.xposed.core.FeatureLoader
 import com.wax.module.xposed.utils.Utils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -65,6 +68,7 @@ class HomeFragment : BaseFragment() {
     private var currentBinding: FragmentHomeBinding? = null
     private val binding get() = currentBinding!!
     private var statusReceiverRegistered = false
+    private var modernCheckJob: Job? = null
     private val activationProbeHandler = Handler(Looper.getMainLooper())
     private val pendingActivationProbes = mutableListOf<Runnable>()
 
@@ -106,8 +110,10 @@ class HomeFragment : BaseFragment() {
                     val reportedPackage = intent.getStringExtra("PKG")
                     val heartbeat = TargetHeartbeatCodec.decode(intent.getStringExtra(FeatureLoader.EXTRA_HEARTBEAT))
                     if (heartbeat == null) {
+                        binding.healthCheckStatus.text = getString(R.string.uix_snapshot_unverified)
                         Log.w("WA-X Activation", "Probe reply from $reportedPackage has no valid runtime heartbeat")
                     } else {
+                        binding.healthCheckStatus.text = getString(R.string.uix_probe_received)
                         activation.accept(heartbeat)
                         Log.i("WA-X Activation", "Probe reply from $reportedPackage: stage=${heartbeat.stage}, state=${heartbeat.state}")
                     }
@@ -170,6 +176,8 @@ class HomeFragment : BaseFragment() {
     }
 
     override fun onStop() {
+        modernCheckJob?.cancel()
+        modernCheckJob = null
         activationProbeHandler.removeCallbacks(modernStatusRefresh)
         pendingActivationProbes.forEach(activationProbeHandler::removeCallbacks)
         pendingActivationProbes.clear()
@@ -190,7 +198,12 @@ class HomeFragment : BaseFragment() {
         checkStateWpp(requireActivity())
 
         binding.healthCheckNow.setOnClickListener {
-            if (BuildConfig.MODERN_XPOSED) renderModernActivation() else checkWpp(requireActivity())
+            if (BuildConfig.MODERN_XPOSED) {
+                renderModernActivation()
+            } else {
+                binding.healthCheckStatus.text = getString(R.string.uix_probe_sent)
+                checkWpp(requireActivity())
+            }
         }
 
         binding.rebootBtn.setOnClickListener { view ->
@@ -361,10 +374,14 @@ class HomeFragment : BaseFragment() {
      */
     private fun renderModernActivation() {
         if (!isAdded || currentBinding == null) return
+        if (modernCheckJob?.isActive == true) return
+        binding.healthCheckNow.isEnabled = false
+        binding.healthCheckStatus.text = getString(R.string.uix_checking_snapshot)
         val applicationContext = requireContext().applicationContext
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val snapshot = ModernManagerRuntimeStatus.inspect(applicationContext)
-            withContext(Dispatchers.Main) {
+        modernCheckJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val snapshot = ModernManagerRuntimeStatus.inspect(applicationContext)
+                withContext(Dispatchers.Main) {
                 if (!isAdded || currentBinding == null) return@withContext
                 binding.statusTitle.text =
                     if (snapshot.connected) {
@@ -474,7 +491,25 @@ class HomeFragment : BaseFragment() {
                     )
                     restart.visibility = if (reported) View.VISIBLE else View.GONE
                 }
+                binding.healthCheckStatus.text = getString(
+                    R.string.uix_snapshot_checked_at,
+                    android.text.format.DateFormat.getTimeFormat(requireContext()).format(Date()),
+                )
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            Log.w("WA-X Health", "Passive status refresh failed", failure)
+            withContext(Dispatchers.Main) {
+                if (isAdded && currentBinding != null) {
+                    binding.healthCheckStatus.text = getString(R.string.uix_snapshot_failed)
+                }
+            }
+        } finally {
+            withContext(NonCancellable + Dispatchers.Main) {
+                if (isAdded && currentBinding != null) binding.healthCheckNow.isEnabled = true
+            }
+        }
         }
     }
 

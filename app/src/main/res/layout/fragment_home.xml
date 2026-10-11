@@ -44,6 +44,16 @@
                     android:layout_marginBottom="@dimen/spacing_small"
                     android:text="@string/uix_check_now" />
 
+                <TextView
+                    android:id="@+id/health_check_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/spacing_small"
+                    android:gravity="center_vertical"
+                    android:minHeight="24dp"
+                    android:text="@string/uix_snapshot_unverified"
+                    android:textAppearance="?attr/textAppearanceBodySmall" />
+
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/status"
                     android:layout_width="match_parent"

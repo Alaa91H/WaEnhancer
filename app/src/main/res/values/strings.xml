@@ -737,4 +737,18 @@
     <string name="uix_use_global">Use Global (remove override)</string>
     <string name="uix_check_now">Check current connection</string>
     <string name="uix_backup_unavailable">Backup options are not ready. Try again.</string>
+    <string name="uix_compat_evidence_summary">Inspect current diagnostic checks; exact-build support may be unverified.</string>
+    <string name="uix_sanitized_reports">Sanitized reports</string>
+    <string name="uix_sanitized_reports_summary">Open Diagnostics to review redactions before exporting locally.</string>
+    <string name="uix_recovery">Safe mode and recovery</string>
+    <string name="uix_recovery_summary">Review diagnostic evidence and recovery guidance. No automatic reset.</string>
+    <string name="uix_recovery_information">Recovery is evidence-led. This shortcut opens Diagnostics; it does not enable safe mode, clear preferences, change WhatsApp data, or promise an automatic repair. Review the actual failure before changing settings.</string>
+    <string name="uix_compat_information">Only verified version- and target-specific results can prove compatibility. Existing Diagnostics can run safe tests and show evidence; unknown or missing results must stay unverified.</string>
+    <string name="uix_open_diagnostics">Open diagnostics</string>
+    <string name="uix_checking_snapshot">Refreshing the latest available evidence…</string>
+    <string name="uix_snapshot_checked_at">Evidence refreshed at %1$s. Runtime state may still be unverified.</string>
+    <string name="uix_snapshot_failed">Could not refresh evidence; previous status may be stale. Try Diagnostics.</string>
+    <string name="uix_snapshot_unverified">No fresh verification evidence yet.</string>
+    <string name="uix_probe_sent">Check requested. Awaiting a valid target reply.</string>
+    <string name="uix_probe_received">A target response arrived; consult its authenticated status.</string>
 </resources>

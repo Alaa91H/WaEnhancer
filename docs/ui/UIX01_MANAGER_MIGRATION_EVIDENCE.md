@@ -41,6 +41,24 @@ Old preference keys are not renamed and all legacy preference fragments remain r
 - App theme choices preserve existing values 0/1/2 and add 3 for AMOLED.
   Compose shares that preference rather than relying only on system theme.
 
+## New Home/Tools safety work (2026-10-11)
+
+- Tools now presents the six requested destinations with an adaptive two/three-column layout:
+  Diagnostics, Compatibility, Backups, Updates, Sanitized Reports, and Safe Mode & Recovery.
+  Compatibility, report export and recovery **reuse** the existing Diagnostics Activity,
+  not a new health/compatibility engine.
+- The Compatibility tile explicitly states that current diagnostics evidence does not imply
+  signed exact-version compatibility and warns before showing existing tests.
+  Safe Mode & Recovery offers a read-only explanation and a route to diagnostics,
+  **not** an unverified automatic reset or unsupported switch.
+- Home manual checks report a request or an observed snapshot refresh independently
+  from runtime success. Automatic modern status refresh now reuses a single in-flight job,
+  disables repeat Check actions while active, records the local refresh time, surfaces a
+  passive inspection failure as unverified, and cancels the job when Home stops.
+  A valid target reply is acknowledged without implying a successful hook.
+- This is **UI progress/feedback only**. It does not implement missing M01/M02/A05
+  evidence stages, signed per-exact-build compatibility or runtime repair.
+
 ## Local validation
 
 Verified on an authorized Windows Android SDK/JDK builder:

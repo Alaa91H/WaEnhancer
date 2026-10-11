@@ -708,4 +708,18 @@
     <string name="uix_use_global">استخدام الإعداد العام (إزالة التخصيص)</string>
     <string name="uix_check_now">فحص الاتصال الحالي</string>
     <string name="uix_backup_unavailable">خيارات النسخ الاحتياطي غير جاهزة الآن. حاول مجدداً.</string>
+    <string name="uix_compat_evidence_summary">افحص الأدلة التشخيصية الحالية؛ قد لا يكون توافق الإصدار المحدد مؤكداً.</string>
+    <string name="uix_sanitized_reports">تقارير منقّحة</string>
+    <string name="uix_sanitized_reports_summary">افتح التشخيصات لمراجعة تنقيح البيانات قبل تصدير التقرير محلياً.</string>
+    <string name="uix_recovery">الوضع الآمن والاسترداد</string>
+    <string name="uix_recovery_summary">راجع الأدلة وإرشادات الاسترداد. لا توجد إعادة ضبط تلقائية.</string>
+    <string name="uix_recovery_information">يستند الاسترداد إلى الأدلة. هذا الاختصار يفتح التشخيصات فقط؛ لا يفعّل الوضع الآمن ولا يمسح الإعدادات أو بيانات واتساب ولا يعد بإصلاح تلقائي. راجع سبب العطل المثبت قبل تغيير الإعدادات.</string>
+    <string name="uix_compat_information">لا يثبت التوافق إلا دليل صالح للإصدار والتطبيق المحددين. يمكن للتشخيصات الحالية إجراء فحوص آمنة وعرض الأدلة؛ وتبقى النتائج المفقودة أو غير المعروفة غير مؤكدة.</string>
+    <string name="uix_open_diagnostics">فتح التشخيصات</string>
+    <string name="uix_checking_snapshot">جارٍ تحديث أحدث الأدلة المتاحة…</string>
+    <string name="uix_snapshot_checked_at">حُدّثت الأدلة الساعة %1$s. قد تبقى حالة التشغيل غير مؤكدة.</string>
+    <string name="uix_snapshot_failed">تعذر تحديث الأدلة؛ قد تكون الحالة السابقة قديمة. جرّب التشخيصات.</string>
+    <string name="uix_snapshot_unverified">لا توجد أدلة تحقق حديثة حتى الآن.</string>
+    <string name="uix_probe_sent">أُرسل طلب الفحص. بانتظار رد صالح من التطبيق المستهدف.</string>
+    <string name="uix_probe_received">وصل رد من التطبيق المستهدف؛ راجع الحالة الموثقة.</string>
 </resources>
