@@ -47,32 +47,32 @@ object ModernTypingPrivacyFeature {
     }
 
     /**
-     * The per-behaviour state, which is not the same as the hook state (#450).
-     *
-     * Typing and recording are separate promises to the people you are talking
-     * to, so they are reported separately even though one hook serves both:
-     * a user who hides recording but not typing has to be able to see which one
-     * is actually in force.
+     * Requested configuration and hook-registration evidence are NOT a proof
+     * that the remote sender actually failed to receive an indicator (#450).
+     * These states deliberately never report WITHHELD / VERIFIED at startup.
      */
     data class BehaviourState(
         val typingRequested: Boolean,
         val recordingRequested: Boolean,
-        val typingWithheld: Boolean,
-        val recordingWithheld: Boolean,
+        val customRulesRequested: Boolean,
         val outcome: Outcome,
     ) {
-        /** True only when the hook is installed and the behaviour is in force. */
-        fun isBehaviourActive(
-            requested: Boolean,
-            withheld: Boolean,
-        ): Boolean = outcome == Outcome.INSTALLED && requested && withheld
+        fun typingTelemetryState(): String = stateFor(typingRequested)
+
+        fun recordingTelemetryState(): String = stateFor(recordingRequested)
+
+        private fun stateFor(globalRequested: Boolean): String =
+            when {
+                !globalRequested && !customRulesRequested -> "DISABLED"
+                outcome == Outcome.INSTALLED -> "HOOK_INSTALLED_UNVERIFIED"
+                else -> "REQUESTED_NOT_INSTALLED"
+            }
     }
 
     /**
-     * Reads the three legacy switches into the two behaviours they control.
-     *
-     * `ghostmode` is the legacy global that covers both, so it counts towards
-     * each behaviour rather than being a third thing.
+     * Read the user-requested switches, separately from any runtime effect.
+     * Custom per-chat overrides may request either behaviour, so a custom-only
+     * mode must not appear as globally DISABLED when the hook is installed.
      */
     @JvmStatic
     fun behaviourState(
@@ -82,15 +82,12 @@ object ModernTypingPrivacyFeature {
         val global = preferences.getBoolean(PREF_GHOSTMODE, false)
         val typing = global || preferences.getBoolean(PREF_GHOSTMODE_TYPING, false)
         val recording = global || preferences.getBoolean(PREF_GHOSTMODE_RECORDING, false)
-        // Installed is the ceiling: without it nothing is withheld, and
-        // reporting the preference alone is exactly the false claim #450 rules
-        // out.
-        val installed = outcome == Outcome.INSTALLED
+        val customRules =
+            isCustomPrivacyEnabled(preferences.getString(PREF_CUSTOM_PRIVACY_MODE, "0"))
         return BehaviourState(
             typingRequested = typing,
             recordingRequested = recording,
-            typingWithheld = typing && installed,
-            recordingWithheld = recording && installed,
+            customRulesRequested = customRules,
             outcome = outcome,
         )
     }
