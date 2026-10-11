@@ -518,23 +518,18 @@ public final class ModernXposedEntry extends XposedModule {
                 }
                 ModernTypingPrivacyFeature.BehaviourState behaviours =
                         ModernTypingPrivacyFeature.INSTANCE.behaviourState(preferences, privacyOutcome);
+                // Hook installation is not proof of callback suppression or
+                // sender-observed privacy. Never report a false WITHHELD state.
                 Log.i(TAG, "M06_TYPING_RECORDING_STATE package=" + packageName
                         + " typingRequested=" + behaviours.getTypingRequested()
-                        + " typingWithheld=" + behaviours.getTypingWithheld()
                         + " recordingRequested=" + behaviours.getRecordingRequested()
-                        + " recordingWithheld=" + behaviours.getRecordingWithheld());
+                        + " customRulesRequested=" + behaviours.getCustomRulesRequested()
+                        + " typingEvidence=" + behaviours.typingTelemetryState()
+                        + " recordingEvidence=" + behaviours.recordingTelemetryState());
                 ModernTargetTelemetry.send(target, packageName,
-                        "TYPING_PRIVACY_TYPING",
-                        behaviours.isBehaviourActive(
-                                behaviours.getTypingRequested(),
-                                behaviours.getTypingWithheld())
-                                ? "WITHHELD" : "NOT_WITHHELD");
+                        "TYPING_PRIVACY_TYPING", behaviours.typingTelemetryState());
                 ModernTargetTelemetry.send(target, packageName,
-                        "TYPING_PRIVACY_RECORDING",
-                        behaviours.isBehaviourActive(
-                                behaviours.getRecordingRequested(),
-                                behaviours.getRecordingWithheld())
-                                ? "WITHHELD" : "NOT_WITHHELD");
+                        "TYPING_PRIVACY_RECORDING", behaviours.recordingTelemetryState());
             } catch (RuntimeException behaviourFailure) {
                 log(Log.WARN, TAG, "Typing/recording state delivery failed", behaviourFailure);
             }
