@@ -26,25 +26,31 @@ dependency:
   recording)` pins the legacy semantics, including that recording is governed
   by its own rule and that unrelated state values are never suppressed.
 
-## Per-contact privacy without moving the address book
+## P0 correction: actual storage of per-contact rules (2026-10-11)
 
-The legacy feature reads per-contact rules from the module's private
-preferences. Those live in the Manager now, and RemotePreferences are
-read-only inside WhatsApp, so the rules are fetched **per contact** through a
-new UID-authenticated provider method `read-target-privacy-v1`:
+A source audit of `ModuleRuntime.getPrivPrefs()` and
+`CustomPrivacy.savePreferences()` confirmed that legacy per-contact JSON
+overrides live under `<number>_privacy` in **the target WhatsApp process's own
+private `WaGlobal` SharedPreferences**. They do NOT live in the Manager's
+default preferences, contrary to the previous version of this document.
 
-- the request names one number — the one the hook is already inspecting;
-- the answer is exactly two booleans, derived from that contact's stored JSON;
-- the number is validated as digits only and nothing is persisted on this
-  side;
-- a cache answers repeat lookups immediately, and a miss answers with the
-  global-only rule while the Manager is asked on a background thread, so a
-  WhatsApp hook thread never blocks on IPC.
+The corrected API 102 hook reads that already-open target-local store without
+sending phone numbers across Binder or waiting for an asynchronous Manager
+lookup. The first composing event now sees an existing override immediately.
+Messenger, Business and independent Android users/profiles have separate
+storage, under the Android application sandbox.
 
-Bulk-syncing every contact number into RemotePreferences would have moved the
-whole address book into the injected process for no benefit; this keeps the
-transferred data to the minimum needed for the decision being made.
+An absent JSON property inherits the corresponding global switch; explicit
+`false` overrides that switch, while global `ghostmode` still takes
+precedence. Corrupt nonempty records fail closed. The target-local reader
+rejects invalid phone identifiers and does not log contact values. No
+number-keyed cache is retained, so same-process edits become visible at the
+next event. Custom-privacy mode is a valid reason to install this hook even
+when both global activity toggles are off.
 
+`read-target-privacy-v1` remains an older compatibility API, but the
+corrected modern typing hook does not call it. This avoids a false assumption
+about the Manager owning target-local per-contact data.
 ## Settings and controls
 
 The relay now forwards the three global switches (`ghostmode`, `ghostmode_t`,
@@ -55,7 +61,15 @@ accepts exactly those three keys.
 
 ## Verification
 
-Eight pure tests cover the anchor parity with the legacy resolver, the state
-constants, every suppression branch, the preference-key parity, the outcome
-set and the rule-cache reset. Real suppression needs WhatsApp
-(`PENDING_USER_DEVICE_TEST`).
+Offline tests cover the parser for real legacy JSON booleans, the first-event
+read, per-contact `false` vs missing properties, live same-process preference
+edits, Messenger/Business store separation, invalid identifiers, corruption,
+the global-ghost override, typing/recording independence, and the exact third
+argument composing-state contract.
+
+**Field acceptance is deferred until a built APK can be tested.** Verify
+target-context access, changes from the actual editor, live preferences and
+external sender-visible ON/OFF using consenting test accounts and exact target
+builds. An installed hook does not prove external behavior. If the feature
+was entirely disabled at process startup, later enabling it may require a
+WhatsApp restart until hot-install is supported.
