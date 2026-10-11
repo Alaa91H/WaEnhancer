@@ -39,6 +39,63 @@ public final class ModernHookRegistry {
     private final Map<String, LinkedHashMap<String, Handle>> installed = new LinkedHashMap<>();
     /** A failed rollback leaves a tracked but NOT healthy handle until cleanup succeeds. */
     private final Set<String> incompleteFeatures = new LinkedHashSet<>();
+    // Only the lifetime of this registry (one target process/session). Never
+    // persist a failure counter that could disable a feature after an upgrade.
+    private static final int SESSION_FAILURE_LIMIT = 3;
+    private final Map<String, Integer> consecutiveInstallFailures = new LinkedHashMap<>();
+    private final Set<String> quarantinedFeatures = new LinkedHashSet<>();
+
+    /** Installation state, NOT proof of externally observed feature behavior. */
+    public enum InstallState {
+        UNKNOWN, INSTALLED, FAILED, QUARANTINED, INCOMPLETE_ROLLBACK
+    }
+
+    public synchronized InstallState installState(String featureId) {
+        String feature = requireId(featureId);
+        if (incompleteFeatures.contains(feature)) return InstallState.INCOMPLETE_ROLLBACK;
+        if (quarantinedFeatures.contains(feature)) return InstallState.QUARANTINED;
+        // An existing handle does not make a subsequent failed install healthy.
+        if (consecutiveInstallFailures.containsKey(feature)) return InstallState.FAILED;
+        return installedCount(feature) > 0 ? InstallState.INSTALLED : InstallState.UNKNOWN;
+    }
+
+    public synchronized int consecutiveInstallFailures(String featureId) {
+        return consecutiveInstallFailures.getOrDefault(requireId(featureId), 0);
+    }
+
+    /**
+     * Explicit in-process recovery, only after all failed rollback handles
+     * have been removed. Restarting the target process also resets the budget.
+     * This never changes user preferences or claims behavior verification.
+     */
+    public synchronized void resetSessionQuarantine(String featureId) {
+        String feature = requireId(featureId);
+        if (incompleteFeatures.contains(feature)) {
+            throw new IllegalStateException("Feature requires rollback cleanup: " + feature);
+        }
+        quarantinedFeatures.remove(feature);
+        consecutiveInstallFailures.remove(feature);
+    }
+
+    private void requireInstallAllowed(String feature) {
+        if (incompleteFeatures.contains(feature)) {
+            throw new IllegalStateException("Feature has incomplete rollback: " + feature);
+        }
+        if (quarantinedFeatures.contains(feature)) {
+            throw new IllegalStateException("Feature quarantined after repeated install failures: " + feature);
+        }
+    }
+
+    private void recordInstallerFailure(String feature) {
+        int count = Math.min(SESSION_FAILURE_LIMIT,
+                consecutiveInstallFailures.getOrDefault(feature, 0) + 1);
+        consecutiveInstallFailures.put(feature, count);
+        if (count >= SESSION_FAILURE_LIMIT) quarantinedFeatures.add(feature);
+    }
+
+    private void recordInstallerSuccess(String feature) {
+        consecutiveInstallFailures.remove(feature);
+    }
 
     private static String requireId(String value) {
         if (value == null || value.trim().isEmpty() || !value.equals(value.trim())) {
@@ -57,17 +114,22 @@ public final class ModernHookRegistry {
 
     public synchronized boolean installOnce(String featureId, Registration hook) throws Throwable {
         String feature = requireId(featureId);
-        if (incompleteFeatures.contains(feature)) {
-            throw new IllegalStateException("Feature has incomplete rollback: " + feature);
-        }
+        requireInstallAllowed(feature);
         Objects.requireNonNull(hook, "hook");
         requireUnclaimedId(feature, hook.id);
         LinkedHashMap<String, Handle> previous = installed.get(feature);
         if (previous != null && previous.containsKey(hook.id)) {
             return false;
         }
-        Handle handle = Objects.requireNonNull(hook.installer.install(), "hook handle");
+        Handle handle;
+        try {
+            handle = Objects.requireNonNull(hook.installer.install(), "hook handle");
+        } catch (Throwable failure) {
+            recordInstallerFailure(feature);
+            throw failure;
+        }
         installed.computeIfAbsent(feature, ignored -> new LinkedHashMap<>()).put(hook.id, handle);
+        recordInstallerSuccess(feature);
         return true;
     }
 
@@ -77,9 +139,7 @@ public final class ModernHookRegistry {
      */
     public synchronized int installFeature(String featureId, List<Registration> hooks) throws Throwable {
         String feature = requireId(featureId);
-        if (incompleteFeatures.contains(feature)) {
-            throw new IllegalStateException("Feature has incomplete rollback: " + feature);
-        }
+        requireInstallAllowed(feature);
         Objects.requireNonNull(hooks, "hooks");
         Set<String> ids = new LinkedHashSet<>();
         LinkedHashMap<String, Handle> existing = installed.get(feature);
@@ -126,11 +186,13 @@ public final class ModernHookRegistry {
                 installed.computeIfAbsent(feature, ignored -> new LinkedHashMap<>()).putAll(residual);
                 incompleteFeatures.add(feature);
             }
+            recordInstallerFailure(feature);
             throw failure;
         }
 
         if (!acquired.isEmpty()) {
             installed.computeIfAbsent(feature, ignored -> new LinkedHashMap<>()).putAll(acquired);
+            recordInstallerSuccess(feature);
         }
         return acquired.size();
     }
