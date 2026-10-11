@@ -37,6 +37,13 @@
                 android:paddingBottom="@dimen/spacing_large"
                 tools:context=".ui.activity.MainActivity">
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/health_check_now"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/spacing_small"
+                    android:text="@string/uix_check_now" />
+
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/status"
                     android:layout_width="match_parent"

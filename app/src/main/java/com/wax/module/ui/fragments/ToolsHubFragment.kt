@@ -41,7 +41,7 @@ class ToolsHubFragment : Fragment() {
         when (action) {
             0 -> startActivity(Intent(host, DiagnosticsActivity::class.java))
             1 -> startActivity(Intent(host, TargetSettingsActivity::class.java))
-            2 -> (host as? MainActivity)?.navigateToLegacyFragment(0)
+            2 -> (host as? MainActivity)?.openBackupActions()
             3 -> startActivity(Intent(host, SearchActivity::class.java))
             4 -> startActivity(Intent(host, AboutActivity::class.java))
             5 -> (host as? MainActivity)?.navigateToLegacyFragment(1, "update_check", "general_home")

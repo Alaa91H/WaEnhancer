@@ -56,6 +56,7 @@ class ManagerSettingsActivity : BaseActivity() {
                     0 to R.string.uix_theme_system,
                     1 to R.string.uix_theme_dark,
                     2 to R.string.uix_theme_light,
+                    3 to R.string.uix_theme_amoled,
                 ).forEach { (value, title) ->
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable {

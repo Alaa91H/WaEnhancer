@@ -66,7 +66,7 @@ class MainActivity : BaseActivity() {
                     super.onPageSelected(position)
                     val primaryId = when (position) {
                         0 -> R.id.navigation_home
-                        2 -> R.id.navigation_colors
+                        2, 8 -> R.id.navigation_colors
                         3 -> R.id.navigation_tools
                         else -> R.id.navigation_features
                     }
@@ -90,6 +90,21 @@ class MainActivity : BaseActivity() {
         createMainDir()
         FilePicker.registerFilePicker(this)
         handleIncomingIntent(intent)
+    }
+
+    /** Opens the existing Home backup/export operations without creating a second backup engine. */
+    fun openBackupActions() {
+        binding.viewPager.setCurrentItem(0, false)
+        binding.viewPager.post {
+            val home = supportFragmentManager.findFragmentByTag("f0") as? HomeFragment
+            if (home != null) {
+                home.openBackupOptions()
+            } else {
+                binding.viewPager.postDelayed({
+                    (supportFragmentManager.findFragmentByTag("f0") as? HomeFragment)?.openBackupOptions()
+                }, 200)
+            }
+        }
     }
 
     private fun createMainDir() {
@@ -144,7 +159,10 @@ class MainActivity : BaseActivity() {
         parentKey: String?,
     ) {
         val currentItem = binding.viewPager.currentItem
-        val fragment = supportFragmentManager.findFragmentByTag("f$currentItem") ?: return
+        // FragmentStateAdapter tags fragments by their stable item ID, not by their new position.
+        // Retained legacy preference pages deliberately have IDs different from their positions.
+        val itemId = binding.viewPager.adapter?.getItemId(currentItem) ?: return
+        val fragment = supportFragmentManager.findFragmentByTag("f$itemId") ?: return
 
         if (fragment is GeneralFragment || fragment is HomeFragment) {
             if (!parentKey.isNullOrEmpty()) {

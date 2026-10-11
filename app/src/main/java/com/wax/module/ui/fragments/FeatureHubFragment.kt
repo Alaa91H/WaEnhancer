@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
@@ -24,25 +25,58 @@ import androidx.preference.PreferenceManager
 import com.wax.module.R
 import com.wax.module.activities.MainActivity
 import com.wax.module.model.SearchableFeature
+import com.wax.module.platform.TargetApp
+import com.wax.module.settings.EffectiveSettingsResolver
+import com.wax.module.settings.SettingKeyRegistry
+import com.wax.module.settings.SettingsScope
+import com.wax.module.settings.SharedPreferencesSettingsStore
 import com.wax.module.ui.targets.TargetSettingsActivity
 import com.wax.module.ui.theme.WaXTheme
 import com.wax.module.utils.FeatureCatalog
 
-/** Reuses the canonical catalog and original preference destinations. */
+/**
+ * UIX-01.2 feature browser. One canonical registry and target-aware settings store;
+ * saved configuration is deliberately NOT mislabelled as a verified working hook.
+ */
 class FeatureHubFragment : Fragment() {
+    private val screenRevision = mutableIntStateOf(0)
+
+    override fun onResume() {
+        super.onResume()
+        screenRevision.intValue++
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
         ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 WaXTheme {
                     Browser(
-                        onOpen = { feature ->
-                            (activity as? MainActivity)?.navigateToLegacyFragment(
-                                feature.fragmentType.position, feature.key, feature.parentKey,
-                            )
+                        externalRevision = screenRevision.intValue,
+                        onOpen = { feature, scopeChoice ->
+                            if (scopeChoice == 0) {
+                                (activity as? MainActivity)?.navigateToLegacyFragment(
+                                    feature.fragmentType.position, feature.key, feature.parentKey,
+                                )
+                            } else {
+                                val target = if (scopeChoice == 1) TargetApp.WHATSAPP else TargetApp.WHATSAPP_BUSINESS
+                                startActivity(
+                                    Intent(requireContext(), TargetSettingsActivity::class.java)
+                                        .putExtra(TargetSettingsActivity.EXTRA_TARGET_CODE, target.code)
+                                        .putExtra(TargetSettingsActivity.EXTRA_SETTING_QUERY, feature.key),
+                                )
+                            }
                         },
-                        onTargets = {
-                            startActivity(Intent(requireContext(), TargetSettingsActivity::class.java))
+                        onTargetSettings = { scopeChoice ->
+                            val code = when (scopeChoice) {
+                                1 -> TargetApp.WHATSAPP.code
+                                2 -> TargetApp.WHATSAPP_BUSINESS.code
+                                else -> null
+                            }
+                            startActivity(
+                                Intent(requireContext(), TargetSettingsActivity::class.java)
+                                    .putExtra(TargetSettingsActivity.EXTRA_TARGET_CODE, code),
+                            )
                         },
                     )
                 }
@@ -50,10 +84,16 @@ class FeatureHubFragment : Fragment() {
         }
 
     @Composable
-    private fun Browser(onOpen: (SearchableFeature) -> Unit, onTargets: () -> Unit) {
+    private fun Browser(
+        externalRevision: Int,
+        onOpen: (SearchableFeature, Int) -> Unit,
+        onTargetSettings: (Int) -> Unit,
+    ) {
         val context = requireContext()
         val prefs = remember(context) { PreferenceManager.getDefaultSharedPreferences(context) }
+        val store = remember(context) { SharedPreferencesSettingsStore(prefs) }
         val entries = remember(context) { FeatureCatalog.getAllFeatures(context) }
+        val declared = remember { SettingKeyRegistry.entries.associateBy { it.key } }
         val favorites = remember(entries) {
             mutableStateListOf<String>().apply {
                 addAll(entries.map { it.key }.filter { prefs.getBoolean("uix_favorite_" + it, false) })
@@ -61,6 +101,19 @@ class FeatureHubFragment : Fragment() {
         }
         var query by rememberSaveable { mutableStateOf("") }
         var selected by rememberSaveable { mutableStateOf("all") }
+        var scopeChoice by rememberSaveable { mutableIntStateOf(0) }
+        var localRevision by remember { mutableIntStateOf(0) }
+
+        // UI reloads cached settings after a change in this screen or any returning editor.
+        val resolver = remember(scopeChoice, localRevision, externalRevision) {
+            store.reload()
+            EffectiveSettingsResolver(store)
+        }
+        val scope: SettingsScope = when (scopeChoice) {
+            1 -> SettingsScope.Target(TargetApp.WHATSAPP)
+            2 -> SettingsScope.Target(TargetApp.WHATSAPP_BUSINESS)
+            else -> SettingsScope.Global
+        }
         val groups = listOf("all", "favorites", "privacy", "general", "media", "customization")
         val filtered = entries.filter { feature ->
             val groupMatch = when (selected) {
@@ -74,6 +127,7 @@ class FeatureHubFragment : Fragment() {
             }
             groupMatch && (query.isBlank() || feature.matches(query))
         }
+
         Scaffold { padding ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
@@ -90,7 +144,16 @@ class FeatureHubFragment : Fragment() {
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        OutlinedButton(onClick = onTargets) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(R.string.uix_global, R.string.uix_whatsapp, R.string.uix_business).forEachIndexed { index, title ->
+                                FilterChip(
+                                    selected = scopeChoice == index,
+                                    onClick = { scopeChoice = index },
+                                    label = { Text(stringResource(title), style = MaterialTheme.typography.labelSmall) },
+                                )
+                            }
+                        }
+                        OutlinedButton(onClick = { onTargetSettings(scopeChoice) }) {
                             Text(stringResource(R.string.open_per_target_settings))
                         }
                         OutlinedTextField(
@@ -136,31 +199,71 @@ class FeatureHubFragment : Fragment() {
                     item { Text(stringResource(R.string.uix_no_results), modifier = Modifier.padding(20.dp)) }
                 }
                 items(filtered, key = { it.key }) { feature ->
+                    val setting = declared[feature.key]
+                    val isBoolean = setting?.kind == SettingKeyRegistry.Kind.BOOLEAN
+                    val chosen = if (isBoolean) resolver.effectiveBoolean(feature.key, scope) else false
+                    val overridden = isBoolean && scope is SettingsScope.Target &&
+                        store.readBoolean(scope, feature.key) != null
                     Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Column(
-                                modifier = Modifier.weight(1f).clickable { onOpen(feature) }.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                Text(feature.title, style = MaterialTheme.typography.titleMedium)
-                                Text(
-                                    feature.summary ?: feature.category.displayName,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
+                        Column {
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Column(
+                                    modifier = Modifier.weight(1f).clickable { onOpen(feature, scopeChoice) }.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    Text(feature.title, style = MaterialTheme.typography.titleMedium)
+                                    Text(
+                                        feature.summary ?: feature.category.displayName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Text(
+                                        if (isBoolean) stringResource(R.string.uix_saved_unverified)
+                                        else stringResource(R.string.uix_open_editor),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                }
+                                Column(modifier = Modifier.padding(end = 6.dp)) {
+                                    IconButton(onClick = {
+                                        val enable = feature.key !in favorites
+                                        if (enable) favorites.add(feature.key) else favorites.remove(feature.key)
+                                        prefs.edit().putBoolean("uix_favorite_" + feature.key, enable).apply()
+                                    }) {
+                                        Text(
+                                            if (feature.key in favorites) "★" else "☆",
+                                            color = MaterialTheme.colorScheme.primary,
+                                            style = MaterialTheme.typography.headlineSmall,
+                                        )
+                                    }
+                                    if (isBoolean) {
+                                        Switch(
+                                            checked = chosen,
+                                            onCheckedChange = { enabled ->
+                                                store.writeBoolean(scope, feature.key, enabled)
+                                                localRevision++
+                                            },
+                                            colors = SwitchDefaults.colors(
+                                                checkedTrackColor = Color(0xFF208B4D),
+                                                checkedThumbColor = Color.White,
+                                                uncheckedTrackColor = Color.Gray,
+                                            ),
+                                        )
+                                    }
+                                }
                             }
-                            IconButton(onClick = {
-                                val enabled = feature.key !in favorites
-                                if (enabled) favorites.add(feature.key) else favorites.remove(feature.key)
-                                prefs.edit().putBoolean("uix_favorite_" + feature.key, enabled).apply()
-                            }) {
-                                Text(
-                                    if (feature.key in favorites) "★" else "☆",
-                                    color = MaterialTheme.colorScheme.primary,
-                                    style = MaterialTheme.typography.headlineSmall,
-                                )
+                            if (overridden) {
+                                TextButton(
+                                    onClick = {
+                                        store.writeBoolean(scope, feature.key, null)
+                                        localRevision++
+                                    },
+                                    modifier = Modifier.padding(start = 8.dp),
+                                ) {
+                                    Text(stringResource(R.string.uix_use_global))
+                                }
                             }
                         }
                     }

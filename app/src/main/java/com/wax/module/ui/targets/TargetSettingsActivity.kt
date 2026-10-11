@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,12 +66,19 @@ import com.wax.module.ui.theme.WaXTheme
  * in one of them has no other symptom.
  */
 class TargetSettingsActivity : ComponentActivity() {
+    companion object {
+        const val EXTRA_TARGET_CODE = "uix_initial_target_code"
+        const val EXTRA_SETTING_QUERY = "uix_initial_setting_query"
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             WaXTheme {
-                TargetSettingsScreen()
+                TargetSettingsScreen(
+                    initialTargetCode = intent.getStringExtra(EXTRA_TARGET_CODE),
+                    initialQuery = intent.getStringExtra(EXTRA_SETTING_QUERY),
+                )
             }
         }
     }
@@ -78,9 +86,19 @@ class TargetSettingsActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TargetSettingsScreen(viewModel: TargetSettingsViewModel = viewModel()) {
+private fun TargetSettingsScreen(
+    initialTargetCode: String? = null,
+    initialQuery: String? = null,
+    viewModel: TargetSettingsViewModel = viewModel(),
+) {
+    LaunchedEffect(initialTargetCode, initialQuery) {
+        TargetApp.fromCode(initialTargetCode)?.let { target ->
+            viewModel.selectScope(SettingsScope.Target(target))
+        }
+        if (!initialQuery.isNullOrBlank()) viewModel.search(initialQuery)
+    }
     val state by viewModel.state.collectAsState()
-    var query by remember { mutableStateOf("") }
+    var query by remember { mutableStateOf(initialQuery.orEmpty()) }
 
     Scaffold(
         topBar = {

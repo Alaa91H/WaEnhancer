@@ -9,7 +9,7 @@ class LegacyNavigationMapTest {
         assertEquals(4, LegacyNavigationMap.toPage(1))
         assertEquals(5, LegacyNavigationMap.toPage(2))
         assertEquals(6, LegacyNavigationMap.toPage(3))
-        assertEquals(2, LegacyNavigationMap.toPage(4))
+        assertEquals(8, LegacyNavigationMap.toPage(4))
         assertEquals(7, LegacyNavigationMap.toPage(5))
     }
 

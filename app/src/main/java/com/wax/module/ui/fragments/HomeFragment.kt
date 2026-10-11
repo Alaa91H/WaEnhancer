@@ -189,6 +189,10 @@ class HomeFragment : BaseFragment() {
 
         checkStateWpp(requireActivity())
 
+        binding.healthCheckNow.setOnClickListener {
+            if (BuildConfig.MODERN_XPOSED) renderModernActivation() else checkWpp(requireActivity())
+        }
+
         binding.rebootBtn.setOnClickListener { view ->
             animateClick(view)
             ModuleApplication.instance.restartApp(FeatureLoader.PACKAGE_WPP)
@@ -260,6 +264,23 @@ class HomeFragment : BaseFragment() {
         startCardAnimations()
 
         return binding.root
+    }
+
+    /** The canonical settings backup/import procedures remain in this screen. */
+    fun openBackupOptions() {
+        if (!isAdded || currentBinding == null) return
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.uix_backup)
+            .setItems(
+                arrayOf(getString(R.string.export_settings), getString(R.string.import_settings)),
+            ) { _, action ->
+                when (action) {
+                    0 -> saveConfigs(requireContext())
+                    1 -> importConfigs(requireContext())
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun startCardAnimations() {
