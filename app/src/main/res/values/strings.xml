@@ -736,4 +736,5 @@
     <string name="uix_open_editor">Open its existing settings editor</string>
     <string name="uix_use_global">Use Global (remove override)</string>
     <string name="uix_check_now">Check current connection</string>
+    <string name="uix_backup_unavailable">Backup options are not ready. Try again.</string>
 </resources>

@@ -707,4 +707,5 @@
     <string name="uix_open_editor">افتح محرر الإعدادات الأصلي</string>
     <string name="uix_use_global">استخدام الإعداد العام (إزالة التخصيص)</string>
     <string name="uix_check_now">فحص الاتصال الحالي</string>
+    <string name="uix_backup_unavailable">خيارات النسخ الاحتياطي غير جاهزة الآن. حاول مجدداً.</string>
 </resources>

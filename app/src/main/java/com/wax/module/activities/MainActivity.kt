@@ -96,19 +96,27 @@ class MainActivity : BaseActivity() {
         handleIncomingIntent(intent)
     }
 
-    /** Opens the existing Home backup/export operations without creating a second backup engine. */
+    /** Opens the existing Home backup operations after the destination's view is ready. */
     fun openBackupActions() {
         binding.viewPager.setCurrentItem(0, false)
-        binding.viewPager.post {
+
+        fun openWhenReady(attemptsLeft: Int) {
+            if (isDestroyed || isFinishing || binding.viewPager.currentItem != 0) return
             val home = supportFragmentManager.findFragmentByTag("f0") as? HomeFragment
-            if (home != null) {
+            if (home?.view != null && home.isResumed) {
                 home.openBackupOptions()
+                return
+            }
+            if (attemptsLeft > 0) {
+                binding.viewPager.postDelayed({ openWhenReady(attemptsLeft - 1) }, 150)
             } else {
-                binding.viewPager.postDelayed({
-                    (supportFragmentManager.findFragmentByTag("f0") as? HomeFragment)?.openBackupOptions()
-                }, 200)
+                android.widget.Toast
+                    .makeText(this, R.string.uix_backup_unavailable, android.widget.Toast.LENGTH_SHORT)
+                    .show()
             }
         }
+
+        binding.viewPager.post { openWhenReady(8) }
     }
 
     private fun createMainDir() {
