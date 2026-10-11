@@ -180,7 +180,7 @@ class MuxerTrimAudioRendererTest {
         // The muxer has no encrypted flag. Writing such a sample would produce a container that
         // claims to be playable and holds ciphertext, so the renderer says no instead.
         assertNull(
-            muxerFlagsFor(MediaExtractor.SAMPLE_FLAG_ENCRYPTED),
+            renderer.muxerFlagsFor(MediaExtractor.SAMPLE_FLAG_ENCRYPTED),
         )
     }
 
@@ -188,15 +188,15 @@ class MuxerTrimAudioRendererTest {
     fun aSyncSampleBecomesAKeyFrameAndAnythingElseCarriesNoFlag() {
         assertEquals(
             MediaCodec.BUFFER_FLAG_KEY_FRAME,
-            muxerFlagsFor(MediaExtractor.SAMPLE_FLAG_SYNC),
+            renderer.muxerFlagsFor(MediaExtractor.SAMPLE_FLAG_SYNC),
         )
-        assertEquals(0, muxerFlagsFor(0))
+        assertEquals(0, renderer.muxerFlagsFor(0))
     }
 
     @Test
     fun aFlagWithNoMuxerEquivalentRefusesTheSample() {
         assertNull(
-            muxerFlagsFor(MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME),
+            renderer.muxerFlagsFor(MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME),
         )
     }
 }
