@@ -354,6 +354,36 @@ that resolves nothing:
 This adds a gate; it removes none. The source-level check that *no* resolver name in the catalog is
 missing from `Unobfuscator` belongs to `tools/` and is raised as its own issue for the other lane.
 
+### #10 unit 2 — preparing a selection into files, and refusing rather than approximating
+
+`StatusAudioStudio` decides *what* should be posted. This unit adds the layer that makes those
+decisions into files, and it is deliberately shaped so that the awkward cases cannot pass
+unnoticed:
+
+- **`StatusAudioPreparer`** turns a plan into parts, and the rules are strict on purpose. A part
+  that fails takes the whole preparation down and **every** file written before it is deleted —
+  a half-prepared series posted as a series would be worse than a refusal. A renderer that cannot
+  do what the plan asked is refused with the missing edit named. A renderer that refuses or fails
+  has its own allocated name released too, because a file the user never chose that nothing else
+  will clean up is a leak, not a detail.
+- **`MuxerTrimAudioRenderer`** copies compressed samples, so a cut is bit-identical to what the
+  user chose. What it cannot do is *change* audio: `MediaMuxer` cannot apply a fade, a volume
+  change or a loudness correction, so the renderer declares exactly the edits it honours and
+  refuses the rest by name. Silently serving a different clip would be the worst outcome here.
+- **`DirectoryStatusAudioWorkspace`** makes every name. The file is
+  `wae-status-part-<n>-of-<total>.<ext>` from the plan's own index, so a source called
+  `../../shared_prefs/x.mp3` cannot choose where anything lands, and no source path is ever
+  carried into a result. The directory is removed with its last part.
+
+19 new unit tests cover the split, the refusal with its reason, the failure that leaves nothing,
+the cancellation between parts, the unknown container, the unsafe name, and each boundary of the
+renderer's honesty — including that a missing source file is a failure and never a crash.
+
+Device validation `PENDING_USER_DEVICE_TEST`. What is **not** claimed: the editor screen, the
+posting path into the Status composer, and the transcode path for containers the platform cannot
+write. Those are the next units, and until they exist the feature stays `NOT_IMPLEMENTED` in the
+catalog — which is exactly what the unit above fixed.
+
 ### Next, in order
 
 1. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell

@@ -291,9 +291,37 @@ class FeatureContractTest {
 
     @Test
     fun evaluateAllFailsClosedWhenTheVersionCannotBeRead() {
-        val features = PlatformFeatureCatalog.metadata()
-        val reports = FeatureAccessPolicy.evaluateAll(features, FeatureFacts(target = TargetApp.WHATSAPP))
+        // Fail-closed means "not available", and NOT_IMPLEMENTED is not available either: a
+        // feature nobody wired stays unavailable whatever the version says. Restricting the
+        // assertion to features that claim to be available is what keeps it testing the
+        // version rule rather than the declaration's own honesty.
+        val available = PlatformFeatureCatalog.metadata().filter { it.availability == FeatureAvailability.AVAILABLE }
+        assertTrue("the catalog must still contain available features", available.isNotEmpty())
+        val reports = FeatureAccessPolicy.evaluateAll(available, FeatureFacts(target = TargetApp.WHATSAPP))
         assertTrue(reports.all { it.availability == FeatureAvailability.UNSUPPORTED_VERSION })
+    }
+
+    @Test
+    fun anUnwiredFeatureStaysUnavailableWhateverTheVersionSays() {
+        val unwired =
+            PlatformFeatureCatalog
+                .metadata()
+                .filter { it.availability == FeatureAvailability.NOT_IMPLEMENTED }
+        assertTrue("the catalog must still declare unwired features", unwired.isNotEmpty())
+        unwired.forEach { metadata ->
+            listOf("2.26.40.21", "2.20.10.5", null).forEach { version ->
+                val report =
+                    FeatureAccessPolicy.evaluate(
+                        metadata,
+                        FeatureFacts(target = TargetApp.WHATSAPP, installedVersion = version),
+                    )
+                assertEquals(
+                    "${metadata.id} has no consumer, so no version can make it available",
+                    FeatureAvailability.NOT_IMPLEMENTED,
+                    report.availability,
+                )
+            }
+        }
     }
 
     @Test
