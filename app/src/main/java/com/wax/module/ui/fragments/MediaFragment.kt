@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.preference.Preference
 import com.wax.module.R
 import com.wax.module.activities.CallRecordingSettingsActivity
+import com.wax.module.activities.StatusAudioStudioActivity
 import com.wax.module.ui.fragments.base.BasePreferenceFragment
 
 class MediaFragment : BasePreferenceFragment() {
@@ -22,6 +23,10 @@ class MediaFragment : BasePreferenceFragment() {
 
         findPreference<Preference>("call_recording_settings")?.setOnPreferenceClickListener {
             startActivity(Intent(requireContext(), CallRecordingSettingsActivity::class.java))
+            true
+        }
+        findPreference<Preference>("status_audio_studio")?.setOnPreferenceClickListener {
+            startActivity(Intent(requireContext(), StatusAudioStudioActivity::class.java))
             true
         }
         findPreference<Preference>("video_call_screen_rec")?.isEnabled = false

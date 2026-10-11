@@ -673,4 +673,36 @@
     <string name="diagnostics_status_unsupported">Unsupported</string>
     <string name="diagnostics_status_external">External verification needed</string>
 
+    <!-- Status Audio Studio (F003, issue #10) -->
+    <string name="status_audio_studio">Status Audio Studio</string>
+    <string name="status_audio_pick_hint">Choose an audio file from this device to prepare it as a voice Status. Nothing is posted until you ask for it.</string>
+    <string name="status_audio_choose_file">Choose audio</string>
+    <string name="status_audio_prepare">Prepare</string>
+    <string name="status_audio_trim_start">Selection start</string>
+    <string name="status_audio_trim_end">Selection end</string>
+    <string name="status_audio_trim_coarse">This file is long, so the selection handle moves in whole seconds.</string>
+    <string name="status_audio_fade_in">Fade in</string>
+    <string name="status_audio_fade_out">Fade out</string>
+    <string name="status_audio_normalize">Even out the loudness</string>
+    <string name="status_audio_strip_metadata">Remove identifying details</string>
+    <string name="status_audio_number_parts">Number the parts</string>
+    <string name="status_audio_overflow">When the selection is longer than this app allows</string>
+    <string name="status_audio_overflow_ask">Ask me each time</string>
+    <string name="status_audio_overflow_trim">Keep the first part only</string>
+    <string name="status_audio_overflow_split">Post as numbered parts</string>
+    <string name="status_audio_overflow_cancel">Do nothing</string>
+    <string name="status_audio_plan">What will happen</string>
+    <string name="status_audio_volume_format">Volume: %1$d%%</string>
+    <string name="status_audio_fade_format">%1$d ms</string>
+    <string name="status_audio_selection_format">Selected %1$s of %2$s</string>
+    <string name="status_audio_source_format">%1$s • %2$s</string>
+    <string name="status_audio_limit_fallback">This app\'s voice Status limit could not be read, so %1$s is being used as a fallback.</string>
+    <string name="status_audio_limit_known">This app posts up to %1$s.</string>
+    <string name="status_audio_reading">Reading the file\u2026</string>
+    <string name="status_audio_preparing">Preparing\u2026</string>
+    <string name="status_audio_prepared">Prepared %1$d part(s), %2$s in total.</string>
+    <string name="status_audio_cannot_prepare">This selection cannot be prepared here: %1$s</string>
+    <string name="status_audio_no_file">No audio file has been chosen.</string>
+    <string name="status_audio_unreadable">That file could not be read as audio.</string>
+
 </resources>

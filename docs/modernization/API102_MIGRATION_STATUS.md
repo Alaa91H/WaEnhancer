@@ -384,6 +384,34 @@ posting path into the Status composer, and the transcode path for containers the
 write. Those are the next units, and until they exist the feature stays `NOT_IMPLEMENTED` in the
 catalog — which is exactly what the unit above fixed.
 
+### #10 unit 3 — the editor, and where the limit comes from
+
+`StatusAudioStudioActivity` is the screen the issue asks for, reachable from **Settings → Media →
+Audio → Status Audio Studio**, and every control on it changes the plan rather than a local field:
+
+- pick a file (SAF), trim start/end, fade in/out, volume, level the loudness, strip identifying
+  details, number the parts, and choose what happens when the selection is longer than this client
+  posts — with the plan, its warnings and the exact outcome shown before anything is written;
+- the header states **whether this client's voice Status limit was read or assumed**.
+  `StatusAudioCapabilityReader` reads it from a target-scoped preference and returns
+  `StatusAudioCapability.Unknown` when it cannot, which makes the planner record the compatibility
+  fallback. There is no path that fills the limit from a constant and calls it a reading, because
+  that distinction is the one the whole compatibility matrix turns on;
+- slow work (copy in, read, plan, prepare) runs off the UI thread, and a preparation in flight is
+  cancelled with the screen;
+- the copied source never leaves the app's own directory: `StatusAudioSourceReaderSupport.safeName`
+  reduces a display name to a last segment and refuses anything that could be a path, so
+  `../../etc/passwd` becomes `passwd` and a control character becomes `audio`.
+
+`AndroidStatusAudioSourceReader` copies the picked document in before reading it: a SAF grant is for
+the process that received it, and working on a copy keeps a long split from failing halfway because
+a permission lapsed.
+
+**Not claimed:** the path that hands a prepared part to the Status composer, and transcoding for
+containers the platform cannot write. Both need the Status composer resolver, which does not exist
+— that is the finding unit 1 recorded — so the feature stays `NOT_IMPLEMENTED` and the Prepare
+button ends in a prepared file rather than a posted Status.
+
 ### Next, in order
 
 1. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
