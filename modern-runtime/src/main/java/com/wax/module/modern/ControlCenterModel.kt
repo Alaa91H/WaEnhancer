@@ -98,7 +98,7 @@ object ControlStatusText {
     fun status(effective: ControlEffective): String =
         when (effective) {
             ControlEffective.NOT_OBSERVED -> "Not observed yet"
-            ControlEffective.WORKING -> "Working"
+            ControlEffective.WORKING -> "Hook signalled active (behavior unverified)"
             ControlEffective.INSTALLED -> "Installed"
             ControlEffective.DISABLED -> "Off"
             ControlEffective.RESOLVER_FAILED -> "Resolver could not confirm"
@@ -171,6 +171,7 @@ object ControlPolicy {
         reported: String?,
         pendingMigration: Boolean,
         requested: ControlRequested,
+        restartHint: Boolean = true,
     ): ControlEffective {
         if (pendingMigration) return ControlEffective.PENDING_MIGRATION
         return when {
@@ -179,15 +180,22 @@ object ControlPolicy {
             }
 
             reported == "DISABLED" -> {
-                if (requested == ControlRequested.ENABLED) {
+                if (restartHint && requested == ControlRequested.ENABLED) {
                     ControlEffective.RESTART_REQUIRED
                 } else {
                     ControlEffective.DISABLED
                 }
             }
 
+            // A more specific armed hook must precede the generic INSTALLED
+            // prefix, otherwise the evidence is classified as INSTALL only.
+            // Armed means the hook signalled activity, not behaviour proof.
+            reported == "INSTALLED_ARMED" || reported.startsWith("INSTALLED_ARMED_") -> {
+                ControlEffective.WORKING
+            }
+
             reported == "INSTALLED" || reported == "ALREADY_INSTALLED" ||
-                reported.startsWith("INSTALLED") -> {
+                reported.startsWith("INSTALLED_") -> {
                 ControlEffective.INSTALLED
             }
 
@@ -206,10 +214,6 @@ object ControlPolicy {
                 ControlEffective.UNSUPPORTED
             }
 
-            reported == "INSTALLED_ARMED" || reported.startsWith("INSTALLED_ARMED") -> {
-                ControlEffective.WORKING
-            }
-
             reported == "SEND_DIRECTION_PENDING" -> {
                 ControlEffective.PARTIAL
             }
@@ -223,6 +227,18 @@ object ControlPolicy {
             }
         }
     }
+
+    /** Recommend a restart only for a verified disabled/mismatched hook and a
+     * feature policy explicitly marked as restart-gated. Unsupported, failed,
+     * unknown and merely unobserved states are *not* proof of a restart need. */
+    fun shouldRecommendRestart(
+        restartHint: Boolean,
+        requested: ControlRequested,
+        effective: ControlEffective,
+    ): Boolean = restartHint &&
+        requested == ControlRequested.ENABLED &&
+        (effective == ControlEffective.RESTART_REQUIRED ||
+            effective == ControlEffective.DISABLED)
 
     /** Requested state changes require a restart, so surface it honestly. */
     fun restartRequired(

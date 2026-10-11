@@ -12,6 +12,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import androidx.preference.PreferenceManager;
 import java.util.Arrays;
+import java.util.ArrayList;
 
 /**
  * Authenticated one-way runtime evidence transport.
@@ -26,6 +27,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String METHOD_WRITE_SETTING = "write-target-setting-v1";
     public static final String METHOD_READ_STATES = "read-target-states-v1";
     public static final String METHOD_READ_PRIVACY = "read-target-privacy-v1";
+    public static final String METHOD_SELECT_PROFILE = "select-control-profile-v1";
     public static final String LOCAL_PREFS = "modern_runtime_target_reports";
     public static final String EVENT_BOOTSTRAP = "BOOTSTRAP";
     public static final String EVENT_RUNTIME_HEARTBEAT = "RUNTIME_HEARTBEAT";
@@ -145,6 +147,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         }
         if (METHOD_READ_STATES.equals(method)) {
             return readStates(getContext(), extras);
+        }
+        if (METHOD_SELECT_PROFILE.equals(method)) {
+            return selectControlProfile(getContext(), extras);
         }
         if (METHOD_READ_PRIVACY.equals(method)) {
             return readPrivacy(getContext(), extras);
@@ -449,7 +454,44 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 result.putString("state." + key, value);
             }
         }
+        ControlCenterProfiles.State profiles = ControlCenterProfiles.read(manager);
+        result.putBoolean("profiles.corrupted", profiles.getCorrupted());
+        if (!profiles.getCorrupted()) {
+            ArrayList<String> ids = new ArrayList<>();
+            ArrayList<String> names = new ArrayList<>();
+            ArrayList<String> icons = new ArrayList<>();
+            for (ControlCenterProfiles.Profile profile : profiles.getProfiles()) {
+                ids.add(profile.getId());
+                names.add(profile.getName());
+                icons.add(profile.getIcon());
+            }
+            result.putStringArrayList("profiles.ids", ids);
+            result.putStringArrayList("profiles.names", names);
+            result.putStringArrayList("profiles.icons", icons);
+            result.putString("profiles.active", profiles.getActiveId());
+            result.putLong("profiles.revision", profiles.getRevision());
+        }
         result.putBoolean("accepted", true);
+        return result;
+    }
+
+    /** Profile selection is a separate authenticated operation with a fixed allowlist. */
+    private static Bundle selectControlProfile(Context context, Bundle extras) {
+        String target = extras.getString("target", "");
+        if (!isAuthorizedSender(target, Binder.getCallingUid(),
+                context.getPackageManager().getPackagesForUid(Binder.getCallingUid()))) {
+            return rejected();
+        }
+        String id = extras.getString("profile_id", "");
+        if (id.length() > 48 || (!"default".equals(id)
+                && !id.matches("p_[a-f0-9]{32}"))) {
+            return rejected();
+        }
+        boolean success = ControlCenterProfiles.select(
+                PreferenceManager.getDefaultSharedPreferences(context), id);
+        Bundle result = new Bundle();
+        result.putBoolean("accepted", success);
+        // No claim of applied hooks; selection only commits desired preferences.
         return result;
     }
 

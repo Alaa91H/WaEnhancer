@@ -132,6 +132,13 @@ class MainActivity : BaseActivity() {
 
     private fun handleIncomingIntent(intent: Intent?) {
         intent ?: return
+        if (intent.getBooleanExtra("open_control_profiles", false)) {
+            intent.removeExtra("open_control_profiles")
+            startActivity(
+                Intent(this, com.wax.module.ui.profiles.ControlCenterProfilesActivity::class.java),
+            )
+            return
+        }
 
         val fragmentPosition = intent.getIntExtra("navigate_to_fragment", -1)
         val preferenceKey = intent.getStringExtra("scroll_to_preference")
@@ -212,6 +219,11 @@ class MainActivity : BaseActivity() {
     @SuppressLint("BatteryLife")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.menu_profiles -> {
+                startActivity(Intent(this, com.wax.module.ui.profiles.ControlCenterProfilesActivity::class.java))
+                return true
+            }
+
             R.id.menu_search -> {
                 val options =
                     ActivityOptionsCompat.makeCustomAnimation(

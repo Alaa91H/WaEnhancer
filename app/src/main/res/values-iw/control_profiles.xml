@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="control_profiles_title">פרופילים</string>
+    <string name="control_profiles_scope">הפרופילים משתמשים כרגע בהגדרות כלליות משותפות ל-WhatsApp ול-WhatsApp Business.</string>
+    <string name="control_profiles_create">צור פרופיל</string>
+    <string name="control_profiles_active">פרופיל פעיל</string>
+    <string name="control_profiles_select">בחר</string>
+    <string name="control_profiles_duplicate">שכפל</string>
+    <string name="control_profiles_rename">שנה שם</string>
+    <string name="control_profiles_delete">מחק</string>
+    <string name="control_profiles_name">שם הפרופיל</string>
+    <string name="control_profiles_confirm">אשר</string>
+    <string name="control_profiles_cancel">ביטול</string>
+    <string name="control_profiles_failure">לא ניתן לשמור את הפרופיל. לא בוצעו שינויים.</string>
+    <string name="control_profiles_default">ברירת מחדל</string>
+</resources>

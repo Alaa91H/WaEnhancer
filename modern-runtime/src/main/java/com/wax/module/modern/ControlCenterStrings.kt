@@ -32,6 +32,15 @@ object ControlCenterStrings {
         val hideAfterClicks: String,
         val hideWhileHolding: String,
         val runDiagnostics: String,
+        val allFeatures: String,
+        val restartConfirmation: String,
+        val loading: String,
+        val stateUnavailable: String,
+        val profiles: String,
+        val manageProfiles: String,
+        val profilesGlobalScope: String,
+        val profileSaveFailed: String,
+        val defaultProfile: String,
     )
 
     private val english = Table(
@@ -49,6 +58,15 @@ object ControlCenterStrings {
         hideAfterClicks = "Hide after click count",
         hideWhileHolding = "Hide while holding the title",
         runDiagnostics = "Run diagnostics",
+        allFeatures = "All",
+        restartConfirmation = "Restart WhatsApp to apply pending changes?",
+        loading = "Loading WA X settings…",
+        stateUnavailable = "Could not read WA X settings. Open Manager or reopen this panel.",
+        profiles = "Profiles",
+        manageProfiles = "Manage profiles",
+        profilesGlobalScope = "These profiles currently share global settings for WhatsApp and Business.",
+        profileSaveFailed = "Could not switch profile. Settings were not confirmed.",
+        defaultProfile = "Default",
     )
 
     private val arabic = Table(
@@ -66,9 +84,36 @@ object ControlCenterStrings {
         hideAfterClicks = "إخفاء بعد عدد الضغطات",
         hideWhileHolding = "إخفاء أثناء الضغط على العنوان",
         runDiagnostics = "تشخيص ذاتي",
+        allFeatures = "الكل",
+        restartConfirmation = "هل تريد إعادة تشغيل واتساب لتطبيق التغييرات؟",
+        loading = "جارٍ تحميل إعدادات WA X…",
+        stateUnavailable = "تعذر قراءة الإعدادات. افتح مدير WA X أو أعد فتح اللوحة.",
+        profiles = "البروفايلات",
+        manageProfiles = "إدارة البروفايلات",
+        profilesGlobalScope = "هذه البروفايلات تستخدم حاليًا الإعدادات العامة المشتركة بين واتساب وواتساب للأعمال.",
+        profileSaveFailed = "تعذر التبديل إلى البروفايل المطلوب.",
+        defaultProfile = "الافتراضي",
     )
 
     /** Unknown languages fall back to English instead of rendering blanks. */
-    fun forLanguage(language: String?): Table =
-        if (language != null && language.lowercase().startsWith(LANGUAGE_ARABIC)) arabic else english
+    fun forLanguage(language: String?): Table {
+        if (language?.lowercase()?.startsWith(LANGUAGE_ARABIC) == true) return arabic
+        val code = when (val tag = language?.lowercase()?.substringBefore('-')?.substringBefore('_')) {
+            "iw", "he" -> "he"
+            "in", "id" -> "id"
+            null -> "en"
+            else -> tag
+        }
+        val translated = ControlCenterLocaleCatalog.values(code)
+        return english.copy(
+            searchHint = translated["ui.search"] ?: english.searchHint,
+            noResults = translated["ui.empty"] ?: english.noResults,
+            restart = translated["ui.restart"] ?: english.restart,
+            allFeatures = translated["ui.all"] ?: english.allFeatures,
+            profiles = translated["ui.profiles"] ?: english.profiles,
+            manageProfiles = translated["ui.profileManage"] ?: english.manageProfiles,
+            profilesGlobalScope = translated["ui.profileScope"] ?: english.profilesGlobalScope,
+            defaultProfile = translated["ui.profileDefault"] ?: english.defaultProfile,
+        )
+    }
 }

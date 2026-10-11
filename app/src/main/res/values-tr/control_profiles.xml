@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="control_profiles_title">Profiller</string>
+    <string name="control_profiles_scope">Profiller şu anda WhatsApp ve WhatsApp Business için ortak genel ayarları kullanır.</string>
+    <string name="control_profiles_create">Profil oluştur</string>
+    <string name="control_profiles_active">Etkin profil</string>
+    <string name="control_profiles_select">Seç</string>
+    <string name="control_profiles_duplicate">Çoğalt</string>
+    <string name="control_profiles_rename">Yeniden adlandır</string>
+    <string name="control_profiles_delete">Sil</string>
+    <string name="control_profiles_name">Profil adı</string>
+    <string name="control_profiles_confirm">Onayla</string>
+    <string name="control_profiles_cancel">İptal</string>
+    <string name="control_profiles_failure">Profil kaydedilemedi. Hiçbir değişiklik uygulanmadı.</string>
+    <string name="control_profiles_default">Varsayılan</string>
+</resources>

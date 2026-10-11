@@ -47,7 +47,8 @@ object ModernRuntimePreferenceRelay {
     internal fun observes(key: String): Boolean = key in observedKeys
 
     internal fun affectsControlCenter(key: String?): Boolean =
-        key == null || key in observedKeys || key == ModernControlCenterCatalog.FAVORITES_KEY
+        key == null || key in observedKeys || key == ModernControlCenterCatalog.FAVORITES_KEY ||
+            key == ControlCenterProfiles.KEY
 
     private val worker =
         Executors.newSingleThreadExecutor { task ->

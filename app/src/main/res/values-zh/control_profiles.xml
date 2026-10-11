@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="control_profiles_title">配置文件</string>
+    <string name="control_profiles_scope">配置文件目前使用 WhatsApp 和 WhatsApp Business 共享的全局设置。</string>
+    <string name="control_profiles_create">创建配置文件</string>
+    <string name="control_profiles_active">当前配置文件</string>
+    <string name="control_profiles_select">选择</string>
+    <string name="control_profiles_duplicate">复制</string>
+    <string name="control_profiles_rename">重命名</string>
+    <string name="control_profiles_delete">删除</string>
+    <string name="control_profiles_name">配置文件名称</string>
+    <string name="control_profiles_confirm">确认</string>
+    <string name="control_profiles_cancel">取消</string>
+    <string name="control_profiles_failure">无法保存配置文件，未应用任何更改。</string>
+    <string name="control_profiles_default">默认</string>
+</resources>

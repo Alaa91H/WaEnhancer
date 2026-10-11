@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="control_profiles_title">Profil</string>
+    <string name="control_profiles_scope">Profil saat ini memakai pengaturan global bersama untuk WhatsApp dan WhatsApp Business.</string>
+    <string name="control_profiles_create">Buat profil</string>
+    <string name="control_profiles_active">Profil aktif</string>
+    <string name="control_profiles_select">Pilih</string>
+    <string name="control_profiles_duplicate">Gandakan</string>
+    <string name="control_profiles_rename">Ubah nama</string>
+    <string name="control_profiles_delete">Hapus</string>
+    <string name="control_profiles_name">Nama profil</string>
+    <string name="control_profiles_confirm">Konfirmasi</string>
+    <string name="control_profiles_cancel">Batal</string>
+    <string name="control_profiles_failure">Profil tidak dapat disimpan. Tidak ada perubahan diterapkan.</string>
+    <string name="control_profiles_default">Bawaan</string>
+</resources>

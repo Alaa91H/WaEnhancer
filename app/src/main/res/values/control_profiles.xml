@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="control_profiles_title">Profiles</string>
+    <string name="control_profiles_scope">Profiles currently use global settings shared by WhatsApp and WhatsApp Business.</string>
+    <string name="control_profiles_create">Create profile</string>
+    <string name="control_profiles_active">Active profile</string>
+    <string name="control_profiles_select">Select</string>
+    <string name="control_profiles_duplicate">Duplicate</string>
+    <string name="control_profiles_rename">Rename</string>
+    <string name="control_profiles_delete">Delete</string>
+    <string name="control_profiles_name">Profile name</string>
+    <string name="control_profiles_confirm">Confirm</string>
+    <string name="control_profiles_cancel">Cancel</string>
+    <string name="control_profiles_failure">Could not save profile. No changes were applied.</string>
+    <string name="control_profiles_default">Default</string>
+</resources>
