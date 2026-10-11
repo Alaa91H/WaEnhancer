@@ -48,11 +48,12 @@ class MuxerTrimAudioRenderer(
         val container = request.container
         // Only MP4-family audio can be written back without re-encoding, because that is what
         // `MediaMuxer` accepts. Every other container is refused by name.
-        writable(container)
-            ?: return StatusAudioRenderOutcome.Refused(
+        if (!writable(container)) {
+            return StatusAudioRenderOutcome.Refused(
                 "container_not_writable",
                 "This device cannot write ${container.label} directly, so it has to be converted first.",
             )
+        }
         if (request.segment.durationMillis < 1L) {
             return StatusAudioRenderOutcome.Refused("empty_selection", "The selected range is empty.")
         }

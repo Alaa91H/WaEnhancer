@@ -209,7 +209,9 @@ class StatusAudioPreparationTest {
             )
         val workspace = TempWorkspace()
         val renderer = RecordingRenderer()
-        var seen = 0
+        // Cancel once the first part has been written: the preparer polls between parts, so
+        // this is the point at which the half-finished work has to be undone.
+        var polls = 0
 
         val thrown =
             runCatching {
@@ -218,12 +220,15 @@ class StatusAudioPreparationTest {
                     AudioContainer.M4A,
                     StatusAudioOptions(),
                     "/tmp/source.m4a",
-                ) { seen >= 1 }
+                ) {
+                    polls++
+                    polls > 1
+                }
             }.exceptionOrNull()
 
         assertTrue(thrown is StatusAudioCancelled)
-        assertEquals(1, seen)
-        assertEquals(1, workspace.discarded.size)
+        assertEquals("the first part was written before the cancellation", 1, renderer.requests.size)
+        assertEquals("its file was released", 1, workspace.discarded.size)
         assertTrue(
             "a cancelled preparation leaves no file behind",
             workspace.root

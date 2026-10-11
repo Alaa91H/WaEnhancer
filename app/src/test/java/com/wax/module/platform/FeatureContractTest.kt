@@ -102,6 +102,39 @@ class FeatureContractTest {
     }
 
     @Test
+    fun theRegistryEnforcesTheSameHighRiskRuleItDocuments() {
+        // The registry is what actually rejects a declaration, so the rule lives there and the
+        // catalog tests read it back. A test that asserted a different rule would have let a
+        // HIGH-risk feature through the registry while looking green here.
+        val ungated =
+            validMetadata(id = "privacy.high_risk").copy(
+                riskLevel = RiskLevel.HIGH,
+                requiredResolvers = emptyList(),
+                availability = FeatureAvailability.AVAILABLE,
+            )
+        val reasons = FeatureRegistry.validate(ungated)
+        assertTrue(
+            "a HIGH risk feature with no resolver and no NOT_IMPLEMENTED must be refused",
+            reasons.any { it.contains("HIGH risk") },
+        )
+
+        val declaredUnwired = ungated.copy(availability = FeatureAvailability.NOT_IMPLEMENTED)
+        assertFalse(
+            "declaring itself NOT_IMPLEMENTED holds it back harder than any gate",
+            FeatureRegistry.validate(declaredUnwired).any { it.contains("HIGH risk") },
+        )
+
+        val gated =
+            ungated.copy(
+                requiredResolvers = listOf("loadSomethingReal"),
+                availability = FeatureAvailability.AVAILABLE,
+            )
+        assertFalse(
+            FeatureRegistry.validate(gated).any { it.contains("HIGH risk") },
+        )
+    }
+
+    @Test
     fun anUnwiredEngineIsNotPresentedAsAvailable() {
         // These four are tested engines that nothing constructs: no hook installs them, and the
         // manifest declares no listener to feed them. The enum member for "declared, not built"

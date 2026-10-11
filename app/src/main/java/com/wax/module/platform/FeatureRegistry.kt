@@ -137,11 +137,23 @@ object FeatureRegistry {
                     "(visualImpact=${metadata.visualImpact.name})",
             )
         }
-        // A high-risk feature has to be capability-gated, or a WhatsApp update can move the
-        // thing it hooks with nothing to notice it: the kill switch strikes are driven by
-        // failures, and a required resolver is what turns "it broke" into "it stopped".
-        if (metadata.riskLevel == RiskLevel.HIGH && metadata.requiredResolvers.isEmpty()) {
-            problems.add("a HIGH risk feature must declare at least one required resolver so it can be held back")
+        // A high-risk feature has to be held back, or a WhatsApp update can move the thing it
+        // hooks with nothing to notice it: the kill switch strikes are driven by failures, and
+        // a required resolver is what turns "it broke" into "it stopped".
+        //
+        // A feature that declares itself NOT_IMPLEMENTED is held back harder than any gate —
+        // it never loads — so that is the one shape that may be presented without a resolver.
+        // The alternative used to be impossible: the rule forced a resolver name onto features
+        // that have no hook, and ten such names reached the catalog naming methods that exist
+        // in no resolver file at all.
+        if (metadata.riskLevel == RiskLevel.HIGH &&
+            metadata.requiredResolvers.isEmpty() &&
+            metadata.availability != FeatureAvailability.NOT_IMPLEMENTED
+        ) {
+            problems.add(
+                "a HIGH risk feature must declare at least one required resolver so it can be " +
+                    "held back, or declare itself NOT_IMPLEMENTED",
+            )
         }
         return problems
     }
