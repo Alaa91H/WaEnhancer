@@ -198,6 +198,14 @@ class HomeFragment : BaseFragment() {
             renderTarget(FeatureLoader.PACKAGE_WPP)
         }
 
+        // Keep long API 102 evidence accessible without occupying the entire Home screen.
+        // A tap expands the real, unchanged text; restart/diagnostic buttons retain their actions.
+        binding.statusSummary1.maxLines = 3
+        binding.status2.setOnClickListener {
+            binding.statusSummary1.maxLines =
+                if (binding.statusSummary1.maxLines == 3) Int.MAX_VALUE else 3
+        }
+
         binding.scrollDiagBtn.setOnClickListener { view ->
             animateClick(view)
             binding.nestedScrollView.post {

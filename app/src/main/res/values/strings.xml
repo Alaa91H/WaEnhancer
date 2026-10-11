@@ -673,4 +673,29 @@
     <string name="diagnostics_status_unsupported">Unsupported</string>
     <string name="diagnostics_status_external">External verification needed</string>
 
+
+    <string name="uix_features">Features</string>
+    <string name="uix_tools">Tools</string>
+    <string name="uix_app_settings">App settings</string>
+    <string name="uix_all">All</string>
+    <string name="uix_favorites">Favorites</string>
+    <string name="uix_found_count">%1$d settings</string>
+    <string name="uix_no_results">No matching settings</string>
+    <string name="uix_feature_honest_status">Open a feature to view its actual settings. Enabled is not proof that its WhatsApp hook works.</string>
+    <string name="uix_tools_description">Verified entry points to existing tools; detailed status is shown inside each tool.</string>
+    <string name="uix_compatibility">Target settings</string>
+    <string name="uix_backup">Backup and restore</string>
+    <string name="uix_tool_diagnostics_summary">Run quick or atomic diagnostics and export a report.</string>
+    <string name="uix_tool_target_summary">Manage WhatsApp and Business separately.</string>
+    <string name="uix_tool_home_summary">Open Home for existing backup and restore actions.</string>
+    <string name="uix_tool_search_summary">Find settings from the full indexed catalog.</string>
+    <string name="uix_tool_about_summary">Version, credits and app information.</string>
+    <string name="uix_tool_updates_summary">Open the existing update-check preference.</string>
+    <string name="uix_back">Back</string>
+    <string name="uix_theme_system">System default</string>
+    <string name="uix_theme_dark">Dark</string>
+    <string name="uix_theme_light">Light</string>
+    <string name="uix_language_summary">Choose from supported interface languages.</string>
+    <string name="uix_updates_summary">Control automatic update checks.</string>
+    <string name="uix_logs_summary">Review the current diagnostics logging preference.</string>
 </resources>

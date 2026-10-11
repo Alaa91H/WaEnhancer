@@ -18,11 +18,12 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@drawable/toolbar_background"
-            app:logo="@mipmap/ic_launcher"
+            android:background="?attr/colorSurface"
+            app:logo="@null"
             app:menu="@menu/header_menu"
             app:title="@string/app_name"
             app:titleCentered="false"
+            app:titleTextColor="?attr/colorOnSurface"
             app:titleTextAppearance="@style/ToolbarTitleStyle" />
 
     </com.google.android.material.appbar.AppBarLayout>

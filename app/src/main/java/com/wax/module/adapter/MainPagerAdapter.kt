@@ -2,32 +2,22 @@ package com.wax.module.adapter
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.preference.PreferenceManager
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.wax.module.ui.fragments.CustomizationFragment
-import com.wax.module.ui.fragments.GeneralFragment
-import com.wax.module.ui.fragments.HomeFragment
-import com.wax.module.ui.fragments.MediaFragment
-import com.wax.module.ui.fragments.PrivacyFragment
-import com.wax.module.ui.fragments.RecordingsFragment
+import com.wax.module.ui.fragments.*
 
-class MainPagerAdapter(
-    fragmentActivity: FragmentActivity,
-) : FragmentStateAdapter(fragmentActivity) {
-    private val isRecordingEnabled =
-        PreferenceManager
-            .getDefaultSharedPreferences(fragmentActivity)
-            .getBoolean("call_recording_enable", false)
+/** Four visible destinations + invisible, retained legacy preference owners. */
+class MainPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
+    override fun getItemCount(): Int = 8
 
-    override fun createFragment(position: Int): Fragment =
-        when (position) {
-            1 -> GeneralFragment()
-            2 -> PrivacyFragment()
-            3 -> MediaFragment()
-            4 -> CustomizationFragment()
-            5 -> RecordingsFragment()
-            else -> HomeFragment()
-        }
-
-    override fun getItemCount(): Int = if (isRecordingEnabled) 6 else 5
+    override fun createFragment(position: Int): Fragment = when (position) {
+        0 -> HomeFragment()
+        1 -> FeatureHubFragment()
+        2 -> CustomizationFragment()
+        3 -> ToolsHubFragment()
+        4 -> GeneralFragment()
+        5 -> PrivacyFragment()
+        6 -> MediaFragment()
+        7 -> RecordingsFragment()
+        else -> throw IllegalArgumentException("Unknown Manager page")
+    }
 }

@@ -9,7 +9,6 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.net.toUri
-import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
@@ -43,52 +42,21 @@ class MainActivity : BaseActivity() {
         setSupportActionBar(binding.toolbar)
 
         binding.viewPager.adapter = MainPagerAdapter(this)
+        // Legacy preference routes remain reachable, but only four primary tabs are visible.
+        binding.viewPager.isUserInputEnabled = false
         binding.viewPager.setPageTransformer(DepthPageTransformer())
-
-        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        if (!prefs.getBoolean("call_recording_enable", false)) {
-            binding.navView.menu
-                .findItem(R.id.navigation_recordings)
-                .isVisible = false
-        }
 
         binding.navView.setOnItemSelectedListener(
             NavigationBarView.OnItemSelectedListener { item ->
-                when (item.itemId) {
-                    R.id.navigation_home -> {
-                        binding.viewPager.setCurrentItem(0, true)
-                        true
-                    }
-
-                    R.id.navigation_chat -> {
-                        binding.viewPager.setCurrentItem(1, true)
-                        true
-                    }
-
-                    R.id.navigation_privacy -> {
-                        binding.viewPager.setCurrentItem(2, true)
-                        true
-                    }
-
-                    R.id.navigation_media -> {
-                        binding.viewPager.setCurrentItem(3, true)
-                        true
-                    }
-
-                    R.id.navigation_colors -> {
-                        binding.viewPager.setCurrentItem(4, true)
-                        true
-                    }
-
-                    R.id.navigation_recordings -> {
-                        binding.viewPager.setCurrentItem(5, true)
-                        true
-                    }
-
-                    else -> {
-                        false
-                    }
+                val position = when (item.itemId) {
+                    R.id.navigation_home -> 0
+                    R.id.navigation_features -> 1
+                    R.id.navigation_colors -> 2
+                    R.id.navigation_tools -> 3
+                    else -> return@OnItemSelectedListener false
                 }
+                binding.viewPager.setCurrentItem(position, true)
+                true
             },
         )
 
@@ -96,9 +64,13 @@ class MainActivity : BaseActivity() {
             object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
-                    binding.navView.menu
-                        .get(position)
-                        .isChecked = true
+                    val primaryId = when (position) {
+                        0 -> R.id.navigation_home
+                        2 -> R.id.navigation_colors
+                        3 -> R.id.navigation_tools
+                        else -> R.id.navigation_features
+                    }
+                    binding.navView.menu.findItem(primaryId)?.isChecked = true
 
                     val scrollKey = pendingScrollToPreference
                     if (pendingScrollToFragment == position && scrollKey != null) {
@@ -114,7 +86,7 @@ class MainActivity : BaseActivity() {
             },
         )
 
-        binding.viewPager.setCurrentItem(0, false)
+        if (savedInstanceState == null) binding.viewPager.setCurrentItem(0, false)
         createMainDir()
         FilePicker.registerFilePicker(this)
         handleIncomingIntent(intent)
@@ -133,7 +105,8 @@ class MainActivity : BaseActivity() {
     private fun handleIncomingIntent(intent: Intent?) {
         intent ?: return
 
-        val fragmentPosition = intent.getIntExtra("navigate_to_fragment", -1)
+        val legacyPosition = intent.getIntExtra("navigate_to_fragment", -1)
+        val fragmentPosition = if (legacyPosition >= 0) LegacyNavigationMap.toPage(legacyPosition) else -1
         val preferenceKey = intent.getStringExtra("scroll_to_preference")
         val parentKey = intent.getStringExtra("parent_preference")
 
@@ -147,6 +120,22 @@ class MainActivity : BaseActivity() {
             intent.removeExtra("parent_preference")
         } else if (fragmentPosition >= 0) {
             binding.viewPager.setCurrentItem(fragmentPosition, true)
+        }
+    }
+
+    /**
+     * Bridges the new UIX-01 shell into the historical preference owners. Never
+     * rewrites a legacy feature key or changes which target owns its settings.
+     */
+    fun navigateToLegacyFragment(position: Int, preferenceKey: String? = null, parentKey: String? = null) {
+        val page = LegacyNavigationMap.toPage(position)
+        pendingScrollToPreference = preferenceKey
+        pendingScrollToFragment = if (preferenceKey != null) page else -1
+        pendingParentKey = parentKey
+        if (binding.viewPager.currentItem == page && preferenceKey != null) {
+            binding.viewPager.post { scrollToPreferenceInCurrentFragment(preferenceKey, parentKey) }
+        } else {
+            binding.viewPager.setCurrentItem(page, false)
         }
     }
 
@@ -220,6 +209,11 @@ class MainActivity : BaseActivity() {
                         R.anim.slide_out_left,
                     )
                 startActivity(Intent(this, SearchActivity::class.java), options.toBundle())
+                return true
+            }
+
+            R.id.menu_settings -> {
+                startActivity(Intent(this, ManagerSettingsActivity::class.java))
                 return true
             }
 

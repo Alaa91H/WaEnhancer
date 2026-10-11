@@ -6,21 +6,28 @@
         android:id="@+id/menu_search"
         android:icon="@drawable/ic_search"
         android:title="@string/search_features_title"
-        app:iconTint="@color/text_on_gradient"
+        app:iconTint="?attr/colorOnSurface"
         android:showAsAction="always" />
 
     <item
         android:id="@+id/batteryoptimization"
         android:icon="@drawable/ic_battery_optimization"
         android:title="@string/disable_battery_optimization"
-        app:iconTint="@color/text_on_gradient"
+        app:iconTint="?attr/colorOnSurface"
+        android:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menu_settings"
+        android:icon="@drawable/ic_general"
+        android:title="@string/uix_app_settings"
+        app:iconTint="?attr/colorOnSurface"
         android:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/menu_about"
         android:icon="@drawable/about"
         android:title="@string/about"
-        app:iconTint="@color/text_on_gradient"
+        app:iconTint="?attr/colorOnSurface"
         android:showAsAction="ifRoom" />
 
 </menu>

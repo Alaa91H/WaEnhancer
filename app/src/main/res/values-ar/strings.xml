@@ -644,4 +644,29 @@
     <string name="diagnostics_status_unsupported">غير مدعوم</string>
     <string name="diagnostics_status_external">يتطلب تحققًا خارجيًا</string>
 
+
+    <string name="uix_features">الميزات</string>
+    <string name="uix_tools">الأدوات</string>
+    <string name="uix_app_settings">إعدادات التطبيق</string>
+    <string name="uix_all">الكل</string>
+    <string name="uix_favorites">المفضلة</string>
+    <string name="uix_found_count">%1$d إعدادات</string>
+    <string name="uix_no_results">لا توجد إعدادات مطابقة</string>
+    <string name="uix_feature_honest_status">افتح الميزة لرؤية إعداداتها الفعلية. تفعيل الخيار لا يثبت عمل الميزة داخل واتساب.</string>
+    <string name="uix_tools_description">روابط إلى أدوات التطبيق الحالية، وتظهر حالة كل أداة داخلها.</string>
+    <string name="uix_compatibility">إعدادات واتساب</string>
+    <string name="uix_backup">النسخ الاحتياطي والاستعادة</string>
+    <string name="uix_tool_diagnostics_summary">تشخيص سريع أو ذري وتصدير التقرير.</string>
+    <string name="uix_tool_target_summary">إدارة واتساب وواتساب للأعمال بشكل منفصل.</string>
+    <string name="uix_tool_home_summary">افتح الرئيسية للوصول إلى النسخ والاستعادة.</string>
+    <string name="uix_tool_search_summary">البحث في الفهرس الكامل للإعدادات.</string>
+    <string name="uix_tool_about_summary">الإصدار والمساهمون ومعلومات التطبيق.</string>
+    <string name="uix_tool_updates_summary">فتح إعدادات التحقق من التحديثات الحالية.</string>
+    <string name="uix_back">رجوع</string>
+    <string name="uix_theme_system">حسب النظام</string>
+    <string name="uix_theme_dark">داكن</string>
+    <string name="uix_theme_light">فاتح</string>
+    <string name="uix_language_summary">اختر من لغات الواجهة المدعومة.</string>
+    <string name="uix_updates_summary">التحكم في فحص التحديثات التلقائي.</string>
+    <string name="uix_logs_summary">مراجعة إعداد تسجيل التشخيص الحالي.</string>
 </resources>
