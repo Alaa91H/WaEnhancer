@@ -14,6 +14,29 @@ data class CustomizationPreviewState(
     val hiddenTabs: Set<String> = emptySet(),
     val floatingBottomBar: Boolean = false,
 ) {
+    /** Every value uses a Bundle-saveable primitive; unknown legacy tab IDs survive. */
+    fun savedFields(): List<Any> =
+        listOf(
+            colorsEnabled,
+            accentColor,
+            hideChannels,
+            hiddenTabs.sorted().joinToString(","),
+            floatingBottomBar,
+        )
+
+    companion object {
+        fun fromSavedFields(values: List<Any>): CustomizationPreviewState {
+            require(values.size == 5) { "Unsupported preview state" }
+            return CustomizationPreviewState(
+                colorsEnabled = values[0] as Boolean,
+                accentColor = values[1] as Int,
+                hideChannels = values[2] as Boolean,
+                hiddenTabs = (values[3] as String).split(',').filter(String::isNotBlank).toSet(),
+                floatingBottomBar = values[4] as Boolean,
+            )
+        }
+    }
+
     val showCommunities: Boolean get() = "600" !in hiddenTabs
     val showCalls: Boolean get() = "400" !in hiddenTabs
     val showUpdatesTab: Boolean get() = "300" !in hiddenTabs

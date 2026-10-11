@@ -2,6 +2,7 @@ package com.wax.module.ui.customization
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -49,6 +50,28 @@ class CustomizationPreviewStateTest {
             assertEquals("status $mask", !hideUpdates, state.showStatusSection)
             assertEquals("channels visible $mask", !hideUpdates && !hideChannels, state.showChannelsSection)
         }
+    }
+
+    @Test fun pendingPreviewSurvivesStateRestorationIncludingUnknownLegacyTabs() {
+        val original =
+            CustomizationPreviewState(
+                colorsEnabled = true,
+                accentColor = 0xFF123456.toInt(),
+                hideChannels = true,
+                hiddenTabs = setOf("700", "300", "600"),
+                floatingBottomBar = true,
+            )
+        assertEquals(original, CustomizationPreviewState.fromSavedFields(original.savedFields()))
+        assertTrue(CustomizationPreviewState.fromSavedFields(original.savedFields()).hiddenTabs.contains("700"))
+    }
+
+    @Test fun cleanPreviewAndPendingPreviewKeepDistinctSnapshots() {
+        val baseline = CustomizationPreviewState(hiddenTabs = setOf("400"))
+        val draft = baseline.copy(colorsEnabled = true)
+        assertNotEquals(
+            CustomizationPreviewState.fromSavedFields(baseline.savedFields()),
+            CustomizationPreviewState.fromSavedFields(draft.savedFields()),
+        )
     }
 
     @Test(expected = IllegalArgumentException::class)

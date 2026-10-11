@@ -36,11 +36,13 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -79,6 +81,7 @@ class CustomizationDashboardFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View =
         ComposeView(requireContext()).apply {
+            id = R.id.manager_customization_compose_root
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             val repo = CustomizationPreviewRepository(context)
             setContent {
@@ -103,6 +106,12 @@ class CustomizationDashboardFragment : Fragment() {
         }
 }
 
+private val previewSaver =
+    listSaver<CustomizationPreviewState, Any>(
+        save = { it.savedFields() },
+        restore = { CustomizationPreviewState.fromSavedFields(it) },
+    )
+
 @Composable
 private fun CustomizationDashboard(
     repository: CustomizationPreviewRepository,
@@ -117,10 +126,27 @@ private fun CustomizationDashboard(
             else -> SettingsScope.Global
         }
     var revision by remember { mutableIntStateOf(0) }
-    var baseline by remember(scopeChoice, externalRevision, revision) {
+    var baseline by rememberSaveable(scopeChoice, revision, stateSaver = previewSaver) {
         mutableStateOf(repository.read(scope))
     }
-    var draft by remember(scopeChoice, externalRevision, revision) { mutableStateOf(baseline) }
+    var draft by rememberSaveable(scopeChoice, revision, stateSaver = previewSaver) {
+        mutableStateOf(baseline)
+    }
+
+    var baselineFingerprint by rememberSaveable(scopeChoice, revision) {
+        mutableStateOf(repository.fingerprint(scope))
+    }
+
+    // When the original editor changed values and the preview is CLEAN, resync.
+    // When the preview is DIRTY, never discard pending edits on Resume/rotation.
+    LaunchedEffect(scopeChoice, externalRevision) {
+        if (draft == baseline) {
+            val actual = repository.read(scope)
+            baseline = actual
+            draft = actual
+            baselineFingerprint = repository.fingerprint(scope)
+        }
+    }
     var pendingScope by remember { mutableStateOf<Int?>(null) }
     var saveFailed by remember { mutableStateOf(false) }
     val isDirty = baseline != draft
@@ -221,7 +247,7 @@ private fun CustomizationDashboard(
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Button(onClick = {
-                if (repository.save(scope, baseline, draft)) {
+                if (repository.save(scope, baseline, draft, baselineFingerprint)) {
                     saveFailed = false
                     revision++
                 } else {

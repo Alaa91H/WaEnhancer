@@ -19,6 +19,9 @@ class CustomizationPreviewRepository(
 ) {
     private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
 
+    /** Only five preview preferences and their inherited Global parents are fingerprinted. */
+    fun fingerprint(scope: SettingsScope): String = CustomizationSourceStamp.fromValues(scope, prefs.all)
+
     fun read(scope: SettingsScope): CustomizationPreviewState {
         val resolver = EffectiveSettingsResolver(SharedPreferencesSettingsStore(prefs))
         return CustomizationPreviewState(
@@ -35,9 +38,12 @@ class CustomizationPreviewRepository(
         scope: SettingsScope,
         expected: CustomizationPreviewState,
         draft: CustomizationPreviewState,
+        expectedFingerprint: String,
     ): Boolean {
-        // The expected/draft model must only modify keys owned by this preview.
-        if (read(scope) != expected) return false
+        // A matching *effective value* is insufficient: another editor may have
+        // modified a target override whose current value matches Global.
+        // Optimistic detection only: SharedPreferences has no multi-writer CAS API.
+        if (fingerprint(scope) != expectedFingerprint || read(scope) != expected) return false
         if (expected == draft) return true
         val edit = prefs.edit()
 

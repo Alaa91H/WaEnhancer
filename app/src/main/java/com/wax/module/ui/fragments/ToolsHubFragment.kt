@@ -77,6 +77,7 @@ class ToolsHubFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View =
         ComposeView(requireContext()).apply {
+            id = R.id.manager_tools_compose_root
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent { WaXTheme { ToolsScreen(::openTool) } }
         }

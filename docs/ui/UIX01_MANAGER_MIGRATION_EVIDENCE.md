@@ -59,6 +59,26 @@ Old preference keys are not renamed and all legacy preference fragments remain r
 - This is **UI progress/feedback only**. It does not implement missing M01/M02/A05
   evidence stages, signed per-exact-build compatibility or runtime repair.
 
+## Staged preference safety and state restoration (2026-10-11)
+
+- Feature browser uses `FeatureTogglePolicy` for **all** registered Boolean switches:
+  an unknown-risk/unverified enable shows explicit consent, while disabling is immediate.
+  It never treats an unverified hook as signed safe/compatible. No parallel risk registry is
+  introduced; #378, A03 and M12 still own the authoritative account-safety metadata.
+- Pending preview changes use Compose's Bundle-saveable state for baseline and draft,
+  preserving the legacy/unknown hidden-tab IDs during recreation. Returning from a
+  legacy editor only resyncs a **clean** preview; pending changes are not erased by Resume.
+- Feature and Customization Compose roots have stable resource IDs for saveable-state
+  restoration; process-death/instrumentation behavior still needs device verification.
+- Apply checks a SHA-256 source stamp over the five preview keys, including their raw
+  selected-target overrides and Global parents, in addition to the effective preview.
+  This detects changed inherited/overridden settings **even when the visible value
+  did not change**. The stamp excludes unrelated keys and other targets; unit tests
+  cover both isolation and order-independent sets.
+- SharedPreferences does not provide a cross-process compare-and-swap primitive; this is
+  optimistic stale-edit detection plus one committed write batch, **not** an atomic
+  interprocess transaction. Release validation must still test simultaneous writers.
+
 ## Local validation
 
 Verified on an authorized Windows Android SDK/JDK builder:

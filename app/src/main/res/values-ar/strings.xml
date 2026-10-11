@@ -722,4 +722,7 @@
     <string name="uix_snapshot_unverified">لا توجد أدلة تحقق حديثة حتى الآن.</string>
     <string name="uix_probe_sent">أُرسل طلب الفحص. بانتظار رد صالح من التطبيق المستهدف.</string>
     <string name="uix_probe_received">وصل رد من التطبيق المستهدف؛ راجع الحالة الموثقة.</string>
+    <string name="uix_enable_warning_title">تأكيد ميزة غير متحقق منها</string>
+    <string name="uix_enable_warning_message">%1$s: سيُحفظ الخيار المحدد فقط. لم يُتحقق من عمل ميزة API102 أو توافقها مع الإصدار، ولم يُراجع خطر تقييد الحساب بشكل مستقل. هل تريد حفظ هذا الإعداد؟</string>
+    <string name="uix_enable_anyway">حفظ التفضيل</string>
 </resources>

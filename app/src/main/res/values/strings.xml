@@ -751,4 +751,7 @@
     <string name="uix_snapshot_unverified">No fresh verification evidence yet.</string>
     <string name="uix_probe_sent">Check requested. Awaiting a valid target reply.</string>
     <string name="uix_probe_received">A target response arrived; consult its authenticated status.</string>
+    <string name="uix_enable_warning_title">Confirm unverified feature</string>
+    <string name="uix_enable_warning_message">%1$s: this only saves the selected preference. Effective API102 hook and exact-version compatibility are unverified, and account-restriction risk has not been independently audited. Proceed with this configuration change?</string>
+    <string name="uix_enable_anyway">Save preference</string>
 </resources>

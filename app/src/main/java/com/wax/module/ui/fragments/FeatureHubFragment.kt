@@ -58,6 +58,7 @@ import com.wax.module.settings.SettingKeyRegistry
 import com.wax.module.settings.SettingsScope
 import com.wax.module.settings.SharedPreferencesSettingsStore
 import com.wax.module.ui.components.WaXFeatureSwitch
+import com.wax.module.ui.features.FeatureTogglePolicy
 import com.wax.module.ui.targets.TargetSettingsActivity
 import com.wax.module.ui.theme.WaXTheme
 import com.wax.module.utils.FeatureCatalog
@@ -67,6 +68,12 @@ import com.wax.module.utils.FeatureCatalog
  * saved configuration is deliberately NOT mislabelled as a verified working hook.
  */
 class FeatureHubFragment : Fragment() {
+    private data class PendingEnable(
+        val key: String,
+        val title: String,
+        val scope: SettingsScope,
+    )
+
     private val screenRevision = mutableIntStateOf(0)
 
     override fun onResume() {
@@ -80,6 +87,7 @@ class FeatureHubFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View =
         ComposeView(requireContext()).apply {
+            id = R.id.manager_features_compose_root
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 WaXTheme {
@@ -139,6 +147,7 @@ class FeatureHubFragment : Fragment() {
         var selected by rememberSaveable { mutableStateOf("all") }
         var scopeChoice by rememberSaveable { mutableIntStateOf(0) }
         var localRevision by remember { mutableIntStateOf(0) }
+        var pendingEnable by remember { mutableStateOf<PendingEnable?>(null) }
 
         // UI reloads cached settings after a change in this screen or any returning editor.
         val resolver =
@@ -184,6 +193,34 @@ class FeatureHubFragment : Fragment() {
                     }
                 groupMatch && (query.isBlank() || feature.matches(query))
             }
+
+        if (pendingEnable != null) {
+            val pending = pendingEnable
+            AlertDialog(
+                onDismissRequest = { pendingEnable = null },
+                title = { Text(stringResource(R.string.uix_enable_warning_title)) },
+                text = {
+                    Text(stringResource(R.string.uix_enable_warning_message, pending?.title.orEmpty()))
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        if (pending != null &&
+                            declared[pending.key]?.kind == SettingKeyRegistry.Kind.BOOLEAN
+                        ) {
+                            // Only the scope for which consent was granted receives the write.
+                            store.writeBoolean(pending.scope, pending.key, true)
+                            localRevision++
+                        }
+                        pendingEnable = null
+                    }) { Text(stringResource(R.string.uix_enable_anyway)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingEnable = null }) {
+                        Text(stringResource(R.string.diagnostics_cancel))
+                    }
+                },
+            )
+        }
 
         Scaffold { padding ->
             LazyColumn(
@@ -305,8 +342,28 @@ class FeatureHubFragment : Fragment() {
                                         WaXFeatureSwitch(
                                             checked = chosen,
                                             onCheckedChange = { enabled ->
-                                                store.writeBoolean(scope, feature.key, enabled)
-                                                localRevision++
+                                                when (
+                                                    FeatureTogglePolicy.decision(
+                                                        setting?.kind,
+                                                        current = chosen,
+                                                        desired = enabled,
+                                                    )
+                                                ) {
+                                                    FeatureTogglePolicy.Decision.EXPLICIT_ENABLE_CONFIRMATION -> {
+                                                        pendingEnable = PendingEnable(feature.key, feature.title, scope)
+                                                    }
+
+                                                    FeatureTogglePolicy.Decision.DISABLE_IMMEDIATELY -> {
+                                                        store.writeBoolean(scope, feature.key, false)
+                                                        localRevision++
+                                                    }
+
+                                                    FeatureTogglePolicy.Decision.NOT_EDITABLE,
+                                                    FeatureTogglePolicy.Decision.NO_CHANGE,
+                                                    -> {
+                                                        Unit
+                                                    }
+                                                }
                                             },
                                         )
                                     }

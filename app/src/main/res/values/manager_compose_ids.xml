@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stable root IDs allow Compose saveable state to survive Android view recreation. -->
+    <item type="id" name="manager_features_compose_root" />
+    <item type="id" name="manager_customization_compose_root" />
+    <item type="id" name="manager_tools_compose_root" />
+</resources>
