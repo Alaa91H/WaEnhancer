@@ -405,7 +405,7 @@ class HomeFragment : BaseFragment() {
                             if (snapshot.connected) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
                         )
                         binding.status.getChildAt(0).setBackgroundResource(
-                            if (snapshot.connected) R.drawable.gradient_success else R.drawable.gradient_warning,
+                            if (snapshot.connected) R.drawable.gradient_update else R.drawable.gradient_warning,
                         )
 
                         snapshot.targets.forEach { target ->
@@ -488,7 +488,7 @@ class HomeFragment : BaseFragment() {
                                 if (reported) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
                             )
                             card.getChildAt(0).setBackgroundResource(
-                                if (reported) R.drawable.gradient_success else R.drawable.gradient_warning,
+                                if (reported) R.drawable.gradient_update else R.drawable.gradient_warning,
                             )
                             restart.visibility = if (reported) View.VISIBLE else View.GONE
                         }
