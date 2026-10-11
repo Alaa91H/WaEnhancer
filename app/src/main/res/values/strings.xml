@@ -694,12 +694,16 @@
     <string name="status_audio_plan">What will happen</string>
     <string name="status_audio_volume_format">Volume: %1$d%%</string>
     <string name="status_audio_selection_format">Selected %1$s of %2$s</string>
+    <string name="status_audio_selection_coarse_format">Selected %1$s of %2$s\n%3$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">This app\'s voice Status limit could not be read, so %1$s is being used as a fallback.</string>
     <string name="status_audio_limit_known">This app posts up to %1$s.</string>
     <string name="status_audio_reading">Reading the file…</string>
     <string name="status_audio_preparing">Preparing…</string>
-    <string name="status_audio_prepared">Prepared %1$d part(s), %2$s in total. Nothing has been posted; these files are removed when you close this screen.</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">Prepared %1$d part, %2$s in total. Nothing has been posted; these files are removed when you close this screen.</item>
+        <item quantity="other">Prepared %1$d parts, %2$s in total. Nothing has been posted; these files are removed when you close this screen.</item>
+    </plurals>
     <string name="status_audio_cannot_prepare">This selection cannot be prepared here: %1$s</string>
     <string name="status_audio_no_file">No audio file has been chosen.</string>
     <string name="status_audio_unreadable">That file could not be read as audio.</string>

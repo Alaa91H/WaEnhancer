@@ -252,12 +252,25 @@ class StatusAudioStudioActivity : BaseActivity() {
 
         findViewById<TextView>(R.id.volumeLabel).text =
             getString(R.string.status_audio_volume_format, options.volumePercent)
+        // The coarse note is a second string rather than a newline appended to the selection
+        // line: a translator has to be able to order the two sentences, and a line break glued
+        // onto the end of a formatted string is not a sentence they can move.
+        val note = coarseTrim
         findViewById<TextView>(R.id.selectionFacts).text =
-            getString(
-                R.string.status_audio_selection_format,
-                clock((options.trimEndMillis ?: 0L) - options.trimStartMillis),
-                clock(described.durationMillis),
-            ) + (coarseTrim?.let { "\n$it" } ?: "")
+            if (note == null) {
+                getString(
+                    R.string.status_audio_selection_format,
+                    clock((options.trimEndMillis ?: 0L) - options.trimStartMillis),
+                    clock(described.durationMillis),
+                )
+            } else {
+                getString(
+                    R.string.status_audio_selection_coarse_format,
+                    clock((options.trimEndMillis ?: 0L) - options.trimStartMillis),
+                    clock(described.durationMillis),
+                    note,
+                )
+            }
         findViewById<TextView>(R.id.planText).text =
             buildString {
                 append(next.toDisplayLine())
@@ -301,9 +314,13 @@ class StatusAudioStudioActivity : BaseActivity() {
                 setBusy(false)
                 when (outcome) {
                     is StatusAudioPreparation.Prepared -> {
+                        // A plural, because "1 part(s)" is the exact shape of string that
+                        // reads as machine output, and several of the shipped languages inflect
+                        // the noun on the count.
                         showResult(
-                            getString(
-                                R.string.status_audio_prepared,
+                            resources.getQuantityString(
+                                R.plurals.status_audio_prepared,
+                                outcome.parts.size,
                                 outcome.parts.size,
                                 clock(outcome.totalMillis),
                             ),

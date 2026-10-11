@@ -662,12 +662,18 @@
     <string name="status_audio_plan">Что произойдёт</string>
     <string name="status_audio_volume_format">Громкость: %1$d%%</string>
     <string name="status_audio_selection_format">Выбрано %1$s из %2$s</string>
+    <string name="status_audio_selection_coarse_format">Выбрано %1$s из %2$s\n%3$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">Не удалось прочитать лимит голосового статуса для этого приложения, поэтому используется %1$s.</string>
     <string name="status_audio_limit_known">Это приложение публикует до %1$s.</string>
     <string name="status_audio_reading">Чтение файла…</string>
     <string name="status_audio_preparing">Подготовка…</string>
-    <string name="status_audio_prepared">Подготовлено частей: %1$d, всего %2$s. Ничего не опубликовано; файлы удалятся при закрытии экрана.</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">Подготовлена %1$d часть, всего %2$s. Ничего не опубликовано; файлы удалятся при закрытии экрана.</item>
+        <item quantity="few">Подготовлено %1$d части, всего %2$s. Ничего не опубликовано; файлы удалятся при закрытии экрана.</item>
+        <item quantity="many">Подготовлено %1$d частей, всего %2$s. Ничего не опубликовано; файлы удалятся при закрытии экрана.</item>
+        <item quantity="other">Подготовлено %1$d части, всего %2$s. Ничего не опубликовано; файлы удалятся при закрытии экрана.</item>
+    </plurals>
     <string name="status_audio_cannot_prepare">Это выделение нельзя подготовить здесь: %1$s</string>
     <string name="status_audio_no_file">Аудиофайл не выбран.</string>
     <string name="status_audio_unreadable">Не удалось прочитать этот файл как аудио.</string>

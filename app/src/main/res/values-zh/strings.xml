@@ -660,12 +660,15 @@
     <string name="status_audio_plan">将会发生什么</string>
     <string name="status_audio_volume_format">音量：%1$d%%</string>
     <string name="status_audio_selection_format">已选择 %2$s 中的 %1$s</string>
+    <string name="status_audio_selection_coarse_format">已选择 %2$s 中的 %1$s\n%3$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">无法读取该应用的语音动态时长上限，因此使用 %1$s 作为替代值。</string>
     <string name="status_audio_limit_known">该应用最长可发布 %1$s。</string>
     <string name="status_audio_reading">正在读取文件…</string>
     <string name="status_audio_preparing">正在准备…</string>
-    <string name="status_audio_prepared">已准备 %1$d 段，共 %2$s。尚未发布任何内容；关闭此屏幕时将删除这些文件。</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="other">已准备 %1$d 段，共 %2$s。尚未发布任何内容；关闭此屏幕时将删除这些文件。</item>
+    </plurals>
     <string name="status_audio_cannot_prepare">此处无法准备该选择：%1$s</string>
     <string name="status_audio_no_file">尚未选择音频文件。</string>
     <string name="status_audio_unreadable">无法将该文件作为音频读取。</string>

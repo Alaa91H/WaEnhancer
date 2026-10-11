@@ -665,12 +665,20 @@
     <string name="status_audio_plan">ما سيحدث</string>
     <string name="status_audio_volume_format">مستوى الصوت: %1$d%%</string>
     <string name="status_audio_selection_format">المحدد %1$s من %2$s</string>
+    <string name="status_audio_selection_coarse_format">المحدد %1$s من %2$s\n%3$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">تعذّرت قراءة حدّ الحالة الصوتية لهذا التطبيق، لذلك يُستخدم %1$s كبديل.</string>
     <string name="status_audio_limit_known">ينشر هذا التطبيق حتى %1$s.</string>
     <string name="status_audio_reading">جارٍ قراءة الملف…</string>
     <string name="status_audio_preparing">جارٍ التجهيز…</string>
-    <string name="status_audio_prepared">تم تجهيز %1$d جزء، بإجمالي %2$s. لم يُنشر شيء؛ تُحذف هذه الملفات عند إغلاق هذه الشاشة.</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="zero">لم يتم تجهيز أي جزء، بإجمالي %2$s. لم يُنشر شيء؛ تُحذف هذه الملفات عند إغلاق هذه الشاشة.</item>
+        <item quantity="one">تم تجهيز جزء واحد، بإجمالي %2$s. لم يُنشر شيء؛ تُحذف هذه الملفات عند إغلاق هذه الشاشة.</item>
+        <item quantity="two">تم تجهيز جزأين، بإجمالي %2$s. لم يُنشر شيء؛ تُحذف هذه الملفات عند إغلاق هذه الشاشة.</item>
+        <item quantity="few">تم تجهيز %1$d أجزاء، بإجمالي %2$s. لم يُنشر شيء؛ تُحذف هذه الملفات عند إغلاق هذه الشاشة.</item>
+        <item quantity="many">تم تجهيز %1$d جزءًا، بإجمالي %2$s. لم يُنشر شيء؛ تُحذف هذه الملفات عند إغلاق هذه الشاشة.</item>
+        <item quantity="other">تم تجهيز %1$d جزء، بإجمالي %2$s. لم يُنشر شيء؛ تُحذف هذه الملفات عند إغلاق هذه الشاشة.</item>
+    </plurals>
     <string name="status_audio_cannot_prepare">لا يمكن تجهيز هذا التحديد هنا: %1$s</string>
     <string name="status_audio_no_file">لم يتم اختيار أي ملف صوتي.</string>
     <string name="status_audio_unreadable">تعذّرت قراءة هذا الملف كصوت.</string>

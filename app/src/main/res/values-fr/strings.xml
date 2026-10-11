@@ -659,12 +659,16 @@
     <string name="status_audio_plan">Ce qui va se passer</string>
     <string name="status_audio_volume_format">Volume : %1$d%%</string>
     <string name="status_audio_selection_format">%1$s sélectionné sur %2$s</string>
+    <string name="status_audio_selection_coarse_format">%1$s sélectionné sur %2$s\n%3$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">"La limite de statut vocal de cette application n'a pas pu être lue, %1$s est donc utilisé comme solution de repli."</string>
     <string name="status_audio_limit_known">"Cette application publie jusqu'à %1$s."</string>
     <string name="status_audio_reading">Lecture du fichier…</string>
     <string name="status_audio_preparing">Préparation…</string>
-    <string name="status_audio_prepared">"%1$d partie(s) préparée(s), %2$s au total. Rien n'est publié ; ces fichiers sont supprimés à la fermeture de cet écran."</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">"%1$d partie préparée, %2$s au total. Rien n'est publié ; ces fichiers sont supprimés à la fermeture de cet écran."</item>
+        <item quantity="other">"%1$d parties préparées, %2$s au total. Rien n'est publié ; ces fichiers sont supprimés à la fermeture de cet écran."</item>
+    </plurals>
     <string name="status_audio_cannot_prepare">Cette sélection ne peut pas être préparée ici : %1$s</string>
     <string name="status_audio_no_file">"Aucun fichier audio n'a été choisi."</string>
     <string name="status_audio_unreadable">"Ce fichier n'a pas pu être lu comme de l'audio."</string>

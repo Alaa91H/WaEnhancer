@@ -658,12 +658,16 @@
     <string name="status_audio_plan">Yang akan terjadi</string>
     <string name="status_audio_volume_format">Volume: %1$d%%</string>
     <string name="status_audio_selection_format">Dipilih %1$s dari %2$s</string>
+    <string name="status_audio_selection_coarse_format">Dipilih %1$s dari %2$s\n%3$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">Batas status suara untuk aplikasi ini tidak dapat dibaca, jadi %1$s dipakai sebagai pengganti.</string>
     <string name="status_audio_limit_known">Aplikasi ini mempublikasi hingga %1$s.</string>
     <string name="status_audio_reading">Membaca file…</string>
     <string name="status_audio_preparing">Menyiapkan…</string>
-    <string name="status_audio_prepared">%1$d bagian disiapkan, total %2$s. Belum ada yang dipublikasikan; file ini dihapus saat layar ditutup.</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">%1$d bagian disiapkan, total %2$s. Belum ada yang dipublikasikan; file ini dihapus saat layar ditutup.</item>
+        <item quantity="other">%1$d bagian disiapkan, total %2$s. Belum ada yang dipublikasikan; file ini dihapus saat layar ditutup.</item>
+    </plurals>
     <string name="status_audio_cannot_prepare">Pilihan ini tidak dapat disiapkan di sini: %1$s</string>
     <string name="status_audio_no_file">Belum ada file audio yang dipilih.</string>
     <string name="status_audio_unreadable">File itu tidak dapat dibaca sebagai audio.</string>

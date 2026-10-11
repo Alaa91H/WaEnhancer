@@ -661,12 +661,17 @@
     <string name="status_audio_plan">מה יקרה</string>
     <string name="status_audio_volume_format">עוצמה: %1$d%%</string>
     <string name="status_audio_selection_format">נבחר %1$s מתוך %2$s</string>
+    <string name="status_audio_selection_coarse_format">נבחר %1$s מתוך %2$s\n%3$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">לא ניתן היה לקרוא את מגבלת הסטטוס הקולי של האפליקציה, ולכן משתמשים ב-%1$s כחלופה.</string>
     <string name="status_audio_limit_known">האפליקציה מפרסמת עד %1$s.</string>
     <string name="status_audio_reading">קריאת הקובץ…</string>
     <string name="status_audio_preparing">בהכנה…</string>
-    <string name="status_audio_prepared">%1$d חלקים הוכנו, %2$s בסך. שום דבר לא פורסם; הקבצים יימחקו עם סגירת המסך.</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">חלק אחד הוכן, %2$s בסך. שום דבר לא פורסם; הקבצים יימחקו עם סגירת המסך.</item>
+        <item quantity="two">שני חלקים הוכנו, %2$s בסך. שום דבר לא פורסם; הקבצים יימחקו עם סגירת המסך.</item>
+        <item quantity="other">%1$d חלקים הוכנו, %2$s בסך. שום דבר לא פורסם; הקבצים יימחקו עם סגירת המסך.</item>
+    </plurals>
     <string name="status_audio_cannot_prepare">אי אפשר להכין את הבחירה הזו כאן: %1$s</string>
     <string name="status_audio_no_file">לא נבחר קובץ שמע.</string>
     <string name="status_audio_unreadable">לא ניתן היה לקרוא את הקובץ הזה כשמע.</string>

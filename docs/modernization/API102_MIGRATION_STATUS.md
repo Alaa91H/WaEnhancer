@@ -452,6 +452,29 @@ containers the platform cannot write. Both need the Status composer resolver, wh
 — that is the finding unit 1 recorded — so the feature stays `NOT_IMPLEMENTED` and the Prepare
 button ends in a prepared file rather than a posted Status.
 
+### #10 unit 4 — the wording a user actually reads
+
+Lint refused this unit's own strings, and each refusal was a real defect rather than noise:
+
+1. `Prepared %1$d part(s)` was a string, so the count was rendered as `1 part(s)`. It is now a
+   `<plurals>` in **all eleven** shipped locales, each with the quantity forms that language
+   actually uses — ar with zero/one/two/few/many/other, ru with one/few/many/other, iw with
+   one/two/other, zh with `other` only. A count glued to an uninflected noun is machine output, and
+   six of the shipped languages inflect on it.
+2. The coarse-trim note was a `"\n"` appended to a formatted string. It is now
+   `status_audio_selection_coarse_format`, a second string the translator can order, rather than a
+   line break nobody can move.
+3. `status_audio_no_file` was declared in eleven locales and referenced nowhere. It now heads the
+   empty state, above the hint that tells the user what to do about it — which is what the screen
+   was already trying to say with two unlabelled sentences of equal weight.
+4. `Uri.parse(uri)` in the source reader is the KTX `uri.toUri()` the rest of the tree uses.
+
+A new case pins the two properties lint cannot check: that the plural reaches every shipped locale
+rather than only the default one, and that the coarse variant is a string of its own. A checker
+that reads one file would have passed with the other eleven still wrong.
+
+Device validation `PENDING_USER_DEVICE_TEST`.
+
 ### Next, in order
 
 1. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell

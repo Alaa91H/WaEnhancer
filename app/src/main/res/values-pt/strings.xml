@@ -661,12 +661,16 @@
     <string name="status_audio_plan">O que vai acontecer</string>
     <string name="status_audio_volume_format">Volume: %1$d%%</string>
     <string name="status_audio_selection_format">Selecionado %1$s de %2$s</string>
+    <string name="status_audio_selection_coarse_format">Selecionado %1$s de %2$s\n%3$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">Não foi possível ler o limite de status de voz desta app, por isso usa-se %1$s como alternativa.</string>
     <string name="status_audio_limit_known">Esta app publica até %1$s.</string>
     <string name="status_audio_reading">A ler o ficheiro…</string>
     <string name="status_audio_preparing">A preparar…</string>
-    <string name="status_audio_prepared">%1$d parte(s) preparada(s), %2$s no total. Nada foi publicado; estes ficheiros são removidos ao fechar este ecrã.</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">%1$d parte preparada, %2$s no total. Nada foi publicado; estes ficheiros são removidos ao fechar este ecrã.</item>
+        <item quantity="other">%1$d partes preparadas, %2$s no total. Nada foi publicado; estes ficheiros são removidos ao fechar este ecrã.</item>
+    </plurals>
     <string name="status_audio_cannot_prepare">Esta seleção não pode ser preparada aqui: %1$s</string>
     <string name="status_audio_no_file">Não foi escolhido nenhum ficheiro de áudio.</string>
     <string name="status_audio_unreadable">Não foi possível ler esse ficheiro como áudio.</string>

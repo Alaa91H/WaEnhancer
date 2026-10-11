@@ -42,6 +42,15 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="@string/status_audio_no_file"
+                    android:textAlignment="center"
+                    android:textColor="?android:textColorPrimary"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:text="@string/status_audio_pick_hint"
                     android:textAlignment="center"
                     android:textColor="?android:textColorSecondary" />

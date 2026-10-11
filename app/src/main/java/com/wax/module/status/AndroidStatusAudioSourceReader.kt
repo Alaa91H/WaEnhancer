@@ -2,7 +2,7 @@ package com.wax.module.status
 
 import android.content.Context
 import android.media.MediaMetadataRetriever
-import android.net.Uri
+import androidx.core.net.toUri
 import java.io.File
 
 /**
@@ -38,7 +38,7 @@ class AndroidStatusAudioSourceReader(
             val name = StatusAudioSourceReaderSupport.safeName(displayName)
             if (!directory.exists() && !directory.mkdirs()) return null
             val target = File(directory, "source-$name")
-            context.contentResolver.openInputStream(Uri.parse(uri))?.use { input ->
+            context.contentResolver.openInputStream(uri.toUri())?.use { input ->
                 target.outputStream().use { output -> input.copyTo(output, BUFFER_BYTES) }
             } ?: return null
             target.absolutePath

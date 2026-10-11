@@ -661,12 +661,16 @@
     <string name="status_audio_plan">Ne olacak</string>
     <string name="status_audio_volume_format">Ses: %1$d%%</string>
     <string name="status_audio_selection_format">%2$s içinden %1$s seçildi</string>
+    <string name="status_audio_selection_coarse_format">%2$s içinden %1$s seçildi\n%3$s</string>
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">Bu uygulamanın sesli durum sınırı okunamadı, bu yüzden %1$s yedek olarak kullanılıyor.</string>
     <string name="status_audio_limit_known">Bu uygulama %1$s kadar yayınlar.</string>
     <string name="status_audio_reading">Dosya okunuyor…</string>
     <string name="status_audio_preparing">Hazırlanıyor…</string>
-    <string name="status_audio_prepared">%1$d parça hazırlandı, toplam %2$s. Hiçbir şey yayınlanmadı; bu dosyalar ekran kapatıldığında silinir.</string>
+    <plurals name="status_audio_prepared">
+        <item quantity="one">%1$d parça hazırlandı, toplam %2$s. Hiçbir şey yayınlanmadı; bu dosyalar ekran kapatıldığında silinir.</item>
+        <item quantity="other">%1$d parça hazırlandı, toplam %2$s. Hiçbir şey yayınlanmadı; bu dosyalar ekran kapatıldığında silinir.</item>
+    </plurals>
     <string name="status_audio_cannot_prepare">Bu seçim burada hazırlanamaz: %1$s</string>
     <string name="status_audio_no_file">Ses dosyası seçilmedi.</string>
     <string name="status_audio_unreadable">Bu dosya ses olarak okunamadı.</string>
