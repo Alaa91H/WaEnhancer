@@ -5,6 +5,18 @@ package com.wax.module.activities
  * their original preference owners after the four-tab shell migration.
  */
 internal object LegacyNavigationMap {
+    /** Four primary tabs own the back destination of each historical editor. */
+    fun primaryForPage(page: Int): Int? =
+        when (page) {
+            in 4..7 -> 1
+
+            // Features, including legacy General, Privacy, Media and Recordings
+            8 -> 2
+
+            // Customization preview
+            else -> null
+        }
+
     fun toPage(oldPosition: Int): Int =
         when (oldPosition) {
             0 -> 0

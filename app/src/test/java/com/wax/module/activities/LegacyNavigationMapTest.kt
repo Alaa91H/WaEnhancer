@@ -17,4 +17,15 @@ class LegacyNavigationMapTest {
         assertEquals(1, LegacyNavigationMap.toPage(-1))
         assertEquals(1, LegacyNavigationMap.toPage(99))
     }
+
+    @org.junit.Test
+    fun backFromLegacyPagesReturnsToOwningPrimaryTab() {
+        for (page in 4..7) {
+            org.junit.Assert.assertEquals(1, LegacyNavigationMap.primaryForPage(page))
+        }
+        org.junit.Assert.assertEquals(2, LegacyNavigationMap.primaryForPage(8))
+        for (page in 0..3) {
+            org.junit.Assert.assertNull(LegacyNavigationMap.primaryForPage(page))
+        }
+    }
 }

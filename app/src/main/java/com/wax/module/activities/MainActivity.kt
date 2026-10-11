@@ -119,6 +119,13 @@ class MainActivity : BaseActivity() {
         binding.viewPager.post { openWhenReady(8) }
     }
 
+    /** Returns to the owning primary tab instead of closing the Manager after an advanced editor. */
+    fun returnFromLegacyDestination(): Boolean {
+        val destination = LegacyNavigationMap.primaryForPage(binding.viewPager.currentItem) ?: return false
+        binding.viewPager.setCurrentItem(destination, true)
+        return true
+    }
+
     private fun createMainDir() {
         val nomedia = File(ModuleApplication.moduleFolder, ".nomedia")
         if (nomedia.exists()) nomedia.delete()
