@@ -616,7 +616,7 @@
     <string name="diagnostics_external_none">لا توجد ميزة في هذا الإصدار تحتاج تأكيدًا خارجيًا.</string>
     <string name="diagnostics_external_explainer">لا يُرى هذا التأثير إلا من حساب ثانٍ. أكّد أحدها فقط بعد أن تلاحظه على واتساب %1$s. اختيار ميزة مؤكَّدة مسبقًا يلغي التأكيد.</string>
     <string name="diagnostics_external_recorded">تم تأكيد %1$s لواتساب %2$s. أعد الفحص الذري الشامل ليظهر في التقرير.</string>
-    <string name="diagnostics_running">جارٍ تنفيذ الفحوصات\u2026</string>
+    <string name="diagnostics_running">جارٍ تنفيذ الفحوصات…</string>
     <string name="diagnostics_cancelled">تم الإلغاء</string>
     <string name="diagnostics_finished">اكتمل</string>
     <string name="diagnostics_scan">المسح</string>
@@ -668,8 +668,8 @@
     <string name="status_audio_source_format">%1$s • %2$s</string>
     <string name="status_audio_limit_fallback">تعذّرت قراءة حدّ الحالة الصوتية لهذا التطبيق، لذلك يُستخدم %1$s كبديل.</string>
     <string name="status_audio_limit_known">ينشر هذا التطبيق حتى %1$s.</string>
-    <string name="status_audio_reading">جارٍ قراءة الملف\u2026</string>
-    <string name="status_audio_preparing">جارٍ التجهيز\u2026</string>
+    <string name="status_audio_reading">جارٍ قراءة الملف…</string>
+    <string name="status_audio_preparing">جارٍ التجهيز…</string>
     <string name="status_audio_prepared">تم تجهيز %1$d جزء، بإجمالي %2$s.</string>
     <string name="status_audio_cannot_prepare">لا يمكن تجهيز هذا التحديد هنا: %1$s</string>
     <string name="status_audio_no_file">لم يتم اختيار أي ملف صوتي.</string>
