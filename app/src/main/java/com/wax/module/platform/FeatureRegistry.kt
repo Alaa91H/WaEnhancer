@@ -137,10 +137,15 @@ object FeatureRegistry {
                     "(visualImpact=${metadata.visualImpact.name})",
             )
         }
-        // A high-risk feature has to be capability-gated, or a WhatsApp update can move the
-        // thing it hooks with nothing to notice it: the kill switch strikes are driven by
-        // failures, and a required resolver is what turns "it broke" into "it stopped".
-        if (metadata.riskLevel == RiskLevel.HIGH && metadata.requiredResolvers.isEmpty()) {
+        // A runnable HIGH-risk feature must be gated by a real resolver. A feature
+        // explicitly marked NOT_IMPLEMENTED cannot start at all, so requiring a
+        // made-up resolver to register that honest state would encourage false
+        // compatibility claims. Promoting it back to AVAILABLE/EXPERIMENTAL
+        // immediately restores the strict resolver requirement.
+        if (metadata.riskLevel == RiskLevel.HIGH &&
+            metadata.availability != FeatureAvailability.NOT_IMPLEMENTED &&
+            metadata.requiredResolvers.isEmpty()
+        ) {
             problems.add("a HIGH risk feature must declare at least one required resolver so it can be held back")
         }
         return problems

@@ -86,7 +86,10 @@ class FeatureContractTest {
     fun aHighRiskFeatureIsCapabilityGated() {
         PlatformFeatureCatalog
             .metadata()
-            .filter { it.riskLevel == RiskLevel.HIGH }
+            .filter {
+                it.riskLevel == RiskLevel.HIGH &&
+                    it.availability != FeatureAvailability.NOT_IMPLEMENTED
+            }
             .forEach { metadata ->
                 assertTrue(
                     "${metadata.id} is HIGH risk, so it must declare a required resolver",
@@ -118,6 +121,32 @@ class FeatureContractTest {
     @Test
     fun aHighRiskFeatureWithoutARequiredResolverIsRejected() {
         val metadata = validMetadata().copy(riskLevel = RiskLevel.HIGH)
+        val result = FeatureRegistry.register(metadata)
+        assertFalse(result.isAccepted)
+        assertTrue((result as RegistrationResult.Rejected).reasons.any { it.contains("required resolver") })
+    }
+
+    @Test
+    fun anUnimplementedHighRiskFeatureRegistersWithoutInventingAResolver() {
+        val metadata =
+            validMetadata().copy(
+                riskLevel = RiskLevel.HIGH,
+                availability = FeatureAvailability.NOT_IMPLEMENTED,
+            )
+        assertTrue(FeatureRegistry.register(metadata).isAccepted)
+        assertEquals(
+            FeatureAvailability.NOT_IMPLEMENTED,
+            FeatureAccessPolicy.evaluate(metadata, whatsAppFacts()).availability,
+        )
+    }
+
+    @Test
+    fun merelyExperimentalHighRiskFeatureStillRequiresARealResolver() {
+        val metadata =
+            validMetadata().copy(
+                riskLevel = RiskLevel.HIGH,
+                availability = FeatureAvailability.EXPERIMENTAL,
+            )
         val result = FeatureRegistry.register(metadata)
         assertFalse(result.isAccepted)
         assertTrue((result as RegistrationResult.Rejected).reasons.any { it.contains("required resolver") })
