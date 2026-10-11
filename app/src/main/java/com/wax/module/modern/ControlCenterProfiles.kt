@@ -14,7 +14,7 @@ import java.util.UUID
  * Current modern pilot preferences are globally scoped in Manager. Thus these
  * profiles are explicitly global, not per-WhatsApp-account/Android-user.
  */
-@SuppressLint("ApplySharedPref")
+@SuppressLint("ApplySharedPref", "UseKtx")
 object ControlCenterProfiles {
     const val KEY = "wax.control_center.profiles.v1"
     const val DEFAULT_ID = "default"
