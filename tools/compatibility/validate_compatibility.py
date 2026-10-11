@@ -43,6 +43,24 @@ PACKAGE_KEYS = ("whatsapp", "business")
 # Dimension keys allowed inside a per-feature package override.
 DIMENSION_KEYS = ("versions", "sdk", "abi")
 
+# Account scope of a certified cell. A resolver result is observed on one running
+# instance of the app: the primary user, a secondary profile, a work profile or a
+# cloned instance. "any" is the only scope a single observation may certify, and
+# a named instance certifies that instance alone. Without this distinction an
+# observation from one profile is indistinguishable from a statement about every
+# user, which is the claim a compatibility cell is read as making.
+ACCOUNT_ANY = "any"
+ACCOUNT_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:+-]{0,63}")
+
+
+def _account_scope(value: object) -> bool:
+    """Is this a usable account scope: the whole package, or one named instance?"""
+    if not isinstance(value, str) or not value:
+        return False
+    if value == ACCOUNT_ANY:
+        return True
+    return ACCOUNT_TOKEN.fullmatch(value) is not None
+
 
 class Report:
     def __init__(self) -> None:
@@ -120,6 +138,21 @@ def check_schema(matrix: dict, report: Report) -> None:
                 if (not isinstance(fingerprint, str) or not fingerprint.strip()
                         or len(fingerprint) > 512):
                     report.fail("packages.%s has invalid expected fingerprint for %r" % (key, version))
+        # The account scope a cell is certified for. It is curator-declared for the
+        # same reason the fingerprint is: an observation carries the instance it was
+        # taken on, and the cell has to say which instances that observation speaks for.
+        scopes = entry.get("certifiedAccountScopes", {})
+        if not isinstance(scopes, dict):
+            report.fail("packages.%s.certifiedAccountScopes must be an object" % key)
+        else:
+            for version, scope in scopes.items():
+                if not _exact_version(version) or version not in entry.get("declaredVersions", []):
+                    report.fail("packages.%s has non-declared exact account scope %r" % (key, version))
+                if not _account_scope(scope):
+                    report.fail(
+                        "packages.%s has invalid account scope %r for %r; expected %r or an "
+                        "instance token" % (key, scope, version, ACCOUNT_ANY)
+                    )
         # A package-wide default cannot certify all features and versions.
         if entry.get("defaultStatus") == "supported":
             report.fail(
@@ -323,21 +356,50 @@ def _target_verified(
     return True
 
 
-def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
-    """Fail closed: a supported claim needs evidence for that exact target.
+def _observation_account(target: dict) -> str | None:
+    """The runtime instance an observation was taken on, or None if it names none.
 
-    Legacy feature-wide resolver records cannot certify a package/version cell.
-    Evidence targets use feature -> targets[] -> package, packageName, version,
-    buildFingerprint, sdk, abi, verifiedAt, result and resolver observations.
+    An observation with no account is a statement about the package build itself.
+    One that names an account is a statement about that single running instance:
+    a secondary profile, a work profile, or a cloned app has its own data, its own
+    package install path and its own resolver cache, so it cannot be read as a
+    statement about every user.
+    """
+    value = target.get("account")
+    if value is None or value == ACCOUNT_ANY:
+        return None
+    return value if isinstance(value, str) else ""
+
+
+def _account_matches(observed: str | None, declared: str) -> bool:
+    """A package-wide cell takes only package-wide evidence; an instance takes its own."""
+    if declared == ACCOUNT_ANY:
+        return observed is None
+    return observed == declared
+
+
+def supported_cell_problems(matrix: dict, derived: dict) -> list[str]:
+    """Every reason a ``supported`` claim in this document is not earned.
+
+    Fail closed. Legacy feature-wide resolver records cannot certify a package/version
+    cell, and a cell names one exact build, so it also names the instances that build
+    was observed on: feature -> targets[] -> package, packageName, version,
+    buildFingerprint, sdk, abi, account, verifiedAt, result and resolver observations,
+    compared against the pinned packages.<target>.certifiedBuildFingerprints and
+    certifiedAccountScopes for that exact version.
+
+    Returned as plain strings so the generator can refuse the same cells the validator
+    rejects, instead of re-implementing the rule and drifting from it.
     """
     by_id = {item["id"]: item for item in derived["features"]}
     entries = matrix.get("evidence", {})
     packages = matrix.get("packages", {})
     module = matrix.get("module", {})
+    problems: list[str] = []
 
     for feature_id, per_package in matrix.get("matrix", {}).items():
         if not isinstance(per_package, dict):
-            report.fail("matrix.%s must be an object" % feature_id)
+            problems.append("matrix.%s must be an object" % feature_id)
             continue
         for package_key, override in per_package.items():
             if package_key not in PACKAGE_KEYS or not isinstance(override, dict):
@@ -352,21 +414,35 @@ def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
                     # A version is a precise runtime identity. SDK/ABI-only
                     # overrides would certify all versions, so reject them.
                     if dimension != "versions" or not _exact_version(cell):
-                        report.fail("%s claims supported without an exact target version" % claim)
+                        problems.append("%s claims supported without an exact target version" % claim)
                         continue
                     package = packages.get(package_key, {})
                     feature = by_id.get(feature_id)
                     if feature is None or cell not in package.get("declaredVersions", []):
-                        report.fail("%s claims supported for an unknown feature/version" % claim)
+                        problems.append(
+                            "%s claims supported for an unknown feature/version" % claim
+                        )
                         continue
                     certified = package.get("certifiedBuildFingerprints", {})
                     expected_fingerprint = certified.get(cell) if isinstance(certified, dict) else None
                     if not isinstance(expected_fingerprint, str) or not expected_fingerprint.strip():
-                        report.fail(
+                        problems.append(
                             "%s claims supported without a separately declared exact build fingerprint"
                             % claim
                         )
                         continue
+                    scopes = package.get("certifiedAccountScopes", {})
+                    declared_scope = scopes.get(cell) if isinstance(scopes, dict) else None
+                    if not _account_scope(declared_scope):
+                        # Absent means package-wide, which is the only scope a cell may
+                        # silently take; a present-but-unusable value is a schema error
+                        # reported by check_schema, so it cannot certify anything here.
+                        declared_scope = ACCOUNT_ANY if declared_scope is None else declared_scope
+                        if declared_scope != ACCOUNT_ANY:
+                            problems.append(
+                                "%s has an unusable declared account scope %r" % (claim, declared_scope)
+                            )
+                            continue
                     record = entries.get(feature_id, {})
                     targets = record.get("targets") if isinstance(record, dict) else None
                     observed = [
@@ -379,12 +455,32 @@ def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
                     matching = [
                         target for target in observed
                         if target.get("buildFingerprint") == expected_fingerprint
+                        and _account_matches(_observation_account(target), declared_scope)
                     ]
                     if not matching:
-                        report.fail(
-                            "%s claims supported without complete resolver evidence "
-                            "for the exact package/version/build/SDK/ABI target" % claim
-                        )
+                        bound = sorted({
+                            account for account in
+                            (_observation_account(target) for target in observed)
+                            if account
+                        })
+                        if declared_scope != ACCOUNT_ANY:
+                            problems.append(
+                                "%s is certified for instance %r but no complete observation "
+                                "was recorded on that instance" % (claim, declared_scope)
+                            )
+                        elif bound:
+                            problems.append(
+                                "%s is certified for %s as a whole but every complete "
+                                "observation is bound to one instance (%s); a single "
+                                "instance cannot certify every user, so declare "
+                                "packages.%s.certifiedAccountScopes[%s] to scope the claim"
+                                % (claim, package_key, ", ".join(bound), package_key, cell)
+                            )
+                        else:
+                            problems.append(
+                                "%s claims supported without complete resolver evidence "
+                                "for the exact package/version/build/SDK/ABI target" % claim
+                            )
                         continue
                     # One cell, one build. A beta and a release observation of the
                     # same version are different signers and different runtimes,
@@ -395,7 +491,7 @@ def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
                         if isinstance(target, dict)
                     }
                     if len(fingerprints) > 1:
-                        report.fail(
+                        problems.append(
                             "%s is claimed supported by %d conflicting build "
                             "fingerprints; a cell names exactly one target"
                             % (claim, len(fingerprints))
@@ -404,9 +500,34 @@ def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
     # Feature-wide supported status cannot be scoped to any runtime target.
     for feature_id, record in entries.items():
         if isinstance(record, dict) and record.get("status") == "supported":
-            report.fail(
+            problems.append(
                 "evidence.%s.status=supported is not an exact-target claim" % feature_id
             )
+
+    # An observation has to say which instance it came from, in a form the gate can
+    # compare. A free-text or empty account is indistinguishable from no account at
+    # all, so it is refused instead of being read as a package-wide statement.
+    for feature_id, record in entries.items():
+        targets = record.get("targets") if isinstance(record, dict) else None
+        if not isinstance(targets, list):
+            continue
+        for target in targets:
+            if not isinstance(target, dict) or "account" not in target:
+                continue
+            if not _account_scope(target.get("account")):
+                problems.append(
+                    "evidence.%s has an observation with an unusable account scope %r; "
+                    "omit it for a package-wide observation or use %r/an instance token"
+                    % (feature_id, target.get("account"), ACCOUNT_ANY)
+                )
+
+    return problems
+
+
+def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
+    """Report every unsupported claim, and what the matrix still does not prove."""
+    for problem in supported_cell_problems(matrix, derived):
+        report.fail(problem)
 
     # 'none' means no direct resolver dependency, not a runtime guarantee.
     independent = sorted(

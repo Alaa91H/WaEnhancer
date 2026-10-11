@@ -14,7 +14,10 @@ reviewer has to remember.
 
 What is deliberately *not* here: anything that depends on a machine. SDK and NDK locations, JDK
 paths and Gradle caches are recorded as the versions the build asks for, not as paths on one
-developer's disk, so the file means the same thing on every machine and in every CI run.
+developer's disk, so the file means the same thing on every machine and in every CI run. The
+same rule excludes submodule sources: they are a checkout decision rather than a property of
+this project, so ``source_counts`` counts WA X's own files and reads the vendored paths from
+``.gitmodules`` instead of counting whatever a particular clone happened to fetch.
 
 Usage:
     python3 tools/modernization/collect_m00_baseline.py --write
@@ -46,6 +49,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 
 BASELINE_PATH = "docs/modernization/baseline/m00-baseline.json"
+GITMODULES = ".gitmodules"
 CATALOG = "gradle/libs.versions.toml"
 MODULE_BUILD = "app/build.gradle.kts"
 GRADLE_PROPERTIES = "gradle.properties"
@@ -97,11 +101,45 @@ def first_int(content: str, pattern: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
+def vendored_paths() -> set[str]:
+    """The repository paths that belong to a submodule rather than to this project.
+
+    A submodule is a checkout decision, not a source file: `actions/checkout` fetches them, a
+    plain clone leaves the directories empty, and both trees are the same commit. Counting
+    their files made ``source_counts`` depend on how the tree was obtained, which is exactly
+    the machine-specific value this file refuses to record. The 424 vendored ``.c``/``.h``
+    files under opus, ogg and libopusenc are libopus, not WA X, and the three submodules are
+    read from ``.gitmodules`` rather than restated here so a new one is covered automatically.
+    """
+    content = read(os.path.join(REPO_ROOT, GITMODULES))
+    if not content:
+        return set()
+
+    paths = set()
+    inside_submodule = False
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("["):
+            inside_submodule = stripped.startswith("[submodule")
+            continue
+        if inside_submodule and stripped.startswith("path"):
+            _, _, value = stripped.partition("=")
+            value = value.strip().strip("/")
+            if value:
+                paths.add(value)
+    return paths
+
+
 def source_counts() -> dict[str, int]:
     counts = {"kotlin": 0, "java": 0, "cpp": 0, "unit_tests": 0, "android_tests": 0}
-    for directory, _dirs, files in os.walk(os.path.join(REPO_ROOT, "app", "src")):
+    vendored = vendored_paths()
+    source_root = os.path.join(REPO_ROOT, "app", "src")
+    for directory, _dirs, files in os.walk(source_root):
         parts = directory.replace("\\", "/").split("/")
         is_native = "cpp" in parts
+        relative = os.path.relpath(directory, REPO_ROOT).replace("\\", "/")
+        if any(relative == prefix or relative.startswith(prefix + "/") for prefix in vendored):
+            continue
         for name in files:
             if name.endswith((".kt", ".java")):
                 counts["kotlin" if name.endswith(".kt") else "java"] += 1

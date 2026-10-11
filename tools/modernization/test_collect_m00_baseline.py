@@ -132,6 +132,69 @@ def main() -> int:
     if not case("collecting twice over the same tree produces identical output", first == second):
         failures += 1
 
+    # --- a submodule checkout is not a source change ------------------------------
+
+    # `actions/checkout` materialises the three opus submodules and a plain clone leaves them
+    # empty, both at the same commit. Counting their 424 .c/.h files made `source_counts.cpp`
+    # read 425 in CI and 1 on a workstation, so the evidence lock drifted on an unchanged
+    # tree and the regeneration that "fixed" it only moved the breakage to CI.
+    sandbox = tempfile.mkdtemp(prefix="m00-submodule-")
+    try:
+
+        def write(relative: str, body: str = "") -> None:
+            target = os.path.join(sandbox, relative)
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            with open(target, "w", encoding="utf-8", newline="\n") as handle:
+                handle.write(body)
+
+        write(
+            ".gitmodules",
+            '[submodule "opus"]\n\tpath = app/src/main/cpp/opus\n\turl = https://github.com/xiph/opus\n'
+            '[submodule "ogg"]\n\tpath = app/src/main/cpp/ogg\n\turl = https://github.com/xiph/ogg\n',
+        )
+        write("app/src/main/cpp/AudioOpusConverter.cpp", "int main() {}\n")
+        for index in range(5):
+            write("app/src/main/cpp/opus/src/opus_encoder%d.c" % index, "/* libopus */\n")
+        write("app/src/main/cpp/ogg/include/ogg/os_types.h", "/* libogg */\n")
+
+        original_root = BASELINE.REPO_ROOT
+        BASELINE.REPO_ROOT = sandbox
+        try:
+            vendored = BASELINE.vendored_paths()
+            counts = BASELINE.source_counts()
+        finally:
+            BASELINE.REPO_ROOT = original_root
+
+        if not case(
+            "the vendored paths come from .gitmodules, not from a restated list",
+            vendored == {"app/src/main/cpp/opus", "app/src/main/cpp/ogg"},
+        ):
+            failures += 1
+
+        if not case(
+            "submodule sources are excluded from the native count",
+            counts["cpp"] == 1,
+        ):
+            print("  got cpp=%s" % counts["cpp"])
+            failures += 1
+
+        # The exclusion must not become a blind spot: our own native code still moves it.
+        write("app/src/main/cpp/Another.cpp", "int other() {}\n")
+        original_root = BASELINE.REPO_ROOT
+        BASELINE.REPO_ROOT = sandbox
+        try:
+            grown = BASELINE.source_counts()
+        finally:
+            BASELINE.REPO_ROOT = original_root
+        if not case(
+            "a new native file of ours still moves the count",
+            grown["cpp"] == 2,
+        ):
+            print("  got cpp=%s" % grown["cpp"])
+            failures += 1
+    finally:
+        shutil.rmtree(sandbox, ignore_errors=True)
+
     # --- and it matches what is committed ---------------------------------------
 
     committed_path = os.path.join(ROOT, BASELINE.BASELINE_PATH)
