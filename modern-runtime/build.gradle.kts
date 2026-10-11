@@ -22,4 +22,7 @@ dependencies {
     compileOnly(libs.libxposed.modern.api)
     compileOnly(files("../app/libs/dexkit-android.aar"))
     testImplementation(libs.junit)
+    // JVM unit tests need a real JSONObject implementation; Android's test stubs throw.
+    // This is test-only and is never packaged into the module APK.
+    testImplementation("org.json:json:20240303")
 }
