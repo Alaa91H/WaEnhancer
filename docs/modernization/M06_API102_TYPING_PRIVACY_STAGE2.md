@@ -26,6 +26,12 @@ dependency:
   Numeric `@lid`, group, broadcast and unknown-domain identifiers cannot
   select another contact's rule. The legacy `phoneNumber` projection remains
   unchanged for all other consumers. Global switches still apply.
+- **Raw-JID method reflection** excludes the Java standard `toString()`
+  from eligible no-argument `String` accessors. Otherwise the inherited or
+  overridden display method causes false ambiguity beside the real raw
+  accessor, or is falsely selected when no raw accessor exists. Zero or
+  multiple remaining candidates still fail closed. JVM fixtures verify both
+  `toString` cases plus genuine resolver ambiguity.
 - **Suppression decision is pure and tested**: `shouldSuppress(state, typing,
   recording)` pins the legacy semantics, including that recording is governed
   by its own rule and that unrelated state values are never suppressed.
