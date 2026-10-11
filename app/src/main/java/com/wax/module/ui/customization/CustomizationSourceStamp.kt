@@ -5,15 +5,25 @@ import com.wax.module.settings.SettingsScope
 import java.security.MessageDigest
 
 /**
- * Non-secret optimistic stamp for the five editable preview keys.
+ * Non-secret optimistic stamp for the eight editable preview keys.
  *
  * Include both the selected target's raw overrides and their Global parents:
  * the effective preview alone cannot reveal a changed override that happens
- * to resolve to the same visual value. No WhatsApp data or credentials are read.
+ * to resolve to the same visual value. Only selected values contribute to the digest; unrelated values are not exported.
  * This provides conflict detection, not a cross-process CAS transaction.
  */
 internal object CustomizationSourceStamp {
-    private val keys = listOf("changecolor", "primary_color", "channels", "hidetabs", "floating_bottom_bar")
+    private val keys =
+        listOf(
+            "changecolor",
+            "primary_color",
+            "channels",
+            "hidetabs",
+            "floating_bottom_bar",
+            "bubble_color",
+            "bubble_left",
+            "bubble_right",
+        )
 
     fun fromValues(
         scope: SettingsScope,

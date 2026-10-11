@@ -19,7 +19,7 @@ class CustomizationPreviewRepository(
 ) {
     private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
 
-    /** Only five preview preferences and their inherited Global parents are fingerprinted. */
+    /** Only eight preview preferences and their inherited Global parents are fingerprinted. */
     fun fingerprint(scope: SettingsScope): String = CustomizationSourceStamp.fromValues(scope, prefs.all)
 
     fun read(scope: SettingsScope): CustomizationPreviewState {
@@ -30,6 +30,9 @@ class CustomizationPreviewRepository(
             hideChannels = resolver.effectiveBoolean("channels", scope),
             hiddenTabs = resolver.effectiveStringSet("hidetabs", scope),
             floatingBottomBar = resolver.effectiveBoolean("floating_bottom_bar", scope),
+            bubbleColorsEnabled = resolver.effectiveBoolean("bubble_color", scope),
+            leftBubbleColor = resolver.effectiveInt("bubble_left", scope),
+            rightBubbleColor = resolver.effectiveInt("bubble_right", scope),
         )
     }
 
@@ -54,6 +57,15 @@ class CustomizationPreviewRepository(
         if (expected.hiddenTabs != draft.hiddenTabs) edit.putStringSet(key("hidetabs"), draft.hiddenTabs.toSet())
         if (expected.floatingBottomBar != draft.floatingBottomBar) {
             edit.putBoolean(key("floating_bottom_bar"), draft.floatingBottomBar)
+        }
+        if (expected.bubbleColorsEnabled != draft.bubbleColorsEnabled) {
+            edit.putBoolean(key("bubble_color"), draft.bubbleColorsEnabled)
+        }
+        if (expected.leftBubbleColor != draft.leftBubbleColor) {
+            edit.putInt(key("bubble_left"), draft.leftBubbleColor)
+        }
+        if (expected.rightBubbleColor != draft.rightBubbleColor) {
+            edit.putInt(key("bubble_right"), draft.rightBubbleColor)
         }
         return edit.commit()
     }

@@ -70,11 +70,14 @@ Old preference keys are not renamed and all legacy preference fragments remain r
   legacy editor only resyncs a **clean** preview; pending changes are not erased by Resume.
 - Feature and Customization Compose roots have stable resource IDs for saveable-state
   restoration; process-death/instrumentation behavior still needs device verification.
-- Apply checks a SHA-256 source stamp over the five preview keys, including their raw
+- Apply checks a SHA-256 source stamp over the eight preview keys, including their raw
   selected-target overrides and Global parents, in addition to the effective preview.
   This detects changed inherited/overridden settings **even when the visible value
   did not change**. The stamp excludes unrelated keys and other targets; unit tests
   cover both isolation and order-independent sets.
+- The miniature chat preview now stages the original `bubble_color`, `bubble_left`, and
+  `bubble_right` settings, including separate incoming/outgoing bubble colors. Old five-field
+  saved preview states remain decodable; this is not evidence of a functioning API102 hook.
 - SharedPreferences does not provide a cross-process compare-and-swap primitive; this is
   optimistic stale-edit detection plus one committed write batch, **not** an atomic
   interprocess transaction. Release validation must still test simultaneous writers.

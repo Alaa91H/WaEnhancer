@@ -60,9 +60,22 @@ class CustomizationPreviewStateTest {
                 hideChannels = true,
                 hiddenTabs = setOf("700", "300", "600"),
                 floatingBottomBar = true,
+                bubbleColorsEnabled = true,
+                leftBubbleColor = 0xFF008069.toInt(),
+                rightBubbleColor = 0xFF1661A7.toInt(),
             )
         assertEquals(original, CustomizationPreviewState.fromSavedFields(original.savedFields()))
         assertTrue(CustomizationPreviewState.fromSavedFields(original.savedFields()).hiddenTabs.contains("700"))
+    }
+
+    @Test fun oldFiveFieldSavedPreviewRestoresSafely() {
+        val legacy = listOf<Any>(true, 0xFF008069.toInt(), false, "700,300", false)
+        val restored = CustomizationPreviewState.fromSavedFields(legacy)
+        assertTrue(restored.colorsEnabled)
+        assertEquals(setOf("700", "300"), restored.hiddenTabs)
+        assertFalse(restored.bubbleColorsEnabled)
+        assertEquals(0, restored.leftBubbleColor)
+        assertEquals(0, restored.rightBubbleColor)
     }
 
     @Test fun cleanPreviewAndPendingPreviewKeepDistinctSnapshots() {

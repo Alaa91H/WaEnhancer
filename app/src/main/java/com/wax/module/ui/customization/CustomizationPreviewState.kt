@@ -13,6 +13,9 @@ data class CustomizationPreviewState(
     val hideChannels: Boolean = false,
     val hiddenTabs: Set<String> = emptySet(),
     val floatingBottomBar: Boolean = false,
+    val bubbleColorsEnabled: Boolean = false,
+    val leftBubbleColor: Int = 0,
+    val rightBubbleColor: Int = 0,
 ) {
     /** Every value uses a Bundle-saveable primitive; unknown legacy tab IDs survive. */
     fun savedFields(): List<Any> =
@@ -22,17 +25,23 @@ data class CustomizationPreviewState(
             hideChannels,
             hiddenTabs.sorted().joinToString(","),
             floatingBottomBar,
+            bubbleColorsEnabled,
+            leftBubbleColor,
+            rightBubbleColor,
         )
 
     companion object {
         fun fromSavedFields(values: List<Any>): CustomizationPreviewState {
-            require(values.size == 5) { "Unsupported preview state" }
+            require(values.size == 5 || values.size == 8) { "Unsupported preview state" }
             return CustomizationPreviewState(
                 colorsEnabled = values[0] as Boolean,
                 accentColor = values[1] as Int,
                 hideChannels = values[2] as Boolean,
                 hiddenTabs = (values[3] as String).split(',').filter(String::isNotBlank).toSet(),
                 floatingBottomBar = values[4] as Boolean,
+                bubbleColorsEnabled = if (values.size == 8) values[5] as Boolean else false,
+                leftBubbleColor = if (values.size == 8) values[6] as Int else 0,
+                rightBubbleColor = if (values.size == 8) values[7] as Int else 0,
             )
         }
     }

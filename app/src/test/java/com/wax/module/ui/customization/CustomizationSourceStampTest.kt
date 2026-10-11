@@ -46,6 +46,15 @@ class CustomizationSourceStampTest {
         )
     }
 
+    @Test fun bubbleColorChangeInvalidatesScopedSnapshot() {
+        val before = mapOf("bubble_left" to 0xFF008069.toInt(), "bubble_right" to 0xFF008069.toInt())
+        val after = before + ("bubble_right" to 0xFF1661A7.toInt())
+        assertNotEquals(
+            CustomizationSourceStamp.fromValues(whatsapp, before),
+            CustomizationSourceStamp.fromValues(whatsapp, after),
+        )
+    }
+
     @Test fun setElementOrderDoesNotCreatePhantomConflict() {
         val first = mapOf("hidetabs" to linkedSetOf("300", "700", "400"))
         val second = mapOf("hidetabs" to linkedSetOf("400", "300", "700"))

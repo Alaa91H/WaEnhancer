@@ -217,6 +217,38 @@ private fun CustomizationDashboard(
                 )
             }
         }
+        Text(stringResource(R.string.uix_preview_bubbles), style = MaterialTheme.typography.titleMedium)
+        PreviewSwitch(stringResource(R.string.change_bubble_colors), draft.bubbleColorsEnabled) {
+            draft = draft.copy(bubbleColorsEnabled = it)
+        }
+        val bubblePresets = listOf(0xFF008069, 0xFF1661A7, 0xFF8734AB, 0xFFC06414)
+        Text(stringResource(R.string.bubble_left), style = MaterialTheme.typography.labelMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            bubblePresets.forEach { value ->
+                val selectedColor = value.toInt()
+                FilterChip(
+                    selected = draft.bubbleColorsEnabled && draft.leftBubbleColor == selectedColor,
+                    onClick = {
+                        draft = draft.copy(bubbleColorsEnabled = true, leftBubbleColor = selectedColor)
+                    },
+                    label = { Text("●", color = Color(selectedColor)) },
+                )
+            }
+        }
+        Text(stringResource(R.string.bubble_right), style = MaterialTheme.typography.labelMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            bubblePresets.forEach { value ->
+                val selectedColor = value.toInt()
+                FilterChip(
+                    selected = draft.bubbleColorsEnabled && draft.rightBubbleColor == selectedColor,
+                    onClick = {
+                        draft = draft.copy(bubbleColorsEnabled = true, rightBubbleColor = selectedColor)
+                    },
+                    label = { Text("●", color = Color(selectedColor)) },
+                )
+            }
+        }
+
         Text(stringResource(R.string.uix_preview_sections), style = MaterialTheme.typography.titleMedium)
         PreviewSwitch(stringResource(R.string.uix_hide_channels), draft.hideChannels) {
             draft = draft.copy(hideChannels = it)
@@ -329,6 +361,18 @@ private fun PreviewPhone(state: CustomizationPreviewState) {
         } else {
             MaterialTheme.colorScheme.primary
         }
+    val leftBubble =
+        if (state.bubbleColorsEnabled && state.leftBubbleColor != 0) {
+            Color(state.leftBubbleColor)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        }
+    val rightBubble =
+        if (state.bubbleColorsEnabled && state.rightBubbleColor != 0) {
+            Color(state.rightBubbleColor)
+        } else {
+            accent.copy(alpha = 0.16f)
+        }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -346,13 +390,29 @@ private fun PreviewPhone(state: CustomizationPreviewState) {
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(stringResource(R.string.uix_preview_chat), style = MaterialTheme.typography.labelLarge)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                        Text(
+                            stringResource(R.string.uix_preview_message_other),
+                            modifier = Modifier.background(leftBubble, RoundedCornerShape(10.dp)).padding(10.dp),
+                            color =
+                                if (state.bubbleColorsEnabled && state.leftBubbleColor != 0) {
+                                    Color.White
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         Text(
                             stringResource(R.string.uix_preview_message),
-                            modifier =
-                                Modifier
-                                    .background(accent.copy(alpha = 0.16f), RoundedCornerShape(10.dp))
-                                    .padding(10.dp),
+                            modifier = Modifier.background(rightBubble, RoundedCornerShape(10.dp)).padding(10.dp),
+                            color =
+                                if (state.bubbleColorsEnabled && state.rightBubbleColor != 0) {
+                                    Color.White
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }

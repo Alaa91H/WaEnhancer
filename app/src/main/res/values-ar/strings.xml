@@ -725,4 +725,6 @@
     <string name="uix_enable_warning_title">تأكيد ميزة غير متحقق منها</string>
     <string name="uix_enable_warning_message">%1$s: سيُحفظ الخيار المحدد فقط. لم يُتحقق من عمل ميزة API102 أو توافقها مع الإصدار، ولم يُراجع خطر تقييد الحساب بشكل مستقل. هل تريد حفظ هذا الإعداد؟</string>
     <string name="uix_enable_anyway">حفظ التفضيل</string>
+    <string name="uix_preview_bubbles">ألوان فقاعات المحادثة</string>
+    <string name="uix_preview_message_other">رسالة واردة</string>
 </resources>
