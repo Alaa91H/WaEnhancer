@@ -144,7 +144,9 @@ object PlatformFeatureCatalog {
                 StartupPolicy.EAGER_NORMAL,
                 tests = listOf("OutgoingPolicyEngineTest", "MessageRevocationQueueTest"),
                 preferenceKeys = listOf("wae.outgoing.policy."),
-                optionalResolvers = listOf("loadSendMessage", "loadRevokeMessage"),
+                // Tested engine, no consumer: nothing installs it into a send path yet, and
+                // the two resolver names that used to stand here existed in no resolver.
+                availability = FeatureAvailability.NOT_IMPLEMENTED,
                 tags = setOf("privacy", "outgoing", "policy", "local-only"),
                 confidence = Confidence.LIKELY,
                 riskLevel = RiskLevel.MEDIUM,
@@ -156,7 +158,9 @@ object PlatformFeatureCatalog {
                 StartupPolicy.LAZY,
                 tests = listOf("OutgoingPolicyEngineTest"),
                 preferenceKeys = listOf("wae.outgoing.policy."),
-                requiredResolvers = listOf("loadSendMessage"),
+                // The gate below is the point: this may only become available once it names a
+                // native send resolver that exists. Until then it says so.
+                availability = FeatureAvailability.NOT_IMPLEMENTED,
                 tags = setOf("privacy", "view-once", "media"),
                 confidence = Confidence.LIKELY,
                 // A misfire sends media the user asked to be ephemeral as a persistent
@@ -173,7 +177,9 @@ object PlatformFeatureCatalog {
                 StartupPolicy.EAGER_NORMAL,
                 tests = listOf("MessageRevocationQueueTest", "OutgoingPolicyEngineTest"),
                 preferenceKeys = listOf("wae.outgoing.policy.", "wae.revoke.job."),
-                requiredResolvers = listOf("loadSendMessage", "loadRevokeMessage"),
+                // Same gate as Automatic View Once: a scheduled revoke that fires on the
+                // wrong message cannot be undone from the other end.
+                availability = FeatureAvailability.NOT_IMPLEMENTED,
                 tags = setOf("privacy", "revoke", "ephemeral", "scheduler"),
                 confidence = Confidence.LIKELY,
                 riskLevel = RiskLevel.HIGH,
@@ -187,7 +193,9 @@ object PlatformFeatureCatalog {
                 StartupPolicy.EAGER_NORMAL,
                 tests = listOf("PrivacyProfilesTest", "PrivacyPhaseGateTest"),
                 preferenceKeys = listOf("wae.privacy.profiles", "wae.privacy.active"),
-                optionalResolvers = listOf("loadReceiptOptions", "loadPresenceManager"),
+                // Profile storage is tested; applying a profile inside WhatsApp is not
+                // wired, and neither named resolver existed.
+                availability = FeatureAvailability.NOT_IMPLEMENTED,
                 tags = setOf("privacy", "profiles"),
                 confidence = Confidence.LIKELY,
             ),
@@ -244,7 +252,9 @@ object PlatformFeatureCatalog {
                 FeatureCategory.MESSAGE_HISTORY,
                 StartupPolicy.LAZY,
                 tests = listOf("MessageHistoryTest"),
-                optionalResolvers = listOf("loadRevokeMessage"),
+                // Timeline storage is tested; the hook that would feed it from a revoke is
+                // not written, and `loadRevokeMessage` existed in no resolver.
+                availability = FeatureAvailability.NOT_IMPLEMENTED,
                 tags = setOf("history", "antirevoke"),
                 confidence = Confidence.LIKELY,
             ),
@@ -290,7 +300,9 @@ object PlatformFeatureCatalog {
                 StartupPolicy.EAGER_NORMAL,
                 tests = listOf("SchedulingTest", "MessagePhaseGateTest"),
                 preferenceKeys = listOf("wae.scheduler.messages", "wae.scheduler.history"),
-                optionalResolvers = listOf("loadSendMessage"),
+                // Scheduling is tested; sending through the target is not wired, and
+                // `loadSendMessage` existed in no resolver.
+                availability = FeatureAvailability.NOT_IMPLEMENTED,
                 tags = setOf("scheduler"),
                 confidence = Confidence.LIKELY,
             ),

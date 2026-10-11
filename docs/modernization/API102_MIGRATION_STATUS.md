@@ -328,6 +328,32 @@ chained accessor (`ModuleRuntime.getPrefs()`), a dynamic key and a write-only ke
 are all refused. Under-reporting a key is recoverable; certifying a key that is not
 a preference is not.
 
+### #10 scope notes — the catalog must not claim a native path that does not exist
+
+Inspecting F003 before building it turned up a defect that reaches past that one feature:
+**every resolver name the platform catalog declares existed in no resolver.** Ten declarations —
+`loadStatusComposer`, `loadStatusPublish`, `loadSendMessage`, `loadRevokeMessage`,
+`loadReceiptOptions`, `loadPresenceManager`, `loadChatState`, `loadMediaTransfer`,
+`loadMediaDownload`, `loadNotificationListener` — are absent from the 191 `fun load*` in
+`Unobfuscator`, and every one of those features was marked `AVAILABLE`.
+
+The engines are real and tested. What does not exist is the consumer: nothing constructs
+`StatusAudioStudio`, `MediaPolicy`, `NotificationCooldownEngine`, `PresenceAlertEngine`,
+`OutgoingPolicyEngine`, `MessageRevocationQueue`, the history timeline or the scheduler, and the
+manifest declares no notification listener. So the fix is to say so rather than to name a resolver
+that resolves nothing:
+
+- the fictional names are gone; no feature declares a resolver it does not use;
+- the ten unwired features are declared `FeatureAvailability.NOT_IMPLEMENTED` — the enum member
+  that already existed for "declared, not built";
+- `FeatureContractTest.aHighRiskFeatureIsCapabilityGated` now accepts "a required resolver **or**
+  NOT_IMPLEMENTED". The combination it replaces — HIGH risk, no resolver, presented as available —
+  is exactly what the two outbound features declared;
+- a new case pins the four unwired engines to `NOT_IMPLEMENTED` and to declaring no resolver.
+
+This adds a gate; it removes none. The source-level check that *no* resolver name in the catalog is
+missing from `Unobfuscator` belongs to `tools/` and is raised as its own issue for the other lane.
+
 ### Next, in order
 
 1. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell

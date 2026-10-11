@@ -110,7 +110,10 @@ internal fun additionDeclarations(): List<FeatureMetadata> =
             StartupPolicy.EAGER_NORMAL,
             tests = listOf("MediaPolicyTest"),
             preferenceKeys = listOf("wae.media.policy."),
-            optionalResolvers = listOf("loadMediaDownload"),
+            // No resolver is declared because none is used: the engine exists and is tested,
+            // and nothing constructs it from a hook yet. Naming a resolver that does not
+            // exist would make the catalog claim a native path the feature never takes.
+            availability = FeatureAvailability.NOT_IMPLEMENTED,
             tags = setOf("media", "downloads", "policy", "local-only"),
             confidence = Confidence.LIKELY,
             visualImpact = VisualImpact.EXTERNAL_ONLY,
@@ -137,7 +140,10 @@ internal fun additionDeclarations(): List<FeatureMetadata> =
             StartupPolicy.LAZY,
             tests = listOf("StatusAudioStudioTest"),
             preferenceKeys = listOf("wae.status.audio."),
-            optionalResolvers = listOf("loadStatusComposer", "loadStatusPublish"),
+            // The planner is real and tested; the hook is not written. `loadStatusComposer`
+            // and `loadStatusPublish` were declared here and existed in no resolver, so the
+            // feature was presented as available with a native path it never had.
+            availability = FeatureAvailability.NOT_IMPLEMENTED,
             tags = setOf("status", "audio", "voice-status", "drafts"),
             confidence = Confidence.LIKELY,
             riskLevel = RiskLevel.MEDIUM,
@@ -155,7 +161,9 @@ internal fun additionDeclarations(): List<FeatureMetadata> =
             StartupPolicy.EAGER_NORMAL,
             tests = listOf("NotificationCooldownTest"),
             preferenceKeys = listOf("wae.notifications.cooldown."),
-            optionalResolvers = listOf("loadNotificationListener"),
+            // The engine is tested and has no consumer: the manifest declares no
+            // notification listener, so nothing feeds it yet.
+            availability = FeatureAvailability.NOT_IMPLEMENTED,
             tags = setOf("notifications", "cooldown", "burst"),
             confidence = Confidence.LIKELY,
             visualImpact = VisualImpact.EXTERNAL_ONLY,
@@ -171,7 +179,8 @@ internal fun additionDeclarations(): List<FeatureMetadata> =
             StartupPolicy.EAGER_NORMAL,
             tests = listOf("PresenceAlertTest", "PresenceAlertEngineTest"),
             preferenceKeys = listOf("wae.presence.alert."),
-            optionalResolvers = listOf("loadChatState", "loadMediaTransfer"),
+            // Tested, and wired to nothing: no listener feeds the engine yet.
+            availability = FeatureAvailability.NOT_IMPLEMENTED,
             tags = setOf("notifications", "presence", "typing", "recording", "uploads"),
             confidence = Confidence.LIKELY,
             visualImpact = VisualImpact.EXTERNAL_ONLY,

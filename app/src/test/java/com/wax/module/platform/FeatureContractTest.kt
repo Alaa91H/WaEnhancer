@@ -88,9 +88,43 @@ class FeatureContractTest {
             .metadata()
             .filter { it.riskLevel == RiskLevel.HIGH }
             .forEach { metadata ->
+                // Either it names the native path it needs, or it says out loud that it has
+                // not been wired. The combination this replaces — a HIGH-risk feature with no
+                // required resolver, presented as available — is the one that lied: ten
+                // declarations named resolvers that exist in no resolver file at all.
                 assertTrue(
-                    "${metadata.id} is HIGH risk, so it must declare a required resolver",
-                    metadata.requiredResolvers.isNotEmpty(),
+                    "${metadata.id} is HIGH risk, so it must declare a required resolver " +
+                        "or be declared NOT_IMPLEMENTED",
+                    metadata.requiredResolvers.isNotEmpty() ||
+                        metadata.availability == FeatureAvailability.NOT_IMPLEMENTED,
+                )
+            }
+    }
+
+    @Test
+    fun anUnwiredEngineIsNotPresentedAsAvailable() {
+        // These four are tested engines that nothing constructs: no hook installs them, and the
+        // manifest declares no listener to feed them. The enum member for "declared, not built"
+        // exists precisely so that can be said out loud instead of implied.
+        val unwired =
+            setOf(
+                PlatformFeatures.MEDIA_POLICY,
+                PlatformFeatures.STATUS_AUDIO_STUDIO,
+                PlatformFeatures.NOTIFICATION_COOLDOWN,
+                PlatformFeatures.PRESENCE_ALERTS,
+            )
+        PlatformFeatureCatalog
+            .metadata()
+            .filter { it.id in unwired }
+            .forEach { metadata ->
+                assertEquals(
+                    "${metadata.id} is a tested engine with no consumer, so it cannot be offered",
+                    FeatureAvailability.NOT_IMPLEMENTED,
+                    metadata.availability,
+                )
+                assertTrue(
+                    "${metadata.id} claims no native path, so it must not name a resolver",
+                    metadata.requiredResolvers.isEmpty() && metadata.optionalResolvers.isEmpty(),
                 )
             }
     }
