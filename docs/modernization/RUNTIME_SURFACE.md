@@ -8,7 +8,7 @@ the numbers.
 | --- | --- | --- | --- |
 | [Legacy Xposed API surface](#legacy_api_surface) | #318 M04-M06 | 239 | 97 |
 | [Preference reads inside the injected process](#runtime_preference_reads) | #318 M02 / #333 A08 | 12 | 3 |
-| [Preference reads inside the Manager process](#manager_preference_reads) | #333 A09 | 51 | 19 |
+| [Preference reads inside the Manager process](#manager_preference_reads) | #333 A09 | 52 | 19 |
 | [World-readable preference compatibility](#world_readable_prefs) | #318 M02 / #333 A16 | 4 | 1 |
 | [Legacy resource injection](#resource_injection) | #318 M07 | 11 | 2 |
 | [Reflective mutation of generated/static fields](#static_final_mutation) | #318 M07 | 39 | 22 |
@@ -16,7 +16,7 @@ the numbers.
 | [Direct legacy hook installation](#direct_hooks) | #318 M03 / #333 A05 | 235 | 71 |
 | [Self-hook as the activation signal](#self_hook_activation) | #333 A01 | 7 | 3 |
 | [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 234 | 61 |
-| [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 142 | 43 |
+| [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 143 | 44 |
 
 ## Legacy Xposed API surface
 
@@ -179,11 +179,11 @@ Legacy types in use:
 
 **End state:** Not a target of this program. Listed so the asymmetry stays visible.
 
-**Current:** 51 occurrences across 19 files.
+**Current:** 52 occurrences across 19 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
-| `PreferenceManager` | 42 | 17 |
+| `PreferenceManager` | 43 | 17 |
 | `getSharedPreferences()` | 9 | 6 |
 
 <details><summary>Files</summary>
@@ -553,17 +553,18 @@ Legacy types in use:
 
 **End state:** Every catch reports through the runtime health store.
 
-**Current:** 142 occurrences across 43 files.
+**Current:** 143 occurrences across 44 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
-| `catch with discarded binding` | 90 | 38 |
+| `catch with discarded binding` | 91 | 39 |
 | `empty catch body` | 52 | 24 |
 
 <details><summary>Files</summary>
 
 - `app/src/main/java/com/wax/module/ModuleApplication.kt`
 - `app/src/main/java/com/wax/module/ModuleEntryPoint.kt`
+- `app/src/main/java/com/wax/module/diagnostics/selftest/DiagnosticZipExporter.kt`
 - `app/src/main/java/com/wax/module/model/Recording.kt`
 - `app/src/main/java/com/wax/module/preference/FileSelectPreference.kt`
 - `app/src/main/java/com/wax/module/preference/ThemePreference.kt`
