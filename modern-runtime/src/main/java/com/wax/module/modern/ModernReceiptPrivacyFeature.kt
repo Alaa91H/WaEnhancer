@@ -212,6 +212,14 @@ object ModernReceiptPrivacyFeature {
         return !consumeArming(conversationKey, nowMillis)
     }
 
+    /**
+     * Group-only privacy is not implemented by the current native adapter.
+     * Never report DISABLED for an active user preference, or treat a 1:1
+     * receipt hook as a safe replacement for missing group classification.
+     */
+    internal fun readOutcomeWithoutGlobalHook(request: Request): Outcome =
+        if (request.hideReadInGroups) Outcome.UNSUPPORTED else Outcome.DISABLED
+
     @JvmStatic
     fun install(
         target: Context,
@@ -229,7 +237,11 @@ object ModernReceiptPrivacyFeature {
 
         val withholds = request.hideRead || request.afterReply
         if (!withholds) {
-            results[FEATURE_ID_READ] = Outcome.DISABLED
+            // A group-only switch is a request, not a globally disabled feature.
+            // We cannot claim group-only suppression without a proven group
+            // classifier in the native read-receipt path. Never hook all chats
+            // to approximate the missing group-only capability.
+            results[FEATURE_ID_READ] = readOutcomeWithoutGlobalHook(request)
             results[FEATURE_ID_AFTER_REPLY] = Outcome.DISABLED
             return results
         }
