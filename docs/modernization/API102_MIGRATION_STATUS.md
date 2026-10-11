@@ -28,6 +28,16 @@
   Manager fallback. Device validation PENDING_USER_DEVICE_TEST. Controls for
   the still-legacy-only features stay pending until their own waves land.
 
+## Concurrent development
+
+Two lanes work on this repository in parallel and neither waits on the other. The protocol,
+including which paths each lane owns, is [`docs/collaboration/PROTOCOL.md`](../collaboration/PROTOCOL.md);
+claims, leases, the `blocked-on:aux` route and the append-only
+[`LOG.md`](../collaboration/LOG.md) are defined there. Work order comes from
+[`docs/collaboration/QUEUE.md`](../collaboration/QUEUE.md).
+
+---
+
 ## Wave / batch plan (M06.08 order, batches of 5 per task spec)
 
 Wave rule (mechanical, refinement-allowed but never silent):
