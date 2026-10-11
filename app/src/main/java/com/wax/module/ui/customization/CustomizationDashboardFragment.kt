@@ -32,7 +32,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,6 +56,7 @@ import com.wax.module.R
 import com.wax.module.activities.MainActivity
 import com.wax.module.platform.TargetApp
 import com.wax.module.settings.SettingsScope
+import com.wax.module.ui.components.WaXFeatureSwitch
 import com.wax.module.ui.targets.TargetSettingsActivity
 import com.wax.module.ui.theme.WaXTheme
 
@@ -291,7 +291,7 @@ private fun PreviewSwitch(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(title, modifier = Modifier.weight(1f).padding(end = 8.dp), style = MaterialTheme.typography.bodyMedium)
-        Switch(checked = checked, onCheckedChange = onChanged)
+        WaXFeatureSwitch(checked = checked, onCheckedChange = onChanged)
     }
 }
 

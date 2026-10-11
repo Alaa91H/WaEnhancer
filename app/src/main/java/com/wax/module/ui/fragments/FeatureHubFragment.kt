@@ -31,8 +31,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -44,7 +42,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
@@ -60,6 +57,7 @@ import com.wax.module.settings.EffectiveSettingsResolver
 import com.wax.module.settings.SettingKeyRegistry
 import com.wax.module.settings.SettingsScope
 import com.wax.module.settings.SharedPreferencesSettingsStore
+import com.wax.module.ui.components.WaXFeatureSwitch
 import com.wax.module.ui.targets.TargetSettingsActivity
 import com.wax.module.ui.theme.WaXTheme
 import com.wax.module.utils.FeatureCatalog
@@ -304,18 +302,12 @@ class FeatureHubFragment : Fragment() {
                                         )
                                     }
                                     if (isBoolean) {
-                                        Switch(
+                                        WaXFeatureSwitch(
                                             checked = chosen,
                                             onCheckedChange = { enabled ->
                                                 store.writeBoolean(scope, feature.key, enabled)
                                                 localRevision++
                                             },
-                                            colors =
-                                                SwitchDefaults.colors(
-                                                    checkedTrackColor = Color(0xFF208B4D),
-                                                    checkedThumbColor = Color.White,
-                                                    uncheckedTrackColor = Color.Gray,
-                                                ),
                                         )
                                     }
                                 }
