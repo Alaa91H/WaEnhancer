@@ -28,6 +28,15 @@ class ControlCenterLocalizationTest {
             ControlCenterLabels.forLanguage("de").title("freeze_last_seen", "Freeze Last Seen"))
     }
 
+    @Test fun shippedLocalesReuseExistingDescriptionsNotOnlyFeatureNames() {
+        val german = ControlCenterLabels.forLanguage("de")
+        assertNotEquals("Untranslated description",
+            german.description("hide_chat", "Untranslated description"))
+        assertNotEquals("Diagnostics", german.title("diagnostics", "Diagnostics"))
+        assertEquals("Unknown fallback",
+            german.description("untranslated_feature", "Unknown fallback"))
+    }
+
     @Test fun legacyLanguageCodesResolveToCurrentLocales() {
         assertNotEquals("Freeze Last Seen",
             ControlCenterLabels.forLanguage("iw").title("freeze_last_seen", "Freeze Last Seen"))

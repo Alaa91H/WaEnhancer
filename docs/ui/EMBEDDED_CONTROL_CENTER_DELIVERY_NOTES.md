@@ -6,7 +6,7 @@ Issue: [#458](https://github.com/Alaa91H/WA-X/issues/458). PR: [#478](https://gi
 
 - Bounded Android framework dialog hosted in WhatsApp, with category/favourites tabs and live search.
 - Compact controls with one favourite star, clear requested/effective states, grey OFF and green ON switches.
-- Arabic and shipped language labels reused from Manager resource files through a checked-in data-only generator.
+- Feature labels and descriptions reuse existing Manager resource translations across 11 shipped locales through a checked-in data-only generator. Locale-specific strings without a validated resource mapping still fall back to English; this is partial translation coverage, not a completed all-locale acceptance gate.
 - Initial authenticated settings snapshot fetched **off the WhatsApp main thread**. The dialog shows a loading/error state until readback completes; it observes settings only while visible.
 - Manager-owned multi-profile repository with schema/version validation and global desired-preference snapshots. Default profile migrates existing current settings without deleting them. Current Manager values remain authoritative.
 - Profile create/duplicate/rename/delete/select in a private Manager Activity; quick-select in embedded WhatsApp UI through the existing UID-authenticated telemetry provider.

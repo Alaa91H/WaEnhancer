@@ -11,7 +11,11 @@ class ControlCenterLabels private constructor(private val language: String) {
         if (language == "ar") arabicTitles[id] ?: resourceLabels[id] ?: fallback else resourceLabels[id] ?: fallback
 
     fun description(id: String, fallback: String): String =
-        if (language == "ar") arabicDescriptions[id] ?: fallback else fallback
+        if (language == "ar") {
+            arabicDescriptions[id] ?: resourceLabels["description." + id] ?: fallback
+        } else {
+            resourceLabels["description." + id] ?: fallback
+        }
 
     fun category(category: ControlCategory): String =
         if (language == "ar") arabicCategories[category] ?: ControlStatusText.categoryTitle(category)

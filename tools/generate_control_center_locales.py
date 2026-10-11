@@ -21,6 +21,22 @@ name_by_id = {
     "typing_privacy": "ghostmode",
     "dnd_mode": "dnd_mode_title",
     "tasker": "enable_tasker_automation",
+    "share_limit": "removeforwardlimit",
+    "hide_chat": "hide_archived_chat",
+    "diagnostics": "diagnostics_title",
+}
+description_by_id = {
+    "freeze_last_seen": "freezelastseen_sum",
+    "view_once": "viewonce_sum",
+    "anti_revoke": "antirevoke_sum",
+    "receipt_privacy_read": "hideread_sum",
+    "receipt_privacy_delivery": "hidereceipt_sum",
+    "status_seen_hidden": "hidestatusview_sum",
+    "typing_privacy": "ghostmode_sum",
+    "tasker": "enable_tasker_automation_sum",
+    "share_limit": "removeforwardlimit_sum",
+    "hide_chat": "hide_archived_chat_sum",
+    "diagnostics": "diagnostics_explain",
 }
 ui_keys = {
     "ui.search": "search_features_hint",
@@ -36,7 +52,11 @@ ui_keys = {
     "category.tools": "tools",
     "category.appearance": "custom_appearance",
 }
-all_keys = {**name_by_id, **ui_keys}
+all_keys = {
+    **name_by_id,
+    **{"description." + key: resource for key, resource in description_by_id.items()},
+    **ui_keys,
+}
 def values(locale):
     data = {}
     for file in (res / locale).glob("*.xml"):
