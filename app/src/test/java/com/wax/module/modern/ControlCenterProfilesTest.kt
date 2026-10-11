@@ -190,6 +190,61 @@ class ControlCenterProfilesTest {
         assertEquals(true, p.values["hideread"])
     }
 
+    @Test fun iconsRoundTripWithDuplicationAndInvalidValuesFailClosed() {
+        val prefs = MemoryPrefs()
+        val star = "\u2605"
+        val sun = "\u2600"
+        assertTrue(ControlCenterProfiles.create(prefs.prefs, "Work", star))
+        val id =
+            ControlCenterProfiles
+                .read(prefs.prefs)
+                .profiles
+                .last()
+                .id
+        assertEquals(
+            star,
+            ControlCenterProfiles
+                .read(prefs.prefs)
+                .profiles
+                .last()
+                .icon,
+        )
+        assertTrue(ControlCenterProfiles.rename(prefs.prefs, id, "Work", sun))
+        assertEquals(
+            sun,
+            ControlCenterProfiles
+                .read(prefs.prefs)
+                .profiles
+                .last()
+                .icon,
+        )
+        assertTrue(ControlCenterProfiles.duplicate(prefs.prefs, id, "Copy"))
+        assertEquals(
+            sun,
+            ControlCenterProfiles
+                .read(prefs.prefs)
+                .profiles
+                .last()
+                .icon,
+        )
+        assertFalse(ControlCenterProfiles.create(prefs.prefs, "Bad", "<invalid>"))
+        assertFalse(ControlCenterProfiles.rename(prefs.prefs, id, "Work", "<invalid>"))
+        assertEquals(3, ControlCenterProfiles.read(prefs.prefs).profiles.size)
+    }
+
+    @Test fun legacyProfilesWithNoIconStayReadable() {
+        val prefs = MemoryPrefs()
+        prefs.values["hideread"] = true
+        assertTrue(ControlCenterProfiles.create(prefs.prefs, "Work"))
+        val raw = prefs.values[ControlCenterProfiles.KEY] as String
+        val marker = Regex(",\\\"icon\\\":\\\"[^\\\"]+\\\"")
+        prefs.values[ControlCenterProfiles.KEY] = raw.replace(marker, "")
+        val state = ControlCenterProfiles.read(prefs.prefs)
+        assertFalse(state.corrupted)
+        assertTrue(state.profiles.all { it.icon == ControlCenterProfiles.DEFAULT_ICON })
+        assertEquals(true, prefs.values["hideread"])
+    }
+
     @Test fun duplicateRenameDeleteArePersistedAndGuarded() {
         val p = MemoryPrefs()
         assertTrue(ControlCenterProfiles.create(p.prefs, "Work"))

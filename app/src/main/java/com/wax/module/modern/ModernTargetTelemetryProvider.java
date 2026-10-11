@@ -459,12 +459,15 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         if (!profiles.getCorrupted()) {
             ArrayList<String> ids = new ArrayList<>();
             ArrayList<String> names = new ArrayList<>();
+            ArrayList<String> icons = new ArrayList<>();
             for (ControlCenterProfiles.Profile profile : profiles.getProfiles()) {
                 ids.add(profile.getId());
                 names.add(profile.getName());
+                icons.add(profile.getIcon());
             }
             result.putStringArrayList("profiles.ids", ids);
             result.putStringArrayList("profiles.names", names);
+            result.putStringArrayList("profiles.icons", icons);
             result.putString("profiles.active", profiles.getActiveId());
             result.putLong("profiles.revision", profiles.getRevision());
         }

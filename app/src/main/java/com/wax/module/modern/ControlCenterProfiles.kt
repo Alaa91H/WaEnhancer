@@ -21,6 +21,8 @@ object ControlCenterProfiles {
     private const val SCHEMA = 1
     private const val MAX_PROFILES = 16
     private const val MAX_NAME = 40
+    const val DEFAULT_ICON = "●"
+    val ICON_OPTIONS = listOf("●", "◆", "★", "☀", "✿", "⬟")
 
     private val modeKeys = setOf("typearchive", "antirevoke")
     private val favoriteKey = ModernTargetTelemetryProvider.CONTROL_CENTER_FAVORITES_KEY
@@ -33,6 +35,7 @@ object ControlCenterProfiles {
         val id: String,
         val name: String,
         val settings: Map<String, JsonValue>,
+        val icon: String = DEFAULT_ICON,
     )
 
     data class State(
@@ -74,7 +77,14 @@ object ControlCenterProfiles {
                 val name = (obj["name"] as? JsonValue.Str)?.value ?: return corrupt()
                 val settings = (obj["settings"] as? JsonValue.Obj)?.fields ?: return corrupt()
                 if (!validId(id) || !validName(name) || !validSettings(settings)) return corrupt()
-                Profile(id, name, settings)
+                val icon =
+                    when (val storedIcon = obj["icon"]) {
+                        null -> DEFAULT_ICON
+                        is JsonValue.Str -> storedIcon.value
+                        else -> return corrupt()
+                    }
+                if (icon !in ICON_OPTIONS) return corrupt()
+                Profile(id, name, settings, icon)
             }
         if (profiles.distinctBy { it.id }.size != profiles.size ||
             profiles.none { it.id == DEFAULT_ID } ||
@@ -97,14 +107,16 @@ object ControlCenterProfiles {
     fun create(
         prefs: SharedPreferences,
         name: String,
+        icon: String = DEFAULT_ICON,
     ): Boolean {
+        if (icon !in ICON_OPTIONS) return false
         val state = read(prefs)
         if (state.corrupted || !validName(name) || state.profiles.size >= MAX_PROFILES ||
             state.profiles.any { it.name.equals(name.trim(), ignoreCase = true) }
         ) {
             return false
         }
-        val new = Profile("p_" + UUID.randomUUID().toString().replace("-", ""), name.trim(), capture(prefs))
+        val new = Profile("p_" + UUID.randomUUID().toString().replace("-", ""), name.trim(), capture(prefs), icon)
         return commitState(prefs, state.copy(profiles = state.profiles + new))
     }
 
@@ -113,7 +125,9 @@ object ControlCenterProfiles {
         prefs: SharedPreferences,
         id: String,
         name: String,
+        icon: String? = null,
     ): Boolean {
+        if (icon != null && icon !in ICON_OPTIONS) return false
         val state = read(prefs)
         if (state.corrupted || id == DEFAULT_ID || !validName(name) ||
             state.profiles.none { it.id == id } ||
@@ -125,7 +139,7 @@ object ControlCenterProfiles {
             prefs,
             state.copy(
                 profiles =
-                    state.profiles.map { if (it.id == id) it.copy(name = name.trim()) else it },
+                    state.profiles.map { if (it.id == id) it.copy(name = name.trim(), icon = icon ?: it.icon) else it },
             ),
         )
     }
@@ -135,7 +149,9 @@ object ControlCenterProfiles {
         prefs: SharedPreferences,
         id: String,
         name: String,
+        icon: String? = null,
     ): Boolean {
+        if (icon != null && icon !in ICON_OPTIONS) return false
         val state = read(prefs)
         val original = state.profiles.firstOrNull { it.id == id } ?: return false
         if (state.corrupted || state.profiles.size >= MAX_PROFILES ||
@@ -148,7 +164,12 @@ object ControlCenterProfiles {
             state.copy(
                 profiles =
                     state.profiles +
-                        original.copy(id = "p_" + UUID.randomUUID().toString().replace("-", ""), name = name.trim()),
+                        original.copy(
+                            id = "p_" + UUID.randomUUID().toString().replace("-", ""),
+                            name = name.trim(),
+                            icon =
+                                icon ?: original.icon,
+                        ),
             ),
         )
     }
@@ -268,6 +289,7 @@ object ControlCenterProfiles {
                                     mapOf(
                                         "id" to JsonValue.Str(profile.id),
                                         "name" to JsonValue.Str(profile.name),
+                                        "icon" to JsonValue.Str(profile.icon),
                                         "settings" to JsonValue.Obj(profile.settings),
                                     ),
                                 )

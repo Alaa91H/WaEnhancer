@@ -86,6 +86,7 @@ class ModernControlCenterShell(
     private var profileDialog: AlertDialog? = null
     private var profileButton: TextView? = null
     private var availableProfiles: List<Pair<String, String>> = emptyList()
+    private var profileIcons: Map<String, String> = emptyMap()
     private var activeProfileId: String = "default"
 
     /** Shows one centre per target process/activity. Returns false for one Manager fallback. */
@@ -335,13 +336,17 @@ class ModernControlCenterShell(
                         currentModes[ModernHideChatFeature.PREF_ARCHIVE_MODE] = readModeFromState(updated)
                         val profileIds = updated.getStringArrayList("profiles.ids").orEmpty()
                         val profileNames = updated.getStringArrayList("profiles.names").orEmpty()
+                        val icons = updated.getStringArrayList("profiles.icons").orEmpty()
+                        profileIcons = if (icons.size == profileIds.size)
+                            profileIds.zip(icons).toMap() else emptyMap()
                         availableProfiles = if (updated.getBoolean("profiles.corrupted") ||
                             profileIds.size != profileNames.size) emptyList()
                             else profileIds.zip(profileNames)
                         activeProfileId = updated.getString("profiles.active", "default") ?: "default"
                         profileButton?.apply {
                             isEnabled = availableProfiles.isNotEmpty()
-                            text = "◎ " + (availableProfiles.firstOrNull {
+                            text = (profileIcons[activeProfileId] ?: "●") + " " +
+                                (availableProfiles.firstOrNull {
                                 it.first == activeProfileId
                             }?.let {
                                 if (it.first == "default") strings.defaultProfile else it.second
@@ -475,6 +480,7 @@ class ModernControlCenterShell(
         profileDialog = null
         profileButton = null
         availableProfiles = emptyList()
+        profileIcons = emptyMap()
         mainHandler.removeCallbacksAndMessages(null)
         try {
             taskScope.close()
@@ -494,6 +500,7 @@ class ModernControlCenterShell(
         profileDialog = null
         profileButton = null
         availableProfiles = emptyList()
+        profileIcons = emptyMap()
         mainHandler.removeCallbacksAndMessages(null)
         try {
             taskScope.close()
@@ -519,7 +526,8 @@ class ModernControlCenterShell(
             profileDialog?.isShowing == true) return
         val options = availableProfiles.toList()
         val labels = options.map {
-            if (it.first == "default") strings.defaultProfile else it.second
+            (profileIcons[it.first] ?: "●") + " " +
+                (if (it.first == "default") strings.defaultProfile else it.second)
         }.toTypedArray()
         // setMessage() and setItems() together make Android's AlertController
         // hide the list on some OS versions. Use one accessible custom view.

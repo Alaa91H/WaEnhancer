@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -46,7 +48,11 @@ import com.wax.module.ui.theme.WaXTheme
 class ControlCenterProfilesActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { WaXTheme { ProfilesScreen() } }
+        setContent {
+            WaXTheme {
+                ProfilesScreen()
+            }
+        }
     }
 }
 
@@ -62,6 +68,7 @@ private fun ProfilesScreen() {
     var action by remember { mutableStateOf<Action?>(null) }
     var chosenId by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
+    var icon by remember { mutableStateOf(ControlCenterProfiles.DEFAULT_ICON) }
     var failed by remember { mutableStateOf(false) }
 
     // Cross-process changes from the embedded WhatsApp panel update this
@@ -114,6 +121,7 @@ private fun ProfilesScreen() {
                 onClick = {
                     chosenId = ""
                     name = ""
+                    icon = ControlCenterProfiles.DEFAULT_ICON
                     action = Action.CREATE
                 },
                 enabled = !state.corrupted && state.profiles.size < 16,
@@ -123,6 +131,7 @@ private fun ProfilesScreen() {
                 items(state.profiles, key = { it.id }) { profile ->
                     Card(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(12.dp)) {
+                            Text(profile.icon, style = MaterialTheme.typography.headlineMedium)
                             Text(
                                 if (profile.id == ControlCenterProfiles.DEFAULT_ID) {
                                     stringResource(R.string.control_profiles_default)
@@ -147,6 +156,7 @@ private fun ProfilesScreen() {
                                 TextButton(onClick = {
                                     chosenId = profile.id
                                     name = profile.name + " (copy)"
+                                    icon = profile.icon
                                     action = Action.DUPLICATE
                                 }) { Text(stringResource(R.string.control_profiles_duplicate)) }
                             }
@@ -155,6 +165,7 @@ private fun ProfilesScreen() {
                                     TextButton(onClick = {
                                         chosenId = profile.id
                                         name = profile.name
+                                        icon = profile.icon
                                         action = Action.RENAME
                                     }) { Text(stringResource(R.string.control_profiles_rename)) }
                                     TextButton(
@@ -194,12 +205,23 @@ private fun ProfilesScreen() {
             title = { Text(stringResource(title)) },
             text = {
                 if (needsName) {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it.take(40) },
-                        label = { Text(stringResource(R.string.control_profiles_name)) },
-                        singleLine = true,
-                    )
+                    Column {
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it.take(40) },
+                            label = { Text(stringResource(R.string.control_profiles_name)) },
+                            singleLine = true,
+                        )
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            items(ControlCenterProfiles.ICON_OPTIONS) { option ->
+                                FilterChip(
+                                    selected = icon == option,
+                                    onClick = { icon = option },
+                                    label = { Text(option) },
+                                )
+                            }
+                        }
+                    }
                 } else {
                     Text(stringResource(R.string.control_profiles_scope))
                 }
@@ -210,9 +232,9 @@ private fun ProfilesScreen() {
                     onClick = {
                         runOperation {
                             when (selectedAction) {
-                                Action.CREATE -> ControlCenterProfiles.create(prefs, name)
-                                Action.DUPLICATE -> ControlCenterProfiles.duplicate(prefs, chosenId, name)
-                                Action.RENAME -> ControlCenterProfiles.rename(prefs, chosenId, name)
+                                Action.CREATE -> ControlCenterProfiles.create(prefs, name, icon)
+                                Action.DUPLICATE -> ControlCenterProfiles.duplicate(prefs, chosenId, name, icon)
+                                Action.RENAME -> ControlCenterProfiles.rename(prefs, chosenId, name, icon)
                                 Action.DELETE -> ControlCenterProfiles.delete(prefs, chosenId)
                                 Action.SELECT -> ControlCenterProfiles.select(prefs, chosenId)
                             }

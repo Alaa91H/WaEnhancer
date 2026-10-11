@@ -10,6 +10,7 @@ Issue: [#458](https://github.com/Alaa91H/WA-X/issues/458). PR: [#478](https://gi
 - Initial authenticated settings snapshot fetched **off the WhatsApp main thread**. The dialog shows a loading/error state until readback completes; it observes settings only while visible.
 - Manager-owned multi-profile repository with schema/version validation and global desired-preference snapshots. Default profile migrates existing current settings without deleting them. Current Manager values remain authoritative.
 - Profile create/duplicate/rename/delete/select in a private Manager Activity; quick-select in embedded WhatsApp UI through the existing UID-authenticated telemetry provider.
+- Profile icons can be customized from a bounded allowlist in Manager and are displayed in the embedded selector. Older schema-v1 documents without an icon retain all preferences and safely use a default; invalid icons are rejected.
 - Profiles persist only allowlisted feature flags, anti-revoke/archive string modes and favourite IDs. Contacts, messages, media, Tasker auth tokens and credentials are not stored in profiles.
 - Bad/corrupt, oversized and wrong-type profile documents fail closed rather than being overwritten. Failed profile switches report an error and attempt rollback.
 - The Manager profile screen listens to SharedPreferences changes while mounted, unregistering on disposal; the embedded panel listens to the existing content-observer notification.
