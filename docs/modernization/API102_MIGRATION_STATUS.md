@@ -273,6 +273,15 @@ Evidence identity is now a full target identity rather than a package/version pa
   `tools/compatibility/test_sync_generated.py` existed but no workflow ran them.
   Both now execute in the strict-static compatibility group, ahead of the tools
   they guard.
+- The M00 evidence lock stopped counting submodule sources. `source_counts` walked
+  every file under `app/src`, so the 424 vendored `.c`/`.h` files under the opus,
+  ogg and libopusenc submodules were counted as WA X source. The count then
+  depended on the clone rather than on the commit — 425 with submodules checked
+  out, 1 without — and the lock drifted on an unchanged tree. The vendored paths
+  are now read from `.gitmodules` and excluded, so `cpp` means "native files this
+  project writes" and is identical on every machine. The gate is unchanged in
+  strength: `test_collect_m00_baseline.py` proves both that a submodule file does
+  not move the count and that a new native file of ours still does.
 
 Deliberate ceilings: the matrix still holds 0 supported cells and no fabricated
 observations. The rules refuse a claim; they do not produce one, and no resolver
